@@ -17,7 +17,8 @@ class LocalProviderPreflightTest {
 
         assertThat(findings).containsExactly(
                 "Argos Translate executable configured as argos-translate (runtime initialization not attempted).",
-                "TranslateLocally executable was not found at missing\\translateLocally.exe.",
+                "TranslateLocally executable was not found at "
+                        + Path.of("missing", "translateLocally.exe") + ".",
                 "TranslateLocally model configured: Helsinki-NLP/opus-mt-zh-en (installation not verified; no download attempted).");
     }
 

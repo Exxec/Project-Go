@@ -54,7 +54,8 @@ class CsvExtractorTest {
                 .filteredOn(value -> value.key().endsWith(":description"))
                 .singleElement()
                 .extracting(ExtractedString::originalText)
-                .isEqualTo("第一行\n第二行");
+                .satisfies(value -> assertThat(value.replace("\r\n", "\n"))
+                        .isEqualTo("\u7b2c\u4e00\u884c\n\u7b2c\u4e8c\u884c"));
     }
 
     @Test

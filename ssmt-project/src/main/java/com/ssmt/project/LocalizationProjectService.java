@@ -705,8 +705,10 @@ public final class LocalizationProjectService {
                     mod.name(),
                     mod.gameVersion(),
                     artifacts));
-            new TranslationReportExporter().write(
-                    outputRoot.resolve("Project Go Changes.csv"), project);
+            Path report = outputRoot.resolve("Project Go Changes.csv");
+            if (result.changed() || !Files.isRegularFile(report)) {
+                new TranslationReportExporter().write(report, project);
+            }
             return new ProjectBuildResult(result.changed(), result.artifactCount());
         } catch (PatchBuilderException | IllegalArgumentException exception) {
             throw new ProjectException(
