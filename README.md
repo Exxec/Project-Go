@@ -142,6 +142,8 @@ and recovery locations.
 See [BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md) for a slower, beginner-friendly
 GUI and CLI walkthrough with examples.
 See [AUTO_GUIDE.md](AUTO_GUIDE.md) for the headless drag-and-drop workflow.
+See [CONVERSATIONAL_GUIDE.md](CONVERSATIONAL_GUIDE.md) for a concise,
+plain-language GUI walkthrough and the current usability recommendations.
 
 ## Modules
 

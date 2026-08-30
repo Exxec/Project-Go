@@ -55,6 +55,9 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.CustomMenuItem;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SplitMenuButton;
@@ -408,22 +411,47 @@ public final class SsmtApplication extends Application {
                 event.consume();
             }
         });
+        MenuButton moreActions = new MenuButton(GuiText.get("button.moreActions"));
+        moreActions.setAccessibleText(GuiText.get("accessible.moreActions"));
+        Menu projectTools = new Menu(GuiText.get("menu.projectTools"));
+        projectTools.getItems().addAll(
+                menuItem(GuiText.get("button.refreshTm"), refreshWithMemory),
+                menuItem(GuiText.get("button.translateProject"), translateProject),
+                menuItem(GuiText.get("button.resumeTranslation"), resumeTranslation));
+        Menu catalogTools = new Menu(GuiText.get("menu.catalogTools"));
+        catalogTools.getItems().addAll(
+                menuItem(GuiText.get("button.openTm"), openMemory),
+                menuItem(GuiText.get("button.mergeTm"), mergeMemory),
+                menuItem(GuiText.get("button.auditGlossary"), auditGlossary),
+                menuItem(GuiText.get("button.exportTranslationReport"), exportReport));
+        Menu aiTools = new Menu(GuiText.get("menu.aiTools"));
+        aiTools.getItems().addAll(
+                menuItem(GuiText.get("button.exportAi"), exportAi),
+                menuItem(GuiText.get("button.importAi"), importAi));
+        Menu browserReview = new Menu(GuiText.get("menu.browserReview"));
+        browserReview.getItems().addAll(
+                menuItem(GuiText.get("button.exportBrowserAi"), exportBrowserAi),
+                menuItem(GuiText.get("button.openBrowserAi"), openBrowserAi),
+                menuItem(GuiText.get("button.copyBrowserPrompt"), copyBrowserPrompt),
+                menuItem(GuiText.get("button.openBrowserFolder"), openBrowserFolder),
+                menuItem(GuiText.get("button.importBrowserAi"), importBrowserAi),
+                menuItem(GuiText.get("button.reopenBrowserAi"), reopenBrowserAi));
+        moreActions.getItems().addAll(projectTools, catalogTools, aiTools, browserReview);
+        MenuButton selectedRowActions = new MenuButton(GuiText.get("button.selectedRowActions"));
+        selectedRowActions.setAccessibleText(GuiText.get("accessible.selectedRowActions"));
+        selectedRowActions.getItems().addAll(
+                menuItem(GuiText.get("button.review"), markReviewed),
+                menuItem(GuiText.get("button.approveDraft"), approveDraft),
+                menuItem(GuiText.get("button.rejectDraft"), rejectDraft),
+                menuItem(GuiText.get("button.inspectEvidence"), inspectEvidence),
+                menuItem(GuiText.get("button.viewLineage"), viewLineage));
         HBox toolbarProject =
-                new HBox(8, createSplit, open, sample, save, refresh, refreshWithMemory,
-                        translateProject, resumeTranslation, build);
-        HBox toolbarMemory =
-                new HBox(8, openMemory, mergeMemory, auditGlossary, exportReport);
-        HBox toolbarAi =
-                new HBox(8, exportAi, importAi);
-        HBox toolbarBrowserAi = new HBox(8, exportBrowserAi, openBrowserAi,
-                copyBrowserPrompt, openBrowserFolder, importBrowserAi, reopenBrowserAi);
+                new HBox(8, createSplit, open, sample, save, refresh, build, moreActions);
         HBox toolbarStatus = new HBox(8, status, coverageLabel);
-        VBox toolbar = new VBox(
-                4, toolbarProject, toolbarMemory, toolbarAi, toolbarBrowserAi, toolbarStatus);
+        VBox toolbar = new VBox(4, toolbarProject, toolbarStatus);
         HBox filters =
                 new HBox(8, new Label(GuiText.get("label.filter")), search, reviewStatus,
-                        provenanceFilter,
-                        markReviewed, approveDraft, rejectDraft, inspectEvidence, viewLineage);
+                        provenanceFilter, selectedRowActions);
         HBox suggestionControls = new HBox(8, suggestions, applySuggestion);
         VBox content =
                 new VBox(8, toolbar, filters, table, suggestionControls, previews);
@@ -2110,6 +2138,12 @@ public final class SsmtApplication extends Application {
         column.setCellValueFactory(cell ->
                 new ReadOnlyStringWrapper(value.apply(cell.getValue())));
         return column;
+    }
+
+    private static MenuItem menuItem(String text, Button action) {
+        MenuItem item = new MenuItem(text);
+        item.setOnAction(ignored -> action.fire());
+        return item;
     }
 
     private static Tab fixedTab(String title, javafx.scene.Node content) {
