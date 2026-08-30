@@ -12,9 +12,10 @@ public final class ProjectRestorePointService {
 
     /** Writes the current project state as the point to which the user may undo. */
     public Path create(Path projectFile, LocalizationProject project) throws ProjectException {
-        Path destination = root(projectFile).resolve(FILE);
+        Path directory = root(projectFile);
+        Path destination = directory.resolve(FILE);
         try {
-            Files.createDirectories(destination.getParent());
+            Files.createDirectories(directory);
         } catch (java.io.IOException exception) {
             throw new ProjectException("Could not create restore-point directory", exception);
         }

@@ -25,7 +25,14 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
       - name: Verify
         shell: bash
-        run: ./gradlew build --no-daemon || ./gradlew build --no-daemon
+        run: ./gradlew build --no-daemon
+      - name: Upload SpotBugs reports
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: spotbugs-reports-${{ matrix.os }}
+          path: "**/build/reports/spotbugs/*.html"
+          if-no-files-found: ignore
       - name: Build application image
         if: runner.os == 'Windows'
         shell: bash
