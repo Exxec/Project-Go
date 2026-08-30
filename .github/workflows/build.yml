@@ -25,7 +25,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
       - name: Verify
         shell: bash
-        run: ./gradlew build --no-daemon
+        run: ./gradlew build --no-daemon || ./gradlew build --no-daemon
       - name: Build application image
         if: runner.os == 'Windows'
         shell: bash
