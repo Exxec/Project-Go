@@ -36,7 +36,7 @@ application {
 }
 
 val packageRoot = layout.buildDirectory.dir("jpackage")
-val appImage = packageRoot.map { it.dir("SSMT") }
+val appImage = packageRoot.map { it.dir("Project Go") }
 val hostOs = System.getProperty("os.name").lowercase()
 val jpackageExecutable = javaToolchains.launcherFor {
     languageVersion.set(JavaLanguageVersion.of(25))
@@ -69,13 +69,13 @@ tasks.register<Exec>("jpackageImage") {
             "--type", "app-image",
             "--input", layout.buildDirectory.dir("install/ssmt-gui/lib").get().asFile,
             "--dest", packageRoot.get().asFile,
-            "--name", "SSMT",
+            "--name", "Project Go",
             "--main-jar", "ssmt-gui-${project.version}.jar",
             "--main-class", "com.ssmt.gui.GuiLauncher",
             "--app-version", project.version.toString(),
-            "--vendor", "SSMT Contributors",
-            "--description", "Offline-first Starsector mod localization toolkit",
-            "--copyright", "Copyright 2026 SSMT Contributors",
+            "--vendor", "Project Go Contributors",
+            "--description", "Personal-use Starsector translation tool",
+            "--copyright", "Copyright 2026 Project Go Contributors",
             "--icon", packageIcon.asFile
         )
     }
@@ -88,9 +88,9 @@ tasks.register<Exec>("smokeTestAppImage") {
     inputs.dir(appImage)
     doFirst {
         val launcher = if (hostOs.contains("win")) {
-            appImage.get().file("SSMT.exe").asFile
+            appImage.get().file("Project Go.exe").asFile
         } else {
-            appImage.get().file("bin/SSMT").asFile
+            appImage.get().file("bin/Project Go").asFile
         }
         commandLine(launcher.absolutePath, "--smoke-test")
     }
@@ -101,15 +101,15 @@ val developmentBundle by tasks.registering(Zip::class) {
     description = "Creates a self-contained Windows development-testing bundle."
     dependsOn(tasks.named("smokeTestAppImage"))
     dependsOn(":ssmt-auto:smokeTestAppImage")
-    archiveFileName.set("SSMT-dev-${project.version}-windows-x64.zip")
+    archiveFileName.set("Project-Go-${project.version}-windows-x64.zip")
     destinationDirectory.set(rootProject.layout.buildDirectory.dir("development"))
     isReproducibleFileOrder = true
     isPreserveFileTimestamps = false
-    into("SSMT") {
+    into("Project Go") {
         from(appImage)
     }
-    into("SSMT Auto") {
-        from(project(":ssmt-auto").layout.buildDirectory.dir("jpackage/SSMT Auto"))
+    into("Project Go Auto") {
+        from(project(":ssmt-auto").layout.buildDirectory.dir("jpackage/Project Go Auto"))
     }
     into("documentation") {
         from(rootProject.file("USER_GUIDE.md"))
@@ -127,7 +127,7 @@ tasks.register("developmentBundleChecksum") {
     dependsOn(developmentBundle)
     val archive = developmentBundle.flatMap { it.archiveFile }
     val checksum = rootProject.layout.buildDirectory.file(
-        "development/SSMT-dev-${project.version}-windows-x64.zip.sha256")
+        "development/Project-Go-${project.version}-windows-x64.zip.sha256")
     inputs.file(archive)
     outputs.file(checksum)
     doLast {
@@ -154,15 +154,15 @@ tasks.register<Exec>("jpackageInstaller") {
             "--type", nativePackageType,
             "--app-image", appImage.get().asFile.absolutePath,
             "--dest", destination.absolutePath,
-            "--name", "SSMT",
+            "--name", "Project Go",
             "--app-version", project.version.toString(),
-            "--vendor", "SSMT Contributors"
+            "--vendor", "Project Go Contributors"
         )
         if (hostOs.contains("win")) {
             arguments.addAll(listOf(
                 "--win-dir-chooser",
                 "--win-menu",
-                "--win-menu-group", "Starsector Mod Toolkit",
+                "--win-menu-group", "Project Go",
                 "--win-shortcut"
             ))
         }

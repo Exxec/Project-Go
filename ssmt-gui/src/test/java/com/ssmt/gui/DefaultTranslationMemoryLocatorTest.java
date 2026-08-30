@@ -36,7 +36,7 @@ class DefaultTranslationMemoryLocatorTest {
                         Optional.empty(),
                         Optional.of(localAppData.toString()),
                         root))
-                .isEqualTo(localAppData.resolve("SSMT/ssmt-english-catalog.db")
+                .isEqualTo(localAppData.resolve("Project Go/project-go-catalog.db")
                         .toAbsolutePath()
                         .normalize());
     }

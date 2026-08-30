@@ -7,7 +7,7 @@ import java.util.Optional;
  * Resolves the persistent GUI translation catalog without consulting mod paths.
  */
 public final class DefaultTranslationMemoryLocator {
-    static final String DEFAULT_FILENAME = "ssmt-english-catalog.db";
+    static final String DEFAULT_FILENAME = "project-go-catalog.db";
 
     private DefaultTranslationMemoryLocator() {
     }
@@ -47,11 +47,11 @@ public final class DefaultTranslationMemoryLocator {
             return Path.of(configuredPath.orElseThrow()).toAbsolutePath().normalize();
         }
         if (localAppData.isPresent() && !localAppData.orElseThrow().isBlank()) {
-            return Path.of(localAppData.orElseThrow(), "SSMT", DEFAULT_FILENAME)
+            return Path.of(localAppData.orElseThrow(), "Project Go", DEFAULT_FILENAME)
                     .toAbsolutePath()
                     .normalize();
         }
-        return userHome.resolve(".ssmt").resolve(DEFAULT_FILENAME)
+        return userHome.resolve(".project-go").resolve(DEFAULT_FILENAME)
                 .toAbsolutePath()
                 .normalize();
     }

@@ -14,7 +14,7 @@ class SsmtApplicationArtifactPathTest {
         assertThat(SsmtApplication.artifactDirectory(
                 source, null, "Example Mod"))
                 .isEqualTo(Objects.requireNonNull(source.getParent())
-                        .resolve("SSMT Auto - Example Mod"));
+                        .resolve("Project Go - Example Mod"));
     }
 
     @Test
@@ -36,7 +36,7 @@ class SsmtApplicationArtifactPathTest {
         assertThat(SsmtApplication.artifactDirectory(
                 source, project, "Example Mod"))
                 .isEqualTo(Objects.requireNonNull(source.getParent())
-                        .resolve("SSMT Auto - Example Mod"));
+                        .resolve("Project Go - Example Mod"));
     }
 
     @Test

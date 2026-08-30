@@ -1,4 +1,4 @@
-# SSMT Beginner Guide
+# Project Go Beginner Guide
 
 This tool makes a private translated copy for your own game. It never changes
 the original mod, and generated copies should not be shared.
@@ -10,9 +10,9 @@ reference is `USER_GUIDE.md`.
 
 ## 1. The five important things
 
-Think of SSMT as keeping five boxes:
+Think of Project Go as keeping five boxes:
 
-1. **Source mod**: the original mod. SSMT reads it but never changes it.
+1. **Source mod**: the original mod. Project Go reads it but never changes it.
 2. **Project file**: your editable translation work, usually ending in
    `.ssmt.json`.
 3. **Translation memory**: an optional persistent SQLite `.db` catalog that
@@ -121,9 +121,9 @@ ssmt-cli.bat tm import `
 
 ## 3. GUI: first project from start to finish
 
-### Start SSMT
+### Start Project Go
 
-Extract the development ZIP, open `SSMT`, and double-click `SSMT.exe`. The
+Extract the development ZIP, open `Project Go`, and double-click `Project Go.exe`. The
 runtime is included; Java does not need to be installed.
 
 ### Create
@@ -190,7 +190,7 @@ If you do nothing, the GUI automatically creates and shares the same growing
 catalog used by SSMT Auto:
 
 ```text
-%LOCALAPPDATA%\SSMT\ssmt-english-catalog.db
+%LOCALAPPDATA%\Project Go\project-go-catalog.db
 ```
 
 To combine an older database into the active one:

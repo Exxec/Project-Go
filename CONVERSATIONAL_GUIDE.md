@@ -1,21 +1,21 @@
-# SSMT: A Conversational Quick Start
+# Project Go: A Conversational Quick Start
 
 This guide follows the normal, safe path: start a project, translate and check
-it, then make a personal copy for your own game. SSMT never edits the source
+it, then make a personal copy for your own game. Project Go never edits the source
 mod, and generated copies are for personal use only.
 
 ## First time
 
-**You:** “I want to try SSMT without touching a real mod.”
+**You:** “I want to try Project Go without touching a real mod.”
 
-**SSMT:** Choose **Try a Practice Project**, select any writable folder, and work
+**Project Go:** Choose **Try a Practice Project**, select any writable folder, and work
 with the synthetic sample. It contains no Starsector or community-mod content.
 Use it to practise editing a row, saving, and building before selecting a real
 mod.
 
 **You:** “I am ready to localize a mod I have permission to use.”
 
-**SSMT:** Choose **Start New Translation**, select the mod folder containing
+**Project Go:** Choose **Start New Translation**, select the mod folder containing
 `mod_info.json`, confirm the translated-clone name, and let extraction finish.
 Your original mod remains read-only. Project files, recovery snapshots, the
 pristine backup, and the translated clone are created outside it.
@@ -24,20 +24,20 @@ pristine backup, and the translated clone are created outside it.
 
 **You:** “Where do I type a translation?”
 
-**SSMT:** In **Translation Editor**, double-click a cell in the Translation
+**Project Go:** In **Translation Editor**, double-click a cell in the Translation
 column, type the new text, then press Enter. Use the search field and status
 filter to focus on untranslated or invalid entries. Select a row to compare its
 source and translation in the previews below the table.
 
 **You:** “A suggestion looks useful.”
 
-**SSMT:** Select the row, choose an entry from the suggestion list, then select
+**Project Go:** Select the row, choose an entry from the suggestion list, then select
 **Apply Suggestion**. Suggestions are never applied automatically. Save with
 **Save** or `Ctrl+S` when ready.
 
 **You:** “How do I finish a group of translations?”
 
-**SSMT:** Select the rows, open **Selected Rows ▾**, then choose **Mark
+**Project Go:** Select the rows, open **Selected Rows ▾**, then choose **Mark
 Reviewed**. If you imported AI drafts, use the same menu to approve or reject
 them only after checking the wording and preserved placeholders.
 
@@ -45,7 +45,7 @@ them only after checking the wording and preserved placeholders.
 
 **You:** “My translations look ready. What now?”
 
-**SSMT:** Select **Make My Personal Copy**. SSMT validates the project and
+**Project Go:** Select **Make My Personal Copy**. Project Go validates the project and
 creates two outputs: a pristine source backup and a translated clone. Copy or
 move only the translated copy into Starsector’s `mods` directory. Disable the
 original mod before enabling the copy; never enable both at once. Keep the
@@ -53,7 +53,7 @@ generated copy for your own use and do not share it.
 
 **You:** “The build says a translation is invalid.”
 
-**SSMT:** Select the affected row and read the Validation column. Keep
+**Project Go:** Select the affected row and read the Validation column. Keep
 placeholders, formatting tokens, and protected syntax compatible with the
 source. Correct the translation, save, and build again. The failed build does
 not modify the source mod or replace the last successful output.
@@ -62,7 +62,7 @@ not modify the source mod or replace the last successful output.
 
 **You:** “Where did the advanced options go?”
 
-**SSMT:** Core actions remain in the first toolbar. Open **More Actions ▾**
+**Project Go:** Core actions remain in the first toolbar. Open **More Actions ▾**
 for four groups:
 
 - **Project Tools**: refresh with translation-memory suggestions, translate
@@ -72,9 +72,9 @@ for four groups:
 - **AI Exchange**: export/import a structured AI package.
 - **Browser AI Review**: create and manage a manual browser-based AI review.
 
-**You:** “Can SSMT send my mod text to an AI automatically?”
+**You:** “Can Project Go send my mod text to an AI automatically?”
 
-**SSMT:** No browser workflow uploads anything automatically. The optional API
+**Project Go:** No browser workflow uploads anything automatically. The optional API
 workflow always asks for per-run consent before it sends routed text to a
 configured provider. AI output is a draft, not an approval.
 
@@ -82,7 +82,7 @@ configured provider. AI output is a draft, not an approval.
 
 **You:** “Do I need every tab?”
 
-**SSMT:** No. Most projects use only Translation Editor and Project Info.
+**Project Go:** No. Most projects use only Translation Editor and Project Info.
 Use the other tabs only for a specific task:
 
 | Need | Tab |

@@ -2,7 +2,7 @@
 
 `Last updated: 2026-08-02 by Codex (0.6.0 clone-output distribution warning)`
 
-SSMT release versioning is controlled by `ssmtVersion` in `gradle.properties`
+Project Go release versioning is controlled by `ssmtVersion` in `gradle.properties`
 (currently 0.6.0). The release build includes PNG and Windows ICO
 application assets and uses the JDK 25 `jpackage` tool without an
 additional packaging plugin.
@@ -14,7 +14,7 @@ additional packaging plugin.
 ```
 
 The host-native self-contained image is written under
-`ssmt-gui/build/jpackage/SSMT`. It includes a trimmed Java runtime and does not
+`ssmt-gui/build/jpackage/Project Go`. It includes a trimmed Java runtime and does not
 require a separately installed JDK.
 
 ## Development-testing bundle
@@ -31,7 +31,7 @@ development testing before installer/signing acceptance.
 
 Generated pristine and translated clone directories contain the original
 mod's assets and code. They are personal-use output only; never include them
-in SSMT release bundles or share them with others.
+in Project Go release bundles or share them with others.
 
 ## Installer
 
@@ -50,7 +50,7 @@ Signing identities are supplied at invocation time and must not be committed:
 
 ```powershell
 .\gradlew.bat :ssmt-gui:signNativePackage `
-  -PpackageFile="C:\release\SSMT-<version>.exe" `
+  -PpackageFile="C:\release\Project-Go-<version>.exe" `
   -PsigningIdentity="CERTIFICATE_SHA1_THUMBPRINT" `
   -PtimestampUrl="http://timestamp.digicert.com"
 ```

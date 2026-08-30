@@ -1,15 +1,15 @@
-# SSMT Personal-Use Guide
+# Project Go Personal-Use Guide
 
 `Last updated: 2026-08-02 by Codex (ADR-043 confidence-gated translation behavior clarified)`
 
 ## What this build is
 
-SSMT is an offline-first Starsector localization toolkit. The Windows
+Project Go is an offline-first Starsector localization tool. The Windows
 development bundle is self-contained: it includes the application and its Java
 runtime, so testers do not need to install Java. It is a development-testing
 build, not a signed installer.
 
-SSMT reads source mods and makes a pristine backup plus a translated copy for
+Project Go reads source mods and makes a pristine backup plus a translated copy for
 your own game.
 It must never edit the source mod. Malformed source, including `Ture` where a
 boolean is required, is reported and is not silently repaired.
@@ -17,8 +17,8 @@ boolean is required, is reported and is not silently repaired.
 ## Start the Windows program
 
 1. Extract the development ZIP to a writable folder.
-2. Open the `SSMT` folder.
-3. Run `SSMT.exe`.
+2. Open the `Project Go` folder.
+3. Run `Project Go.exe`.
 4. Read the personal-use reminder. Generated copies are for your own game and
    should not be shared.
 
@@ -28,12 +28,12 @@ the ZIP against its adjacent `.sha256` file before testing.
 Keep working project files and the pristine backup outside both the original
 mod and the Starsector `mods` directory. Only the translated clone belongs in
 `mods`, and it replaces the original while testing or playing.
-After selecting a source mod, the GUI uses the same safe sibling workspace as
-SSMT Auto, named `SSMT Auto - <Mod Name>`. Generated files never go inside the
+After selecting a source mod, the GUI uses a safe sibling workspace named
+`Project Go - <Mod Name>`. Generated files never go inside the
 source mod:
 
 ```text
-SSMT Auto - <Mod Name>\
+Project Go - <Mod Name>\
   <Mod Name> project.ssmt.json
   <Mod Name> words.json
   <Mod Name> words translated.json
@@ -41,30 +41,30 @@ SSMT Auto - <Mod Name>\
   <Mod Name> translated-source-backup\
 ```
 
-The SQLite translation-memory pool remains separate. The GUI and SSMT Auto
-share `%LOCALAPPDATA%\SSMT\ssmt-english-catalog.db` by default. It is created
+The SQLite translation-memory pool remains separate. The GUI and Project Go Auto
+share `%LOCALAPPDATA%\Project Go\project-go-catalog.db` by default. It is created
 automatically, reused after restart, and never stored inside a source mod.
 Opening another database makes that catalog the remembered GUI default.
 Existing projects keep using their project directory unless it is inside the
-source mod, in which case SSMT uses the safe sibling workspace.
+source mod, in which case Project Go uses the safe sibling workspace.
 
 ## Recommended first test
 
 If you do not want to begin with a real mod, select **Try a Practice Project**.
-Choose a writable parent folder; SSMT creates or resets
+Choose a writable parent folder; Project Go creates or resets
 `ssmt-sample-project` there and opens a synthetic localization project. The
 copy contains no proprietary Starsector or community-mod content.
 
 1. Select **Start New Translation** and choose a mod folder containing
    `mod_info.json`.
-2. SSMT automatically loads `mod_info.json`, proposes
+2. Project Go automatically loads `mod_info.json`, proposes
    `<mod-id>.translation`, and proposes `Translation (<original mod name>)`.
    You may edit both before extraction.
-3. SSMT creates
-   `SSMT Auto - <Mod Name>\<Mod Name> project.ssmt.json`.
+3. Project Go creates
+   `Project Go - <Mod Name>\<Mod Name> project.ssmt.json`.
 4. Search or filter entries, edit translations, and review validation results.
 5. Save the project.
-6. Select **Make My Personal Copy**. SSMT creates `<Mod Name> translated`
+6. Select **Make My Personal Copy**. Project Go creates `<Mod Name> translated`
    plus `<Mod Name> translated-source-backup` in the workspace.
 7. Copy or move only the translated clone into Starsector's `mods` directory.
 8. Disable the original mod, enable the translated clone, then launch Starsector.
@@ -73,7 +73,7 @@ copy contains no proprietary Starsector or community-mod content.
 ## Project Info and recovery
 
 The **Project Info** tab shows the current workflow state and every active
-location SSMT can identify: source mod, project document, translated clone,
+location Project Go can identify: source mod, project document, translated clone,
 pristine source backup,
 translation-memory database, JSON/CSV schema catalogs, and recovery snapshot
 directory. **Open Folder** is enabled only after that location exists.
@@ -445,7 +445,7 @@ imports and run an integrity check after recovery.
 The default shared catalog is:
 
 ```text
-%LOCALAPPDATA%\SSMT\ssmt-english-catalog.db
+%LOCALAPPDATA%\Project Go\project-go-catalog.db
 ```
 
 Use **Open Translation Memory** to switch to an existing catalog. Use

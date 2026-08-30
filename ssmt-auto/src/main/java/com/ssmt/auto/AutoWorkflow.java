@@ -33,7 +33,7 @@ import java.util.Objects;
 public final class AutoWorkflow {
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final int STATE_VERSION = 1;
-    private static final String CATALOG_FILE = "ssmt-english-catalog.db";
+    private static final String CATALOG_FILE = "project-go-catalog.db";
 
     private final LocalizationProjectService projects =
             new LocalizationProjectService();
@@ -71,8 +71,8 @@ public final class AutoWorkflow {
         }
         Path parent = Objects.requireNonNull(source.getParent(), "source mod parent");
         String originalName = safeName(mod.name(), mod.id());
-        Path workspace = parent.resolve("SSMT Auto - " + originalName);
-        Path stateFile = workspace.resolve("ssmt-auto-state.json");
+        Path workspace = parent.resolve("Project Go - " + originalName);
+        Path stateFile = workspace.resolve("project-go-state.json");
         Path legacyCatalog = workspace.resolve(CATALOG_FILE);
         Path missing = workspace.resolve(originalName + " - words-to-translate.json");
         Path translated = workspace.resolve(originalName + " - words-translated.json");
@@ -201,7 +201,7 @@ public final class AutoWorkflow {
                 "LOCALAPPDATA", "").strip();
         Path dataRoot = localAppData.isEmpty()
                 ? Path.of(System.getProperty("user.home"), ".ssmt")
-                : Path.of(localAppData, "SSMT");
+                : Path.of(localAppData, "Project Go");
         return dataRoot.resolve(CATALOG_FILE);
     }
 

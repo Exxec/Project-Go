@@ -29,7 +29,7 @@ public final class AutoMain {
         try {
             if (args.length != 1) {
                 throw new IllegalArgumentException(
-                        "Drag one mod_info.json onto SSMT Auto.exe");
+                        "Drag one mod_info.json onto Project Go Auto.exe");
             }
             Path supplied = Path.of(args[0]).toAbsolutePath().normalize();
             Path modRoot = Files.isDirectory(supplied)
@@ -49,7 +49,7 @@ public final class AutoMain {
             LOG.info("Workspace: {}", result.workspace());
         } catch (Exception exception) {
             exit = 1;
-            LOG.error("SSMT Auto failed: {}", exception.getMessage());
+            LOG.error("Project Go Auto failed: {}", exception.getMessage());
         }
         Console console = System.console();
         if (console != null && exit != 0) {

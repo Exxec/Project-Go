@@ -10,7 +10,7 @@ class SsmtApplicationTest {
     @Test
     void providesJavaFxApplicationEntryPoint() {
         assertThat(Application.class).isAssignableFrom(SsmtApplication.class);
-        assertThat(SsmtApplication.WINDOW_TITLE).isEqualTo("Starsector Mod Toolkit");
+        assertThat(SsmtApplication.WINDOW_TITLE).isEqualTo("Project Go");
         assertThat(SsmtApplication.class.getResource("ssmt-icon.png")).isNotNull();
     }
 

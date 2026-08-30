@@ -34,14 +34,14 @@ class AutoWorkflowTest {
                 StandardCharsets.UTF_8);
         String sourceHash = sha256(strings);
         Path sharedCatalog = temporaryDirectory.resolve(
-                "shared/ssmt-english-catalog.db");
+                "shared/project-go-catalog.db");
         AutoWorkflow workflow = new AutoWorkflow(sharedCatalog);
 
         AutoRunResult waiting = workflow.run(source);
 
         assertThat(waiting.status())
                 .isEqualTo(AutoRunResult.Status.WAITING_FOR_TRANSLATION);
-        Path workspace = temporaryDirectory.resolve("SSMT Auto - Example Mod");
+        Path workspace = temporaryDirectory.resolve("Project Go - Example Mod");
         Path missing = workspace.resolve("Example Mod - words-to-translate.json");
         Path response = workspace.resolve("Example Mod - words-translated.json");
         assertThat(missing).isRegularFile();
@@ -63,7 +63,7 @@ class AutoWorkflowTest {
                         "example.mod.english-source-backup/mod_info.json"))
                 .isRegularFile();
         assertThat(sharedCatalog).isRegularFile();
-        assertThat(workspace.resolve("ssmt-english-catalog.db")).doesNotExist();
+        assertThat(workspace.resolve("project-go-catalog.db")).doesNotExist();
         assertThat(workspace.resolve("Example - Example Mod.ssmt.json")).isRegularFile();
         assertThat(sha256(strings)).isEqualTo(sourceHash);
 

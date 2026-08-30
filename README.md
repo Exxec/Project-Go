@@ -1,13 +1,13 @@
-# Starsector Mod Toolkit (SSMT)
+# Project Go
 
-SSMT is an offline-first Java toolkit for analyzing and localizing Starsector
+Project Go is an offline-first Java tool for analyzing and localizing Starsector
 mods without modifying their source directories. The long-term pipeline scans
 mods, extracts localizable content, validates translations, and makes a
 separate personal-use copy for the user’s own game.
 
 ## Repository scope
 
-This repository contains the SSMT source code and reference documentation. It
+This repository contains the Project Go source code and reference documentation. It
 intentionally excludes generated builds, local caches, and third-party mod
 samples. Historical documents may refer to the former private test corpus;
 those references record prior verification evidence and are not bundled inputs
@@ -17,7 +17,7 @@ or redistribution rights.
 
 Roadmap phases 1 through 10 are implemented; the Windows release candidate
 is awaiting manual GUI/game acceptance testing (see `SESSION.md`/`BUGS.md`).
-SSMT scans Starsector mods, extracts standard CSV/JSON-like and bytecode
+Project Go scans Starsector mods, extracts standard CSV/JSON-like and bytecode
 strings without executing mod classes, stores reusable translations in
 SQLite, validates protected syntax, and generates deterministic
 non-destructive translated clones. Opt-in JSON and CSV extraction-schema catalogs
@@ -105,7 +105,7 @@ opt-in-schema project creation for both JSON and CSV. Custom schemas are
 exact-path/pointer (JSON) or exact-path/column (CSV) catalogs; see
 [JSON_SCHEMAS.md](JSON_SCHEMAS.md) and [CSV_SCHEMAS.md](CSV_SCHEMAS.md).
 
-## Run SSMT Auto (drag-and-drop)
+## Run Project Go Auto (drag-and-drop)
 
 ```powershell
 .\gradlew.bat :ssmt-auto:run --args='"C:\path\to\starsector\mods\ExampleMod\mod_info.json"'
@@ -160,11 +160,11 @@ plain-language GUI walkthrough and the current usability recommendations.
 - `ssmt-gui`: JavaFX desktop shell and tested plain-Java view models
 - `ssmt-project`: versioned project documents and workflow orchestration
 - `ssmt-cli`: command-line application
-- `ssmt-auto`: drag-and-drop/headless automation state machine (`SSMT Auto`)
+- `ssmt-auto`: drag-and-drop/headless automation state machine (`Project Go Auto`)
 
 See [ENVIRONMENT.md](ENVIRONMENT.md) for setup details and
 [ARCHITECTURE.md](ARCHITECTURE.md) for module boundaries.
 
 ## License
 
-SSMT is licensed under the [GNU General Public License v3.0](LICENSE).
+Project Go is licensed under the [GNU General Public License v3.0](LICENSE).

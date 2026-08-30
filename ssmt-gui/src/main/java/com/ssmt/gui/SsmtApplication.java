@@ -515,7 +515,7 @@ public final class SsmtApplication extends Application {
                     sample.sourceRoot(),
                     sample.projectFile(),
                     "ssmt.synthetic.sample.translation",
-                    "SSMT Synthetic Sample Translation");
+                    "Project Go Practice Translation");
             refreshEditor(table);
             updateStatus(status);
             log(GuiText.get("status.sampleOpened"));
@@ -1608,7 +1608,7 @@ public final class SsmtApplication extends Application {
         }
         java.nio.file.Path sourceParent = java.util.Objects.requireNonNull(
                 normalizedSource.getParent(), "source mod parent");
-        return sourceParent.resolve("SSMT Auto - " + artifactBaseName(modName));
+        return sourceParent.resolve("Project Go - " + artifactBaseName(modName));
     }
 
     static String artifactBaseName(String modName) {

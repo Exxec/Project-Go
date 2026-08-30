@@ -1,19 +1,19 @@
-# SSMT Auto: Drag-and-Drop Workflow
+# Project Go Auto: Drag-and-Drop Workflow
 
 `Last updated: 2026-08-02 by Codex (ADR-041 pristine/translated clone output)`
 
-`SSMT Auto.exe` is the third SSMT interface. It runs the normal source-safe
+`Project Go Auto.exe` is the drag-and-drop Project Go helper. It runs the normal source-safe
 project, translation-memory, refresh, validation, and clone pipeline without
 the GUI.
 
 ## First run
 
-1. Open the development bundle's `SSMT Auto` folder.
-2. Drag a mod's `mod_info.json` onto `SSMT Auto.exe`.
-3. SSMT creates a sibling workspace beside the source mod:
+1. Open the development bundle's `Project Go Auto` folder.
+2. Drag a mod's `mod_info.json` onto `Project Go Auto.exe`.
+3. Project Go creates a sibling workspace beside the source mod:
 
 ```text
-SSMT Auto - Original Mod Name
+Project Go - Original Mod Name
 ```
 
 4. Open this generated file:
@@ -29,9 +29,9 @@ Original Mod Name - words-to-translate.json
 Original Mod Name - words-translated.json
 ```
 
-7. Drag the same `mod_info.json` onto `SSMT Auto.exe` again.
+7. Drag the same `mod_info.json` onto `Project Go Auto.exe` again.
 
-SSMT validates the response, updates the persistent catalog, updates the
+Project Go validates the response, updates the persistent catalog, updates the
 project, and publishes the `<mod-id>.english` translated clone plus its
 `<mod-id>.english-source-backup` pristine sibling when every nonblank source
 string has a translation.
@@ -39,26 +39,26 @@ string has a translation.
 ## Files it creates
 
 ```text
-SSMT Auto - Original Mod Name\
+Project Go - Original Mod Name\
   Translation - Original Mod Name.ssmt.json
   Translated Name - Original Mod Name.ssmt.json
   Original Mod Name - words-to-translate.json
   Original Mod Name - words-translated.json
-  ssmt-auto-state.json
+  project-go-state.json
 ```
 
 All automated projects use the same persistent SQLite catalog:
 
 ```text
-%LOCALAPPDATA%\SSMT\ssmt-english-catalog.db
+%LOCALAPPDATA%\Project Go\project-go-catalog.db
 ```
 
-This is a normal SSMT translation-memory database and can be selected from
+This is a normal Project Go translation-memory database and can be selected from
 the GUI or supplied to the CLI. To use an already-established database, set
-`SSMT_TRANSLATION_MEMORY` to its full path before starting `SSMT Auto.exe`.
+`SSMT_TRANSLATION_MEMORY` to its full path before starting `Project Go Auto.exe`.
 The Java system property `-Dssmt.catalog=<path>` is also supported.
 
-An older per-workspace `ssmt-english-catalog.db` is copied into the shared
+An older per-workspace `project-go-catalog.db` is copied into the shared
 location if the shared database does not exist yet. The old file is retained
 as a backup.
 
@@ -66,7 +66,7 @@ The translated-name project appears after a response supplies
 `translatedModName`. Older project snapshots are retained rather than
 destructively deleted.
 
-The clones are inside the SSMT Auto workspace:
+The copies are inside the Project Go workspace:
 
 ```text
 <mod-id>.english\
@@ -98,7 +98,7 @@ also left untranslated for the AI/reviewer to resolve.
 The same executable accepts a mod directory or `mod_info.json`:
 
 ```powershell
-& ".\SSMT Auto\SSMT Auto.exe" `
+& ".\Project Go Auto\Project Go Auto.exe" `
   "C:\Games\Starsector\mods\ExampleMod\mod_info.json"
 ```
 
@@ -110,12 +110,12 @@ For a development JVM launch:
 
 ## Safety and recovery
 
-- Keep `%LOCALAPPDATA%\SSMT\ssmt-english-catalog.db`; it is the growing
+- Keep `%LOCALAPPDATA%\Project Go\project-go-catalog.db`; it is the growing
   catalog shared by every automated mod project.
 - Back up the catalog using the normal `ssmt-cli tm backup` command.
 - Do not rename the two AI exchange files unless you also restore their
   expected names before the next run.
-- If an AI response is incomplete, SSMT writes a new missing-strings export.
+- If an AI response is incomplete, Project Go writes a new missing-strings export.
 - Changed IDs, source strings, schema, or source-mod identity reject the whole
   response.
 - Malformed source such as `Ture` remains rejected and is never repaired.
