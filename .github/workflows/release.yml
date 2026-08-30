@@ -1,0 +1,160 @@
+name: Release Project Go
+
+on:
+  push:
+    tags:
+      - "v*"
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    name: Verify release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: gradle
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Run tests and verification
+        run: ./gradlew build --no-daemon
+
+      - name: Generate release evidence
+        run: |
+          ./gradlew \
+            generateSbom \
+            releaseChecksums \
+            scanReleaseArchives \
+            checkReleaseMetadata \
+            --no-daemon
+
+      - name: Upload verification artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: Project-Go-release-evidence
+          path: |
+            build/reports/ssmt-sbom.cdx.json
+            build/distributions/SHA256SUMS
+            ssmt-cli/build/distributions/*.zip
+            ssmt-gui/build/distributions/*.zip
+          if-no-files-found: error
+
+  windows-portable:
+    name: Windows portable build
+    needs: verify
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: gradle
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build and smoke-test Windows application
+        shell: pwsh
+        run: |
+          .\gradlew.bat :ssmt-gui:developmentBundleChecksum --no-daemon
+
+      - name: Upload Windows package
+        uses: actions/upload-artifact@v5
+        with:
+          name: Project-Go-windows-x64
+          path: |
+            build/development/*.zip
+            build/development/*.sha256
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release
+    needs:
+      - verify
+      - windows-portable
+
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download release evidence
+        uses: actions/download-artifact@v5
+        with:
+          name: Project-Go-release-evidence
+          path: release-assets
+
+      - name: Download Windows build
+        uses: actions/download-artifact@v5
+        with:
+          name: Project-Go-windows-x64
+          path: release-assets/windows
+
+      - name: Determine release type
+        id: release_type
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+
+          if [[ "$TAG" =~ (alpha|beta|rc) ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          PRERELEASE: ${{ steps.release_type.outputs.prerelease }}
+        shell: bash
+        run: |
+          if [ "$PRERELEASE" = "true" ]; then
+            FLAGS="--prerelease"
+          else
+            FLAGS=""
+          fi
+
+          if ! gh release view "$TAG" \
+            --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+
+            gh release create "$TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              $FLAGS \
+              --generate-notes
+          fi
+
+          find release-assets \
+            -type f \
+            \( -name "*.zip" \
+            -o -name "*.sha256" \
+            -o -name "SHA256SUMS" \
+            -o -name "*.json" \) \
+            -print0 \
+            | xargs -0 gh release upload "$TAG" \
+                --repo "$GITHUB_REPOSITORY" \
+                --clobber
