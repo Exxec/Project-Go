@@ -1,4 +1,4 @@
-# SSMT Development Test Guide
+# SSMT Personal-Use Guide
 
 `Last updated: 2026-08-02 by Codex (ADR-043 confidence-gated translation behavior clarified)`
 
@@ -9,7 +9,8 @@ development bundle is self-contained: it includes the application and its Java
 runtime, so testers do not need to install Java. It is a development-testing
 build, not a signed installer.
 
-SSMT reads source mods and publishes a pristine backup plus a translated clone.
+SSMT reads source mods and makes a pristine backup plus a translated copy for
+your own game.
 It must never edit the source mod. Malformed source, including `Ture` where a
 boolean is required, is reported and is not silently repaired.
 
@@ -18,8 +19,8 @@ boolean is required, is reported and is not silently repaired.
 1. Extract the development ZIP to a writable folder.
 2. Open the `SSMT` folder.
 3. Run `SSMT.exe`.
-4. Accept the first-run author-permission and distribution reminder only after
-   confirming that you may translate and distribute the selected mod.
+4. Read the personal-use reminder. Generated copies are for your own game and
+   should not be shared.
 
 Windows SmartScreen may warn because the development build is unsigned. Verify
 the ZIP against its adjacent `.sha256` file before testing.
@@ -49,12 +50,12 @@ source mod, in which case SSMT uses the safe sibling workspace.
 
 ## Recommended first test
 
-If you do not want to begin with a real mod, select **Open Sample Project**.
+If you do not want to begin with a real mod, select **Try a Practice Project**.
 Choose a writable parent folder; SSMT creates or resets
 `ssmt-sample-project` there and opens a synthetic localization project. The
 copy contains no proprietary Starsector or community-mod content.
 
-1. Select **Create Project** and choose a mod folder containing
+1. Select **Start New Translation** and choose a mod folder containing
    `mod_info.json`.
 2. SSMT automatically loads `mod_info.json`, proposes
    `<mod-id>.translation`, and proposes `Translation (<original mod name>)`.
@@ -63,7 +64,7 @@ copy contains no proprietary Starsector or community-mod content.
    `SSMT Auto - <Mod Name>\<Mod Name> project.ssmt.json`.
 4. Search or filter entries, edit translations, and review validation results.
 5. Save the project.
-6. Select **Build Translated Clone**. SSMT publishes `<Mod Name> translated`
+6. Select **Make My Personal Copy**. SSMT creates `<Mod Name> translated`
    plus `<Mod Name> translated-source-backup` in the workspace.
 7. Copy or move only the translated clone into Starsector's `mods` directory.
 8. Disable the original mod, enable the translated clone, then launch Starsector.
@@ -86,10 +87,10 @@ translated clone instead of the original mod. Never enable both copies.
 
 | Control | Effect |
 |---|---|
-| Create Project | Extracts supported text into a new editable project. Source files remain untouched. |
-| Create with JSON Schema | Also loads an explicit exact-path JSON schema. Use this only for mod-specific visible JSON fields. |
-| Create with CSV Schema | Also loads an explicit exact-path/column CSV schema. Use this only for mod-specific unrecognized CSV columns. |
-| Open Project | Loads an existing versioned `.ssmt.json` project. Unsupported major versions are rejected. |
+| Start New Translation | Extracts supported text into a new editable project. Source files remain untouched. |
+| Start with JSON Settings | Also loads an explicit exact-path JSON schema. Use this only for mod-specific visible JSON fields. |
+| Start with CSV Settings | Also loads an explicit exact-path/column CSV schema. Use this only for mod-specific unrecognized CSV columns. |
+| Continue Saved Translation | Loads an existing versioned `.ssmt.json` project. Unsupported major versions are rejected. |
 | Save | Atomically saves current translations. Recovery snapshots are stored outside source mods. |
 | Refresh Project | Compares the project with an updated source mod and shows unchanged, changed, added, removed, and conflicted entries before replacement. |
 | Refresh with Translation Memory | Adds translation-memory suggestions to refresh results. Suggestions are never applied automatically. |
@@ -97,12 +98,16 @@ translated clone instead of the original mod. Never enable both copies.
 | Compare / Merge Catalog | Compares another database with the active catalog before writing. Missing entries and strictly higher-confidence provenance can be merged; equal/lower-confidence disagreements remain reported conflicts. |
 | Export for Online AI | Writes every project entry to an ID-keyed JSON document with source text, context, existing provenance, and strict output instructions. |
 | Import AI Response | Validates a complete AI response, then imports reviewable drafts or explicitly bulk-approves every validated result. It can also update the patch name and translation memory. |
-| Build Translated Clone | Validates entries and transactionally publishes a pristine source backup plus a translated clone. A failure restores prior outputs and does not modify the source. |
+| Make My Personal Copy | Validates entries and transactionally creates a pristine source backup plus a translated copy for your own use. A failure restores prior outputs and does not modify the source. |
 | Search | Filters by source text, translated text, identity, or related displayed content. |
 | Status filter | Shows all, untranslated, translated, or invalid entries. |
 | Mark Reviewed | Marks every selected row reviewed. Multi-selection is supported. |
 | Suggestion list | Shows exact/fuzzy translation-memory candidates for the selected entry. |
 | Apply Suggestion | Copies the selected suggestion into the editable translation; it remains subject to validation and review. |
+
+The first toolbar is the normal path. Use **More Actions** only when you need
+catalog, AI, browser-review, or advanced project tools. Use **Selected Rows**
+when you need to review, approve, reject, or inspect the rows you selected.
 
 Shortcuts:
 

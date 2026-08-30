@@ -30,8 +30,8 @@ the compatibility matrix. It is unsigned and intended for real-world
 development testing before installer/signing acceptance.
 
 Generated pristine and translated clone directories contain the original
-mod's assets and code. They are local/personal-use output unless the mod author
-explicitly permits redistribution; do not include them in SSMT release bundles.
+mod's assets and code. They are personal-use output only; never include them
+in SSMT release bundles or share them with others.
 
 ## Installer
 

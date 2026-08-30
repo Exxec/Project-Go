@@ -9,7 +9,7 @@ class GuiTextTest {
     @Test
     void loadsCoreDesktopLabelsFromBundle() {
         assertThat(GuiText.get("window.title")).isEqualTo("Starsector Mod Toolkit");
-        assertThat(GuiText.get("button.build")).isEqualTo("Build Translated Clone");
+        assertThat(GuiText.get("button.build")).isEqualTo("Make My Personal Copy");
         assertThat(GuiText.get("dialog.unsaved.title")).isNotBlank();
     }
 }

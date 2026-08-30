@@ -1,5 +1,8 @@
 # SSMT Beginner Guide
 
+This tool makes a private translated copy for your own game. It never changes
+the original mod, and generated copies should not be shared.
+
 `Last updated: 2026-08-02 by Codex (ADR-041 clone workflow)`
 
 This guide assumes no command-line or localization experience. The shorter
@@ -250,9 +253,9 @@ suggestions remain suggestions.
 
 ### Build and test
 
-1. Select **Build Translated Clone**.
-2. Confirm that you have permission to translate/distribute the mod.
-3. SSMT publishes a translated clone and a `-source-backup` sibling.
+1. Select **Make My Personal Copy**.
+2. Confirm that this copy is only for your own game.
+3. SSMT creates a translated clone and a `-source-backup` sibling.
 4. Keep the pristine backup outside the Starsector `mods` directory.
 5. Never choose the original mod directory.
 6. Disable the original and enable only the translated clone in Starsector.

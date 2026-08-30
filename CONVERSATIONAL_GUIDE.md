@@ -1,20 +1,21 @@
 # SSMT: A Conversational Quick Start
 
-This guide follows the normal, safe path: create a project, translate and
-review it, then build a translated clone. SSMT never edits the source mod.
+This guide follows the normal, safe path: start a project, translate and check
+it, then make a personal copy for your own game. SSMT never edits the source
+mod, and generated copies are for personal use only.
 
 ## First time
 
 **You:** “I want to try SSMT without touching a real mod.”
 
-**SSMT:** Choose **Open Sample Project**, select any writable folder, and work
+**SSMT:** Choose **Try a Practice Project**, select any writable folder, and work
 with the synthetic sample. It contains no Starsector or community-mod content.
 Use it to practise editing a row, saving, and building before selecting a real
 mod.
 
 **You:** “I am ready to localize a mod I have permission to use.”
 
-**SSMT:** Choose **Create Project**, select the mod folder containing
+**SSMT:** Choose **Start New Translation**, select the mod folder containing
 `mod_info.json`, confirm the translated-clone name, and let extraction finish.
 Your original mod remains read-only. Project files, recovery snapshots, the
 pristine backup, and the translated clone are created outside it.
@@ -44,10 +45,11 @@ them only after checking the wording and preserved placeholders.
 
 **You:** “My translations look ready. What now?”
 
-**SSMT:** Select **Build Translated Clone**. SSMT validates the project and
+**SSMT:** Select **Make My Personal Copy**. SSMT validates the project and
 creates two outputs: a pristine source backup and a translated clone. Copy or
-move only the translated clone into Starsector’s `mods` directory. Disable the
-original mod before enabling the clone; never enable both at once.
+move only the translated copy into Starsector’s `mods` directory. Disable the
+original mod before enabling the copy; never enable both at once. Keep the
+generated copy for your own use and do not share it.
 
 **You:** “The build says a translation is invalid.”
 
