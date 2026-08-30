@@ -126,6 +126,9 @@ class LocalizationProjectServiceTest {
                 .doesNotContain("Hello %s");
         assertThat(Files.readString(output.resolve("mod_info.json")))
                 .isEqualTo(Files.readString(source.resolve("mod_info.json")));
+        assertThat(Files.readString(output.resolve("Project Go Changes.csv")))
+                .contains("data/strings/strings.json")
+                .contains("Bonjour %s");
         Path sourceBackup = com.ssmt.patcher.PatchBuilder.sourceBackupRoot(output);
         assertThat(Files.readString(sourceBackup.resolve("data/strings/strings.json")))
                 .contains("Hello %s")
@@ -133,6 +136,28 @@ class LocalizationProjectServiceTest {
         assertThat(Files.readString(sourceBackup.resolve("mod_info.json")))
                 .isEqualTo(Files.readString(source.resolve("mod_info.json")));
         assertThat(sha256(strings)).isEqualTo(sourceHash);
+    }
+
+    @Test
+    void previewsBuildWithoutWritingAnOutputDirectory() throws Exception {
+        Path source = temporaryDirectory.resolve("preview-source");
+        Files.createDirectories(source.resolve("data/strings"));
+        Files.writeString(source.resolve("mod_info.json"),
+                "{\"id\":\"preview.mod\",\"name\":\"Preview\"}");
+        Files.writeString(source.resolve("data/strings/strings.json"),
+                "{\"welcome\":\"Hello\",\"later\":\"Later\"}");
+        LocalizationProjectService service = new LocalizationProjectService();
+        LocalizationProject project = service.create(source, "preview.en", "Preview English");
+        LocalizationProject edited = project.withEntries(List.of(
+                project.entries().get(0).withTranslatedText("Welcome"),
+                project.entries().get(1)));
+
+        ProjectBuildPreview preview = service.previewBuild(source, edited);
+
+        assertThat(preview.translatedEntries()).isEqualTo(1);
+        assertThat(preview.untranslatedEntries()).isEqualTo(1);
+        assertThat(preview.sourceFiles()).isEqualTo(1);
+        assertThat(Files.exists(temporaryDirectory.resolve("preview-output"))).isFalse();
     }
 
     @Test

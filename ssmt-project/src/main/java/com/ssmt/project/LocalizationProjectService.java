@@ -705,12 +705,39 @@ public final class LocalizationProjectService {
                     mod.name(),
                     mod.gameVersion(),
                     artifacts));
+            new TranslationReportExporter().write(
+                    outputRoot.resolve("Project Go Changes.csv"), project);
             return new ProjectBuildResult(result.changed(), result.artifactCount());
         } catch (PatchBuilderException | IllegalArgumentException exception) {
             throw new ProjectException(
                     "Could not build localization project: " + exception.getMessage(),
                     exception);
         }
+    }
+
+    /** Checks every build precondition without writing a translated copy. */
+    public ProjectBuildPreview previewBuild(Path sourceRoot, LocalizationProject project)
+            throws ProjectException {
+        ModInfo mod;
+        try {
+            mod = modInfoReader.read(sourceRoot);
+        } catch (SsmtParseException exception) {
+            throw new ProjectException("Could not read source mod", exception);
+        }
+        if (!mod.id().equals(project.sourceModId())) {
+            throw new ProjectException("Project source mod id does not match selected source");
+        }
+        int translated = 0;
+        Set<Path> files = new HashSet<>();
+        for (ProjectEntry entry : project.entries()) {
+            if (entry.translatedText().isBlank()) {
+                continue;
+            }
+            validate(entry);
+            translated++;
+            files.add(entry.sourceFile());
+        }
+        return new ProjectBuildPreview(translated, project.entries().size() - translated, files.size());
     }
 
     private void validate(ProjectEntry entry) throws ProjectException {

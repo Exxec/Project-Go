@@ -12,8 +12,10 @@ import com.ssmt.project.FontCoverageFinding;
 import com.ssmt.project.LocalizationProject;
 import com.ssmt.project.LocalizationProjectService;
 import com.ssmt.project.ProjectBuildResult;
+import com.ssmt.project.ProjectBuildPreview;
 import com.ssmt.project.ProjectException;
 import com.ssmt.project.ProjectRecoveryService;
+import com.ssmt.project.ProjectRestorePointService;
 import com.ssmt.project.ProjectRefreshResult;
 import com.ssmt.project.ProjectSourceDetails;
 import com.ssmt.project.SourceLanguageDetector;
@@ -41,6 +43,7 @@ public final class ProjectWorkspaceController {
     private final ProjectWorkflow workflow;
     private final TranslationEditorController editor;
     private final ProjectRecoveryService recovery = new ProjectRecoveryService();
+    private final ProjectRestorePointService restorePoints = new ProjectRestorePointService();
     private final LocalizationProjectService projectService =
             new LocalizationProjectService();
     private final AiTranslationExchangeService aiExchange =
@@ -292,6 +295,33 @@ public final class ProjectWorkspaceController {
         save();
         this.outputRoot = outputRoot.toAbsolutePath().normalize();
         return workflow.build(sourceRoot, this.outputRoot, project, cancellation);
+    }
+
+    /** Runs the same validation as a build without creating or changing any mod files. */
+    public ProjectBuildPreview previewBuild() throws ProjectException {
+        ensureOpen();
+        project = editor.applyEdits(project);
+        return projectService.previewBuild(sourceRoot, project);
+    }
+
+    /** Saves an explicit point the user can return to after experimenting. */
+    public Path createRestorePoint() throws ProjectException {
+        ensureOpen();
+        project = editor.applyEdits(project);
+        return restorePoints.create(projectFile, project);
+    }
+
+    /** Restores the latest explicit restore point and saves it to the active project file. */
+    public boolean restoreLastRestorePoint() throws ProjectException {
+        ensureOpen();
+        Optional<LocalizationProject> restored = restorePoints.load(projectFile);
+        if (restored.isEmpty()) {
+            return false;
+        }
+        workflow.write(projectFile, restored.orElseThrow());
+        project = restored.orElseThrow();
+        editor.load(project);
+        return true;
     }
 
     /**

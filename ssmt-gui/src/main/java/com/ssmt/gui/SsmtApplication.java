@@ -15,6 +15,7 @@ import com.ssmt.ocr.OcrTextRegion;
 import com.ssmt.ocr.RegionCropExport;
 import com.ssmt.ocr.TesseractOcrEngine;
 import com.ssmt.project.ProjectBuildResult;
+import com.ssmt.project.ProjectBuildPreview;
 import com.ssmt.project.ProjectException;
 import com.ssmt.project.ProjectRefreshResult;
 import com.ssmt.project.AiTranslationImportResult;
@@ -260,6 +261,21 @@ public final class SsmtApplication extends Application {
         Button build = new Button(GuiText.get("button.build"));
         build.setAccessibleText(GuiText.get("accessible.build"));
         build.setOnAction(ignored -> buildProject(stage, status));
+        Button previewBuild = new Button(GuiText.get("button.previewBuild"));
+        previewBuild.setAccessibleText(GuiText.get("accessible.previewBuild"));
+        previewBuild.setOnAction(ignored -> previewBuild(stage));
+        Button saveRestorePoint = new Button(GuiText.get("button.saveRestorePoint"));
+        saveRestorePoint.setOnAction(ignored -> runProjectAction(
+                "Create restore point", GuiText.get("status.restorePointSaved"),
+                workspace::createRestorePoint));
+        Button undoRestorePoint = new Button(GuiText.get("button.undoRestorePoint"));
+        undoRestorePoint.setOnAction(ignored -> runProjectAction(
+                "Restore point", GuiText.get("status.restorePointRestored"), () -> {
+                    if (!workspace.restoreLastRestorePoint()) {
+                        throw new ProjectException(GuiText.get("error.noRestorePoint"));
+                    }
+                    refreshEditor(table);
+                }));
         Button translateProject = new Button(GuiText.get("button.translateProject"));
         translateProject.setOnAction(ignored ->
                 translateProject(stage, table, status));
@@ -415,6 +431,9 @@ public final class SsmtApplication extends Application {
         moreActions.setAccessibleText(GuiText.get("accessible.moreActions"));
         Menu projectTools = new Menu(GuiText.get("menu.projectTools"));
         projectTools.getItems().addAll(
+                menuItem(GuiText.get("button.previewBuild"), previewBuild),
+                menuItem(GuiText.get("button.saveRestorePoint"), saveRestorePoint),
+                menuItem(GuiText.get("button.undoRestorePoint"), undoRestorePoint),
                 menuItem(GuiText.get("button.refreshTm"), refreshWithMemory),
                 menuItem(GuiText.get("button.translateProject"), translateProject),
                 menuItem(GuiText.get("button.resumeTranslation"), resumeTranslation));
@@ -446,7 +465,7 @@ public final class SsmtApplication extends Application {
                 menuItem(GuiText.get("button.inspectEvidence"), inspectEvidence),
                 menuItem(GuiText.get("button.viewLineage"), viewLineage));
         HBox toolbarProject =
-                new HBox(8, createSplit, open, sample, save, refresh, build, moreActions);
+                new HBox(8, createSplit, open, sample, save, refresh, previewBuild, build, moreActions);
         HBox toolbarStatus = new HBox(8, status, coverageLabel);
         VBox toolbar = new VBox(4, toolbarProject, toolbarStatus);
         HBox filters =
@@ -1319,6 +1338,20 @@ public final class SsmtApplication extends Application {
             TableView<TranslationRow> table,
             Label status) {
         runRefreshTask(stage, table, status, workspace::previewRefresh);
+    }
+
+    private void previewBuild(Stage stage) {
+        runProjectAction("Preview personal copy", "", () -> {
+            ProjectBuildPreview preview = workspace.previewBuild();
+            Alert report = new Alert(Alert.AlertType.INFORMATION, "", ButtonType.OK);
+            report.initOwner(stage);
+            report.setHeaderText(GuiText.get("dialog.previewBuild.title"));
+            report.setContentText(GuiText.get("dialog.previewBuild.message")
+                    .replace("{translated}", Integer.toString(preview.translatedEntries()))
+                    .replace("{untranslated}", Integer.toString(preview.untranslatedEntries()))
+                    .replace("{files}", Integer.toString(preview.sourceFiles())));
+            report.showAndWait();
+        });
     }
 
     private void refreshProjectWithMemory(

@@ -10,6 +10,7 @@ class GuiTextTest {
     void loadsCoreDesktopLabelsFromBundle() {
         assertThat(GuiText.get("window.title")).isEqualTo("Project Go");
         assertThat(GuiText.get("button.build")).isEqualTo("Make My Personal Copy");
+        assertThat(GuiText.get("button.previewBuild")).isEqualTo("Preview My Copy");
         assertThat(GuiText.get("dialog.unsaved.title")).isNotBlank();
     }
 }

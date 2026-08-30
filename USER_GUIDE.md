@@ -1,6 +1,6 @@
 # Project Go Personal-Use Guide
 
-`Last updated: 2026-08-02 by Codex (ADR-043 confidence-gated translation behavior clarified)`
+`Last updated: 2026-08-30 (personal-copy preview, restore point, and change report added)`
 
 ## What this build is
 
@@ -64,11 +64,13 @@ copy contains no proprietary Starsector or community-mod content.
    `Project Go - <Mod Name>\<Mod Name> project.ssmt.json`.
 4. Search or filter entries, edit translations, and review validation results.
 5. Save the project.
-6. Select **Make My Personal Copy**. Project Go creates `<Mod Name> translated`
+6. Select **Preview My Copy**. This safe dry run changes no files and tells you
+   how many entries and source files are ready.
+7. Select **Make My Personal Copy**. Project Go creates `<Mod Name> translated`
    plus `<Mod Name> translated-source-backup` in the workspace.
-7. Copy or move only the translated clone into Starsector's `mods` directory.
-8. Disable the original mod, enable the translated clone, then launch Starsector.
-9. Rebuild without changing translations and confirm that output is unchanged.
+8. Copy or move only the translated clone into Starsector's `mods` directory.
+9. Disable the original mod, enable the translated clone, then launch Starsector.
+10. Rebuild without changing translations and confirm that output is unchanged.
 
 ## Project Info and recovery
 
@@ -92,13 +94,16 @@ translated clone instead of the original mod. Never enable both copies.
 | Start with CSV Settings | Also loads an explicit exact-path/column CSV schema. Use this only for mod-specific unrecognized CSV columns. |
 | Continue Saved Translation | Loads an existing versioned `.ssmt.json` project. Unsupported major versions are rejected. |
 | Save | Atomically saves current translations. Recovery snapshots are stored outside source mods. |
+| Preview My Copy | Performs every validation needed for a build without changing any mod files. It shows what will be translated and what will stay untouched. |
+| Save Restore Point | Saves an explicit point you can safely return to before trying a large edit or AI import. |
+| Undo to Restore Point | Restores the last explicit restore point. This replaces the open project document, so use it only when you want to discard later edits. |
 | Refresh Project | Compares the project with an updated source mod and shows unchanged, changed, added, removed, and conflicted entries before replacement. |
 | Refresh with Translation Memory | Adds translation-memory suggestions to refresh results. Suggestions are never applied automatically. |
 | Open Translation Memory | Opens and integrity-checks an existing SQLite `.db`/`.sqlite` catalog and remembers it for later GUI sessions. |
 | Compare / Merge Catalog | Compares another database with the active catalog before writing. Missing entries and strictly higher-confidence provenance can be merged; equal/lower-confidence disagreements remain reported conflicts. |
 | Export for Online AI | Writes every project entry to an ID-keyed JSON document with source text, context, existing provenance, and strict output instructions. |
 | Import AI Response | Validates a complete AI response, then imports reviewable drafts or explicitly bulk-approves every validated result. It can also update the patch name and translation memory. |
-| Make My Personal Copy | Validates entries and transactionally creates a pristine source backup plus a translated copy for your own use. A failure restores prior outputs and does not modify the source. |
+| Make My Personal Copy | Validates entries and transactionally creates a pristine source backup plus a translated copy for your own use. A failure restores prior outputs and does not modify the source. The copy includes `Project Go Changes.csv`, a simple record of every source file, key, status, and translation. |
 | Search | Filters by source text, translated text, identity, or related displayed content. |
 | Status filter | Shows all, untranslated, translated, or invalid entries. |
 | Mark Reviewed | Marks every selected row reviewed. Multi-selection is supported. |
