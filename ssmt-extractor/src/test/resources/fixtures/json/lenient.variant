@@ -1,0 +1,4 @@
+{
+  // Starsector accepts comments, unquoted names, single quotes, and trailing commas.
+  displayName: 'Assault',
+}

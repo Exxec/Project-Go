@@ -1,0 +1,6 @@
+{
+  // Real Starsector metadata commonly contains comments and trailing commas.
+  "id": "lenient_mod",
+  "name": "Lenient Mod",
+  "jars": ["lenient.jar",],
+}

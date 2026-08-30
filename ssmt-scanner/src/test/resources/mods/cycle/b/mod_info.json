@@ -1,0 +1,5 @@
+{
+  "id": "cycle_b",
+  "name": "Cycle B",
+  "dependencies": [{"id": "cycle_a", "name": "Cycle A"}]
+}

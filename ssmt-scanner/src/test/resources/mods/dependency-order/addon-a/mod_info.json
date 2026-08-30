@@ -1,0 +1,5 @@
+{
+  "id": "addon_a",
+  "name": "Addon A",
+  "dependencies": [{"id": "base_mod", "name": "Base"}]
+}

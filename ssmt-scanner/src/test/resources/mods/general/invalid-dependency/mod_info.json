@@ -1,0 +1,5 @@
+{
+  "id": "invalid_dependency",
+  "name": "Invalid Dependency",
+  "dependencies": [{"name": "No ID"}]
+}

@@ -1,0 +1,5 @@
+{
+  "welcome": "Welcome, captain!",
+  "tooltip": "Flux level: %s",
+  "warning": "The source fixture is read-only practice content."
+}

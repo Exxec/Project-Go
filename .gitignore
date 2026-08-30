@@ -1,0 +1,30 @@
+# Gradle
+.gradle/
+.gradle-user-home/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Local test corpus and packaged artifacts
+Test mods/
+*.zip
+*.7z
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.claude/
+.cursor/
+*.classpath
+*.project
+.settings/
+bin/
+out/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

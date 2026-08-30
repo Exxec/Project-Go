@@ -1,0 +1,33 @@
+[versions]
+jackson = "2.18.2"
+junit = "5.11.4"
+slf4j = "2.0.16"
+logback = "1.5.15"
+assertj = "3.27.3"
+mockito = "5.14.2"
+picocli = "4.7.6"
+commons-csv = "1.14.1"
+asm = "9.9.1"
+sqlite-jdbc = "3.53.1.0"
+hikaricp = "7.0.2"
+javafx = "25.0.2"
+
+[libraries]
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
+picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
+commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "commons-csv" }
+asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
+asm-tree = { module = "org.ow2.asm:asm-tree", version.ref = "asm" }
+sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
+javafx-base = { module = "org.openjfx:javafx-base", version.ref = "javafx" }
+javafx-graphics = { module = "org.openjfx:javafx-graphics", version.ref = "javafx" }
+javafx-controls = { module = "org.openjfx:javafx-controls", version.ref = "javafx" }

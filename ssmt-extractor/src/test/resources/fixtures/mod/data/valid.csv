@@ -1,0 +1,3 @@
+id,name,description,ignored
+pulse%laser,Pulse Laser,"Deals $damage.\nSecond line  ",not extracted
+laser:heavy,Heavy Laser,"Heavy, accurate weapon",not extracted

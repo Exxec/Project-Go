@@ -1,0 +1,10 @@
+{
+  "title": "标题",
+  "menu": {
+    "a/b": "Slash",
+    "tilde~key": "Tilde"
+  },
+  "array": ["First", {"name": "Second"}],
+  "ignoredNumber": 42,
+  "ignoredBoolean": true
+}

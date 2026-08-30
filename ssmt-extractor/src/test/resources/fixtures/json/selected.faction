@@ -1,0 +1,5 @@
+{
+  "displayName": "Example",
+  "nested": {"text": "Visible", "id": "internal"},
+  "number": 7
+}
