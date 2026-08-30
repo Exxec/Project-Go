@@ -24,6 +24,6 @@ exports omit translation content and redact path- and secret-like values.
 ## Release Evidence
 
 Release candidates must pass the full build, Checkstyle, SpotBugs, tests,
-three-platform CI, application-image construction, dependency review, SBOM
-generation, and SHA-256 checksum generation. Signing keys remain outside the
-repository.
+Windows and Linux CI, Windows application-image construction, dependency
+review, SBOM generation, and SHA-256 checksum generation. Signing keys remain
+outside the repository.

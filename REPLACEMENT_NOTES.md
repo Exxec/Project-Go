@@ -34,7 +34,7 @@ These did not require a compatibility-driven rewrite in this pass:
 
 - `README.md`
 - `PROJECT_MANIFEST.md`
-- `VISION.md` / `vision.md`
+- `vision.md`
 - `WORKFLOW.md`
 - `PLUGIN_API.md`
 - `JSON_SCHEMAS.md`

@@ -50,7 +50,7 @@ Signing identities are supplied at invocation time and must not be committed:
 
 ```powershell
 .\gradlew.bat :ssmt-gui:signNativePackage `
-  -PpackageFile="C:\release\SSMT-0.2.0.exe" `
+  -PpackageFile="C:\release\SSMT-<version>.exe" `
   -PsigningIdentity="CERTIFICATE_SHA1_THUMBPRINT" `
   -PtimestampUrl="http://timestamp.digicert.com"
 ```
@@ -62,7 +62,7 @@ repository files.
 ## SBOM and checksums
 
 ```powershell
-.\gradlew.bat generateSbom releaseChecksums
+.\gradlew.bat generateSbom releaseChecksums scanReleaseArchives checkReleaseMetadata
 ```
 
 The tasks emit `build/reports/ssmt-sbom.cdx.json` and

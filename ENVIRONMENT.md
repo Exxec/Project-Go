@@ -26,7 +26,7 @@ Do not rely on a system Java installation if it points to an older runtime.
 PowerShell example:
 
 ```powershell
-$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot"
+$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\<jdk-25>"
 $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 .\gradlew.bat --version
 ```
@@ -34,7 +34,7 @@ $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 Current verified JDK:
 
 ```text
-Temurin 25.0.3
+Temurin 25.0.4
 ```
 
 Current verified Gradle:

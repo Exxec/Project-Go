@@ -1,5 +1,11 @@
 # Current Development Session
 
+> Historical handoff: this is the final recorded development-session snapshot
+> from 2026-08-02, not a live release dashboard. For current release work, use
+> `BUGS.md`, `MANUAL_ACCEPTANCE.md`, and `ROADMAP.md`. References to local test
+> mods describe a private corpus that is intentionally excluded from this
+> repository.
+
 `Last updated: 2026-08-02 by Claude (BUG-005's first live smoke test ran against Azure Federation and found BUG-011/BUG-012; both fixed, plus a new CoverageGapAuditor; AzureFederation, ApproLightPlus, and Goat_Aviation_Bureau fully translated/rebuilt; 5 more mods have projects created but untranslated; BlueSeaFisher refreshed; Moci correctly left blocked by a source typo)`
 
 ## Repository state

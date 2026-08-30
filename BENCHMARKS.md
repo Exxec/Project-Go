@@ -1,5 +1,9 @@
 # Scale Benchmark
 
+> Historical evidence: the proprietary local corpus described below is not
+> included in this repository. The figures remain as a record of the measured
+> 2026-07-26 run, not as a reproducible bundled fixture.
+
 ## 2026-07-26 Windows corpus run
 
 Environment:

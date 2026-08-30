@@ -15,12 +15,12 @@ not deprecated without an update-reconciliation migration.
 
 | Surface | Supported baseline | Verification |
 | --- | --- | --- |
-| Java | Temurin/OpenJDK 25 | Three-OS CI |
+| Java | Temurin/OpenJDK 25 | Windows and Linux CI |
 | Gradle | Wrapper 9.1 | Wrapper validation |
 | Windows | Current GitHub-hosted image | Build and `jpackage` app image |
-| Linux | Current GitHub-hosted image | Build and `jpackage` app image |
-| macOS | Current GitHub-hosted image | Build and `jpackage` app image |
-| Starsector source | Data-only offline parsing | Corpus and owned fixtures |
+| Linux | Current GitHub-hosted image | Build/test CI; native package is best effort |
+| macOS | Not a release target | No CI or packaging commitment |
+| Starsector source | Data-only offline parsing | Owned fixtures and user-supplied smoke tests |
 | Project schema | Version 1 | Strict read/write tests |
 | Plugin metadata | Repository-documented versions | Catalog tests |
 | Tesseract | User-supplied optional process | Adapter tests |

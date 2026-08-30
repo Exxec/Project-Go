@@ -1,5 +1,9 @@
 # Real-Mod Compatibility
 
+> Historical evidence: this report records results from a proprietary local
+> test corpus that is intentionally excluded from this repository. It does not
+> grant redistribution rights or provide bundled reproduction inputs.
+
 `Last updated: 2026-08-01 by Claude (Azure Federation findings statuses updated to Fixed; see BUGS.md)`
 
 ## Purpose

@@ -5,6 +5,14 @@ mods without modifying their source directories. The long-term pipeline scans
 mods, extracts localizable content, validates translations, and builds
 deterministic override mods.
 
+## Repository scope
+
+This repository contains the SSMT source code and reference documentation. It
+intentionally excludes generated builds, local caches, and third-party mod
+samples. Historical documents may refer to the former private test corpus;
+those references record prior verification evidence and are not bundled inputs
+or redistribution rights.
+
 ## Current status
 
 Roadmap phases 1 through 10 are implemented; the Windows release candidate
@@ -153,3 +161,7 @@ See [AUTO_GUIDE.md](AUTO_GUIDE.md) for the headless drag-and-drop workflow.
 
 See [ENVIRONMENT.md](ENVIRONMENT.md) for setup details and
 [ARCHITECTURE.md](ARCHITECTURE.md) for module boundaries.
+
+## License
+
+SSMT is licensed under the [GNU General Public License v3.0](LICENSE).

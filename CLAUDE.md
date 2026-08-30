@@ -1,5 +1,10 @@
 # CLAUDE.md
 
+> Historical AI-development guidance retained for project reference. It is not
+> end-user documentation; its session state and references to local test mods
+> are dated snapshots, and the proprietary corpus is not part of this
+> repository.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Starsector Mod Toolkit (SSMT)

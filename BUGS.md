@@ -10,6 +10,10 @@ commit/test reference — don't delete the history.
 Do not restate this list in `SESSION.md`, `ROADMAP.md`, or elsewhere — link
 here instead, so there's exactly one place to update.
 
+> Repository note: the proprietary test-mod corpus mentioned in older entries
+> is intentionally excluded from this repository. Reproduce a case only with a
+> legally obtained, user-owned mod and the author’s distribution terms in mind.
+
 ---
 
 ## Open
@@ -22,7 +26,8 @@ here instead, so there's exactly one place to update.
   landed. `ROADMAP.md`'s "Post-RC Real-Game Findings" exit criterion requires
   this manual repeat, not just passing unit/integration tests.
 - **Required:** run the full manual workflow (scan → extract → translate →
-  build) against `Test mods/AzureFederation/`; verify the pristine backup;
+  build) against a user-owned Azure Federation copy or another suitable,
+  legally obtained mod; verify the pristine backup;
   install/enable only the ADR-041 translated clone (disable the original),
   launch Starsector, and verify: (a) it loads without structural CSV repair,
   (b) a campaign starts, and (c) the previously-`???` manufacturer/tooltip/
