@@ -22,9 +22,11 @@ explicit version, exact safe relative paths, and explicit RFC 6901 pointers.
 ```
 
 Paths must be relative `.json`, `.faction`, or `.variant` files. Catalogs
-cannot contain globs, duplicate paths or pointers, standard-handler files, more
-than 256 files, more than 256 pointers per file, or more than 1 MiB of JSON.
-Missing pointers are skipped; selected non-text values are reported as errors.
+cannot contain globs, duplicate paths or pointers, standard-handler files (see
+`StandardJsonFileExtractor` in `ssmt-extractor` for the full, current list,
+which grows as new real-mod evidence is found), more than 256 files, more
+than 256 pointers per file, or more than 1 MiB of JSON. Missing pointers are
+skipped; selected non-text values are reported as errors.
 
 Use the GUI's **Create with JSON Schema** action or the CLI:
 

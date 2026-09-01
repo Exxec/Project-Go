@@ -98,9 +98,8 @@ original, and keep the generated copy private.
 The desktop app opens on a **Start** screen: start a new project, continue a
 saved project, or use a practice project. The primary path is then **Start**,
 **Translation Editor**, and **Tools and Settings**, so optional configuration,
-AI exchange, image localization, and diagnostics do not crowd the translation
-workflow. Custom schemas are exact-path/pointer (JSON) or exact-path/column
-(CSV) catalogs; see
+AI exchange, and diagnostics do not crowd the translation workflow. Custom
+schemas are exact-path/pointer (JSON) or exact-path/column (CSV) catalogs; see
 [JSON_SCHEMAS.md](JSON_SCHEMAS.md) and [CSV_SCHEMAS.md](CSV_SCHEMAS.md).
 
 ## Run Project Go Auto (drag-and-drop)
@@ -148,7 +147,7 @@ See [AUTO_GUIDE.md](AUTO_GUIDE.md) for the headless drag-and-drop workflow.
 
 - `ssmt-core`: dependency-free domain records, exceptions, and extraction contracts
 - `ssmt-scanner`: metadata parsing, discovery, and dependency ordering
-- `ssmt-extractor`: CSV, JSON-like, and non-executing class-file handlers
+- `ssmt-extractor`: CSV, JSON-like, plain-text, and non-executing class-file/jar handlers
 - `ssmt-tm`: versioned SQLite translation-memory persistence
 - `ssmt-validation`: structured placeholder and syntax integrity checks
 - `ssmt-patcher`: standard-file reinjection and transactional clone publication

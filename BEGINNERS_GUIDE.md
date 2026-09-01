@@ -141,11 +141,11 @@ runtime is included; Java does not need to be installed.
 **Create Project** is a split button: clicking its main face creates a plain
 project, and its dropdown arrow reveals two schema variants:
 
-- **Create with JSON Schema** Ã¢â‚¬â€ use only when the mod has visible text in
+- **Create with JSON Schema** — use only when the mod has visible text in
   custom JSON locations that standard extraction does not know about. A
   schema is an explicit list of relative files and JSON pointers; it is not
   a repair file. See [JSON_SCHEMAS.md](JSON_SCHEMAS.md).
-- **Create with CSV Schema** Ã¢â‚¬â€ the same idea for a mod's extra or
+- **Create with CSV Schema** — the same idea for a mod's extra or
   unrecognized CSV columns (e.g. a custom tooltip column standard
   extraction doesn't know about). See [CSV_SCHEMAS.md](CSV_SCHEMAS.md).
 
@@ -211,7 +211,7 @@ higher-confidence conflicting translation.
 1. Select **Export for Online AI**.
 2. SSMT examines the source and suggests its main language. It recognizes
    Chinese (`zh`), Japanese (`ja`), Korean (`ko`), Russian (`ru`), and clear
-   English (`en`). `und` means it could not decide Ã¢â‚¬â€ correct the suggestion
+   English (`en`). `und` means it could not decide — correct the suggestion
    for mixed-language material or a wrong guess.
 3. The target defaults to English (`en`); keep it for English localization.
 4. SSMT saves `<Mod Name> words.json` beside the project.
@@ -272,7 +272,7 @@ Two ways to see how complete a translation is before you build:
   in-game font can actually *display* your translated text. Select
   **Check Font Coverage**, choose the Starsector `.fnt` file (e.g.
   `starsector-core\graphics\fonts\insignia15LTaa.fnt` in your Starsector
-  install), and review any findings Ã¢â‚¬â€ each one names the file, the entry,
+  install), and review any findings — each one names the file, the entry,
   and which characters the font has no glyph for.
 
 A translation can be 100% complete and still show `?` in-game if the

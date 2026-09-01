@@ -1,6 +1,6 @@
 # System Architecture
 
-`Last updated: 2026-08-02 by Codex (ADR-046 deterministic provider routing)`
+`Last updated: 2026-09-01 by Claude (jar-packed bytecode and plain-text extraction/reinjection, mojibake corruption fixed throughout this file)`
 
 ## Overview
 
@@ -10,25 +10,25 @@ The core pipeline is:
 
 ```text
 Source Mod
-   Ã¢â€ â€œ
+   ↓
 Scanner
-   Ã¢â€ â€œ
+   ↓
 Compatibility Boundary
-   Ã¢â€ â€œ
+   ↓
 Format Parser / Extractor
-   Ã¢â€ â€œ
+   ↓
 Normalization + Stable Identity
-   Ã¢â€ â€œ
+   ↓
 Portable Project
-   Ã¢â€ â€œ
+   ↓
 Translation Memory / Optional AI Drafts
-   Ã¢â€ â€œ
+   ↓
 Validation
-   Ã¢â€ â€œ
+   ↓
 Reinjection
-   Ã¢â€ â€œ
+   ↓
 Staged Patch Builder
-   Ã¢â€ â€œ
+   ↓
 Pristine Source Clone + Translated Clone
 ```
 
@@ -54,7 +54,8 @@ The compatibility boundary is deliberately narrow. It accepts documented ecosyst
   - CSV extraction;
   - JSON-like extraction;
   - faction/variant extraction;
-  - bytecode extraction via ASM;
+  - bytecode extraction via ASM, from loose `.class` files and `.jar` archives;
+  - whole-file plain-text extraction;
   - input-compatibility decoding.
 
 - `ssmt-tm`
@@ -98,7 +99,7 @@ The compatibility boundary is deliberately narrow. It accepts documented ecosyst
 
 # Compatibility Boundary
 
-The compatibility layer is not a generic Ã¢â‚¬Å“lenient mode.Ã¢â‚¬Â
+The compatibility layer is not a generic “lenient mode.”
 
 It exists to normalize known, observed Starsector ecosystem conventions into strict internal representations.
 
@@ -206,11 +207,14 @@ Each identity value is percent-encoded so separators cannot create collisions.
 - optional non-identity columns may be absent only when the schema allows them;
 - sentinel rows may be skipped only when they contain no localizable data and match an observed safe convention.
 
-The current standard registry includes the usual Starsector CSVs such as:
-
-- `data/strings/descriptions.csv`
-- `data/weapons/weapon_data.csv`
-- `data/hulls/ship_data.csv`
+The current standard registry includes vanilla Starsector CSVs (for example
+`data/strings/descriptions.csv`, `data/weapons/weapon_data.csv`,
+`data/hulls/ship_data.csv`) and CSVs from widely-used companion mods/shared
+frameworks with their own fixed layout (for example Nexerelin's
+`data/config/exerelin/character_backgrounds.csv`). Every entry was added from
+a real mod's evidence, per the Phase 7 principle below. The registry grows as
+new real-mod evidence is found, so treat `StandardCsvSchemas` (`ssmt-extractor`)
+as the authoritative, current list rather than this doc.
 
 Mod-specific identity layouts must be explicit.
 
@@ -245,10 +249,22 @@ Stable keys use RFC 6901-style pointers.
 
 Default eligibility:
 
-- all textual leaves in standard `data/strings/strings.json`;
+- all textual leaves in standard `data/strings/strings.json` and a small set
+  of other whole-file text lists (for example `tips.json`, `ship_names.json`)
+  whose arbitrary/variable-length arrays a fixed pointer or `*` pattern
+  cannot address on their own;
 - verified root display-name fields in `.faction`;
 - `/displayName` in `.variant`;
+- fixed pointers and `*`-wildcard patterns against known fields in other
+  standard, evidence-backed formats (vanilla and widely-used companion-mod
+  conventions alike, e.g. MagicLib's bounty format, Nexerelin's faction
+  config, the "chatter" character format);
 - explicitly opted-in custom paths through versioned schema catalogs.
+
+A selection may also target one or more known subtrees of otherwise-standard
+structure and extract every textual leaf within just that subtree, for
+content shaped like an array of `{"text": "..."}` objects nested under an
+object with other, non-textual sibling fields.
 
 Identifiers, asset paths, weapon IDs, enum-like configuration values, and structural strings are not automatically translated.
 
@@ -256,11 +272,17 @@ Loose syntax support is compatibility-scoped.
 
 Known syntax variants may be accepted when fixture-backed. Probable misspellings or unknown literals must remain errors.
 
+As with the CSV registry, treat `StandardJsonFileExtractor` (`ssmt-extractor`)
+as the authoritative, current list of standard JSON-like coverage.
+
 ---
 
 # Bytecode Safety Boundary
 
-Bytecode extraction reads raw `.class` bytes with ASM.
+Bytecode extraction reads raw `.class` bytes with ASM -- both loose `.class`
+files and every `.class` entry inside a `.jar` (the form real mods actually
+ship compiled code in; a `.jar` is never loaded or opened as a classpath
+entry, only read as a zip archive and rewritten entry-by-entry on reinjection).
 
 It must never:
 
@@ -276,6 +298,18 @@ Candidates are taken from string-valued constants and `LDC` instructions.
 Stable bytecode keys include class, method/field identity, and instruction-local identity.
 
 Reinjection verifies exact original text before replacement.
+
+---
+
+# Plain-Text Extraction Boundary
+
+A small number of standard Starsector files have no internal structure to
+select fields from -- the entire file content is the shown text. Vanilla's
+mission-briefing `mission_text.txt` (paired with `MissionDefinition.java` and
+`descriptor.json` under `data/missions/<name>/`) is the current example: it
+extracts as exactly one stable-keyed unit per file. Reinjection verifies the
+whole file's exact original text before replacement, the same as any other
+format.
 
 ---
 
@@ -438,19 +472,19 @@ For every new compatibility case:
 
 ```text
 observe
-  Ã¢â€ â€œ
+  ↓
 isolate
-  Ã¢â€ â€œ
+  ↓
 fixture
-  Ã¢â€ â€œ
+  ↓
 failing regression
-  Ã¢â€ â€œ
+  ↓
 narrow compatibility rule
-  Ã¢â€ â€œ
+  ↓
 module tests
-  Ã¢â€ â€œ
+  ↓
 full corpus
-  Ã¢â€ â€œ
+  ↓
 source immutability verification
 ```
 

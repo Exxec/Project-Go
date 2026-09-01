@@ -1,10 +1,10 @@
 # Desktop Accessibility Review
 
-Date: 2026-07-26
+Date: 2026-07-26 (amended 2026-09-01: removed the deleted Image Localization tab's accessible-text bullet)
 
 ## Implemented
 
-- Primary project, refresh, review, build, schema, image, and provider actions
+- Primary project, refresh, review, build, schema, and provider actions
   expose accessible text.
 - Translation rows support keyboard selection and multi-selection.
 - `Ctrl+S` saves and `Ctrl+F` focuses search.

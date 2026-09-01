@@ -83,7 +83,7 @@ translation-memory database, JSON/CSV schema catalogs, and recovery snapshot
 directory. **Open Folder** is enabled only after that location exists.
 
 For an open project, autosave snapshots live in `.ssmt-recovery` next to the
-project documentÃ¢â‚¬â€not inside the source mod. The first-run message also explains
+project document—not inside the source mod. The first-run message also explains
 that builds produce two clones: keep the pristine backup safe and enable the
 translated clone instead of the original mod. Never enable both copies.
 
@@ -138,7 +138,7 @@ human edits, and author translations are preserved. Results remain drafts and
 the status/log reports the backends actually used and unresolved work.
 
 The AI Provider Settings tab stores provider type, endpoint, model, and only
-the *name* of a credential environment variableÃ¢â‚¬â€never the credential value.
+the *name* of a credential environment variable—never the credential value.
 Before a remote provider can receive routed text, SSMT displays a per-run
 disclosure and requires confirmation. With no configured AI, routing stays
 offline. Argos remains the preferred default; TranslateLocally uses
@@ -188,7 +188,7 @@ optional API-provider workflow below.
    different target language. Set the batch size (default 250) to the maximum
    entries one AI response should contain. SSMT writes `<Mod Name> words.json`
    when the project fits in one file, or numbered sibling files
-   (`<Mod Name> words1.json`, `<Mod Name> words2.json`, ...) when it doesn't Ã¢â‚¬â€
+   (`<Mod Name> words1.json`, `<Mod Name> words2.json`, ...) when it doesn't —
    this keeps a single AI response from being silently truncated on a large mod.
 4. Upload that JSON to the online AI of your choice without editing its IDs or
    source fields. Upload/translate each numbered file separately if the
@@ -264,7 +264,7 @@ model. TranslateLocally also needs the installed model ID shown by
 Run one glossary-first draft like this (quote paths containing spaces):
 
 ```text
-ssmt offline-translate "Ã¤Â½Â Ã¥Â¥Â½Ã¯Â¼Å’Ã¨Ë†Â°Ã©â€¢Â¿" --source-language zh --target-language en --argos path/to/argos-translate --translate-locally path/to/translateLocally
+ssmt offline-translate "你好，舰长" --source-language zh --target-language en --argos path/to/argos-translate --translate-locally path/to/translateLocally
 ```
 
 Argos uses CPU by default. Add `--argos-device AUTO` to let Argos/CTranslate2
@@ -313,8 +313,8 @@ Planned routing modes are deliberately simple:
 - **AI Assisted:** permits routed refinement of long-form or complex entries,
   while preserving the same validation and review gates.
 
-Routing scores are not translation-quality scores: `0Ã¢â‚¬â€œ2` uses the local draft,
-`3Ã¢â‚¬â€œ4` queues optional AI review, and `5+` permits AI only when enabled. The
+Routing scores are not translation-quality scores: `0–2` uses the local draft,
+`3–4` queues optional AI review, and `5+` permits AI only when enabled. The
 project-level mode/router UI and final AI call are roadmap work, not active
 behavior yet.
 
@@ -363,7 +363,7 @@ under `starsector-core/graphics/fonts/` in a Starsector installation, with the
 currently active one named by `data/config/settings.json`'s `defaultFont`
 key) and checks every translated entry's text against that font's actual
 glyph coverage. It reports entries containing characters the font cannot
-render Ã¢â‚¬â€ useful for catching incomplete or wrong-script translations before
+render — useful for catching incomplete or wrong-script translations before
 they show up in-game as `???`. This is a warning only, never a build
 failure, and it is not a substitute for extraction-schema coverage: a field
 SSMT never extracted at all won't appear here, since it never became a

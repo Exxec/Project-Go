@@ -21,9 +21,11 @@ the text columns to extract.
 ```
 
 Paths must be relative `.csv` files. Catalogs cannot contain globs, duplicate
-paths, standard-handler files (`data/strings/descriptions.csv`,
-`data/weapons/weapon_data.csv`, `data/hulls/ship_data.csv`), more than 256
-files, more than 256 text columns per file, or more than 1 MiB of JSON.
+paths, standard-handler files (for example `data/strings/descriptions.csv`,
+`data/weapons/weapon_data.csv`, `data/hulls/ship_data.csv` — see
+`StandardCsvSchemas` in `ssmt-extractor` for the full, current list, which
+grows as new real-mod evidence is found), more than 256 files, more than 256
+text columns per file, or more than 1 MiB of JSON.
 `textColumns` are used when present in the file's header — a declared column
 missing from a particular row's header is skipped, not an error, matching how
 opt-in JSON pointers behave when absent. `identityColumns` follow the same
