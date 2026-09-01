@@ -115,7 +115,6 @@ val developmentBundle by tasks.registering(Zip::class) {
         from(rootProject.file("USER_GUIDE.md"))
         from(rootProject.file("BEGINNERS_GUIDE.md"))
         from(rootProject.file("AUTO_GUIDE.md"))
-        from(rootProject.file("MANUAL_ACCEPTANCE.md"))
         from(rootProject.file("SECURITY.md"))
         from(rootProject.file("COMPATIBILITY_MATRIX.md"))
     }

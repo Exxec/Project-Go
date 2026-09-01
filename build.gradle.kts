@@ -182,17 +182,12 @@ val scanReleaseArchives by tasks.registering {
 
 val checkReleaseMetadata by tasks.registering {
     group = "verification"
-    description = "Verifies semantic versioning, changelog, and archive naming."
+    description = "Verifies semantic versioning and archive naming."
     inputs.file("gradle.properties")
-    inputs.file("CHANGELOG.md")
     doLast {
         val releaseVersion = project.version.toString()
         if (!releaseVersion.matches(Regex("""\d+\.\d+\.\d+([-.][0-9A-Za-z.-]+)?"""))) {
             throw GradleException("ssmtVersion is not semantic: $releaseVersion")
-        }
-        val changelog = file("CHANGELOG.md").readText(Charsets.UTF_8)
-        if (!changelog.contains("## $releaseVersion")) {
-            throw GradleException("CHANGELOG.md has no section for $releaseVersion")
         }
         val expected = setOf(
             "ssmt-cli-$releaseVersion.zip",

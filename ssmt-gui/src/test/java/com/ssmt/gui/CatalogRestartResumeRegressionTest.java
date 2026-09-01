@@ -14,7 +14,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 /**
  * End-to-end regression coverage for the SQLite restart/resume scenario
- * described in TEST_PLAN.md's "SQLite restart/resume persistence" section
+ * covering SQLite restart/resume persistence
  * (ADR-033): a shared catalog must survive repeated application restarts
  * across multiple mod projects without ever being destructively reinitialized.
  */

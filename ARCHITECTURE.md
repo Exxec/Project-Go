@@ -487,4 +487,4 @@ full corpus
 source immutability verification
 ```
 
-See `REAL_MOD_COMPATIBILITY.md`.
+Real-mod acceptance should cover source safety, output validity, and in-game loading.

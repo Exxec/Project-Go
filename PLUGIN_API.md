@@ -140,5 +140,4 @@ deterministic order. Extractors must:
 * throw `SsmtParseException` for localized read/parse failures.
 
 The standard CSV implementation requires an explicit identity column and
-localizable column list. See `DECISIONS.md` ADR-023 (ordered composite CSV
-identities).
+localizable column list. Ordered composite CSV identities are significant.

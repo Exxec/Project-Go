@@ -35,8 +35,8 @@ are still rejected as errors.
 
 Standard CSV schemas (`StandardCsvSchemas`) are a closed, hardcoded map —
 adding coverage for a column or file not shipped with SSMT normally requires
-a new SSMT release, evidenced by a real mod per `REAL_MOD_COMPATIBILITY.md`'s
-policy. An opt-in CSV schema catalog lets you handle a specific mod's extra
+a new SSMT release backed by a reproducible compatibility case. An opt-in CSV
+schema catalog lets you handle a specific mod's extra
 columns yourself, immediately, without waiting for that. It does not weaken
 or replace the standard schemas — a path already covered by a standard
 schema cannot also appear in an opt-in catalog.
