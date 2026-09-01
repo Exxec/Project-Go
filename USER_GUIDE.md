@@ -42,8 +42,10 @@ Project Go - <Mod Name>\
 ```
 
 The SQLite translation-memory pool remains separate. The GUI and Project Go Auto
-share `%LOCALAPPDATA%\Project Go\project-go-catalog.db` by default. It is created
-automatically, reused after restart, and never stored inside a source mod.
+share `%LOCALAPPDATA%\Project Go\project-go-catalog.db` as their master translation
+library by default. Auto checks it first, then adds validated AI results so it
+becomes a reusable index across mods. It is created automatically, reused after
+restart, and never stored inside a source mod.
 Opening another database makes that catalog the remembered GUI default.
 Existing projects keep using their project directory unless it is inside the
 source mod, in which case Project Go uses the safe sibling workspace.
@@ -145,7 +147,7 @@ offline. Argos remains the preferred default; TranslateLocally uses
 The CLI equivalent is:
 
 ```text
-ssmt translate-project project.ssmt.json --memory translations.db --source-language zh --target-language en --mode SMART_DEFAULT --preferred-local ARGOS --maximum-batch-size 32
+ssmt translate-project project.ssmt.json --source-language zh --target-language en --mode SMART_DEFAULT --preferred-local ARGOS --maximum-batch-size 32
 ```
 
 Optional retained lineage is written beside the project as schema-v2 JSON.
@@ -298,7 +300,7 @@ model. TranslateLocally also needs the installed model ID shown by
 Run one glossary-first draft like this (quote paths containing spaces):
 
 ```text
-ssmt offline-translate "你好，舰长" --source-language zh --target-language en --memory path/to/translation-memory.db --argos path/to/argos-translate --translate-locally path/to/translateLocally
+ssmt offline-translate "你好，舰长" --source-language zh --target-language en --argos path/to/argos-translate --translate-locally path/to/translateLocally
 ```
 
 Argos uses CPU by default. Add `--argos-device AUTO` to let Argos/CTranslate2

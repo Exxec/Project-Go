@@ -9,6 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.HexFormat;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -40,10 +42,10 @@ class AutoWorkflowTest {
         AutoRunResult waiting = workflow.run(source);
 
         assertThat(waiting.status())
-                .isEqualTo(AutoRunResult.Status.WAITING_FOR_TRANSLATION);
+                .isEqualTo(AutoRunResult.Status.MASTER_LIBRARY_NEEDED);
         Path workspace = temporaryDirectory.resolve("Project Go - Example Mod");
-        Path missing = workspace.resolve("Example Mod - words-to-translate.json");
-        Path response = workspace.resolve("Example Mod - words-translated.json");
+        Path missing = workspace.resolve("Example Mod - AI translation request.json");
+        Path response = workspace.resolve("Example Mod - AI translation library.json");
         assertThat(missing).isRegularFile();
         ObjectNode translated = (ObjectNode) JSON.readTree(missing.toFile());
         translated.put("translatedModName", "Example");
@@ -84,9 +86,34 @@ class AutoWorkflowTest {
         AutoRunResult updated = workflow.run(source);
 
         assertThat(updated.status())
-                .isEqualTo(AutoRunResult.Status.WAITING_FOR_TRANSLATION);
+                .isEqualTo(AutoRunResult.Status.MASTER_LIBRARY_INCOMPLETE);
         assertThat(JSON.readTree(missing.toFile()).withArray("entries").size())
                 .isEqualTo(1);
+    }
+
+    @Test
+    void acceptsZipArchiveWithSingleNestedModFolder() throws Exception {
+        Path archive = temporaryDirectory.resolve("Archive Mod.zip");
+        try (ZipOutputStream output = new ZipOutputStream(Files.newOutputStream(archive))) {
+            writeZipEntry(output, "Archive Mod/mod_info.json",
+                    "{\"id\":\"archive.mod\",\"name\":\"Archive Mod\",\"version\":\"1\"}");
+            writeZipEntry(output, "Archive Mod/data/strings/strings.json",
+                    "{\"welcome\":\"A line from an archive\"}");
+        }
+
+        AutoRunResult result = new AutoWorkflow(temporaryDirectory.resolve("shared/catalog.db"))
+                .runDropped(archive);
+
+        assertThat(result.status()).isEqualTo(AutoRunResult.Status.MASTER_LIBRARY_NEEDED);
+        assertThat(result.workspace().resolve("Archive Mod - AI translation request.json"))
+                .isRegularFile();
+    }
+
+    private static void writeZipEntry(ZipOutputStream output, String name, String content)
+            throws java.io.IOException {
+        output.putNextEntry(new ZipEntry(name));
+        output.write(content.getBytes(StandardCharsets.UTF_8));
+        output.closeEntry();
     }
 
     private static String sha256(Path path) throws Exception {

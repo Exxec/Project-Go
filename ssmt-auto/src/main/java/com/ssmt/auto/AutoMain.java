@@ -1,9 +1,7 @@
 package com.ssmt.auto;
 
 import java.io.Console;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +17,7 @@ public final class AutoMain {
     /**
      * Runs one automation pass.
      *
-     * @param args dropped mod_info.json or mod directory
+     * @param args dropped mod archive, mod_info.json, or mod directory
      */
     public static void main(String[] args) {
         if (args.length == 1 && "--smoke-test".equals(args[0])) {
@@ -29,22 +27,10 @@ public final class AutoMain {
         try {
             if (args.length != 1) {
                 throw new IllegalArgumentException(
-                        "Drag one mod_info.json onto Project Go Auto.exe");
+                        "Drag one mod ZIP, mod_info.json, or mod folder onto Project Go Auto.exe");
             }
             Path supplied = Path.of(args[0]).toAbsolutePath().normalize();
-            Path modRoot = Files.isDirectory(supplied)
-                    ? supplied
-                    : supplied.getParent();
-            Path suppliedName = Objects.requireNonNull(
-                    supplied.getFileName(), "dropped filename");
-            if (modRoot == null
-                    || !"mod_info.json".equalsIgnoreCase(
-                            suppliedName.toString())
-                            && !Files.isDirectory(supplied)) {
-                throw new IllegalArgumentException(
-                        "Drop a mod_info.json file or supply its mod directory");
-            }
-            AutoRunResult result = new AutoWorkflow().run(modRoot);
+            AutoRunResult result = new AutoWorkflow().runDropped(supplied);
             LOG.info("{}: {}", result.status(), result.detail());
             LOG.info("Workspace: {}", result.workspace());
         } catch (Exception exception) {

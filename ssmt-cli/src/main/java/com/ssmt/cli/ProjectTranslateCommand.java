@@ -17,6 +17,7 @@ import com.ssmt.project.ProjectTranslationSettings;
 import com.ssmt.project.TranslationMemoryApprovedGlossary;
 import com.ssmt.project.TranslationMetadataInterchangeService;
 import com.ssmt.tm.SqliteTranslationMemory;
+import com.ssmt.tm.MasterTranslationLibrary;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Map;
@@ -35,7 +36,8 @@ import picocli.CommandLine.Model.CommandSpec;
 public final class ProjectTranslateCommand implements Callable<Integer> {
     @Spec private CommandSpec spec;
     @Parameters(index = "0") private Path projectFile;
-    @Option(names = "--memory", required = true) private Path memory;
+    @Option(names = "--memory", description = "Master translation library (defaults to shared).")
+    private Path memory = MasterTranslationLibrary.currentUserDefault();
     @Option(names = "--source-language", defaultValue = "zh") private String sourceLanguage;
     @Option(names = "--target-language", defaultValue = "en") private String targetLanguage;
     @Option(names = "--mode", defaultValue = "SMART_DEFAULT") private TranslationMode mode;

@@ -1,5 +1,6 @@
 package com.ssmt.gui;
 
+import com.ssmt.tm.MasterTranslationLibrary;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -7,7 +8,7 @@ import java.util.Optional;
  * Resolves the persistent GUI translation catalog without consulting mod paths.
  */
 public final class DefaultTranslationMemoryLocator {
-    static final String DEFAULT_FILENAME = "project-go-catalog.db";
+    static final String DEFAULT_FILENAME = MasterTranslationLibrary.DEFAULT_FILENAME;
 
     private DefaultTranslationMemoryLocator() {
     }
@@ -43,16 +44,6 @@ public final class DefaultTranslationMemoryLocator {
             Optional<String> configuredPath,
             Optional<String> localAppData,
             Path userHome) {
-        if (configuredPath.isPresent() && !configuredPath.orElseThrow().isBlank()) {
-            return Path.of(configuredPath.orElseThrow()).toAbsolutePath().normalize();
-        }
-        if (localAppData.isPresent() && !localAppData.orElseThrow().isBlank()) {
-            return Path.of(localAppData.orElseThrow(), "Project Go", DEFAULT_FILENAME)
-                    .toAbsolutePath()
-                    .normalize();
-        }
-        return userHome.resolve(".project-go").resolve(DEFAULT_FILENAME)
-                .toAbsolutePath()
-                .normalize();
+        return MasterTranslationLibrary.resolve(configuredPath, localAppData, userHome);
     }
 }

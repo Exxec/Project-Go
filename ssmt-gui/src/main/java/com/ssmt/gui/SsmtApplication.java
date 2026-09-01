@@ -109,6 +109,10 @@ public final class SsmtApplication extends Application {
     private TableView<LogEntry> logTable;
     private Label coverageLabel;
     private TableView<com.ssmt.project.FontCoverageFinding> fontCoverageTable;
+    private TabPane navigationTabs;
+    private Tab editorNavigationTab;
+    private TableView<TranslationRow> editorTable;
+    private Label editorStatus;
 
     /**
      * Launches JavaFX.
@@ -122,16 +126,12 @@ public final class SsmtApplication extends Application {
     @Override
     public void start(Stage stage) {
         initializeTranslationMemory();
-        TabPane tabs = new TabPane(
-                editorTab(stage),
-                projectInfoTab(),
-                schemaEditorTab(stage),
-                imageEditorTab(stage),
-                providerSettingsTab(),
-                pluginTab(stage),
-                fontCoverageTab(stage),
-                logTab());
-        BorderPane root = new BorderPane(tabs);
+        editorNavigationTab = editorTab(stage);
+        navigationTabs = new TabPane(
+                welcomeTab(stage),
+                editorNavigationTab,
+                toolsTab(stage));
+        BorderPane root = new BorderPane(navigationTabs);
         root.setPadding(new Insets(8));
         stage.setTitle(WINDOW_TITLE);
         stage.getIcons().add(new Image(java.util.Objects.requireNonNull(
@@ -156,6 +156,75 @@ public final class SsmtApplication extends Application {
         });
         stage.show();
         showFirstRunGuidance(stage);
+    }
+
+    /**
+     * The intentional first screen: the three actions a new user needs before
+     * encountering the editor and its optional tools.
+     */
+    private Tab welcomeTab(Stage stage) {
+        Label title = new Label(GuiText.get("heading.welcome"));
+        title.setStyle("-fx-font-size: 22px; -fx-font-weight: bold;");
+        Label introduction = new Label(GuiText.get("label.welcomeIntroduction"));
+        introduction.setWrapText(true);
+
+        SplitMenuButton start = new SplitMenuButton();
+        start.setText(GuiText.get("button.create"));
+        start.setAccessibleText(GuiText.get("accessible.create"));
+        start.setOnAction(ignored -> createProject(
+                stage, editorTable, editorStatus, SchemaKind.NONE, this::showEditor));
+        start.getItems().addAll(
+                schemaVariantMenuItem(
+                        GuiText.get("button.createSchema"),
+                        GuiText.get("accessible.createSchema"),
+                        ignored -> createProject(
+                                stage, editorTable, editorStatus, SchemaKind.JSON, this::showEditor)),
+                schemaVariantMenuItem(
+                        GuiText.get("button.createCsvSchema"),
+                        GuiText.get("accessible.createCsvSchema"),
+                        ignored -> createProject(
+                                stage, editorTable, editorStatus, SchemaKind.CSV, this::showEditor)));
+        Button open = new Button(GuiText.get("button.open"));
+        open.setAccessibleText(GuiText.get("accessible.open"));
+        open.setOnAction(ignored -> openProject(
+                stage, editorTable, editorStatus, this::showEditor));
+        Button sample = new Button(GuiText.get("button.sample"));
+        sample.setAccessibleText(GuiText.get("accessible.sample"));
+        sample.setOnAction(ignored -> openSampleProject(
+                stage, editorTable, editorStatus, this::showEditor));
+        HBox projectActions = new HBox(10, start, open, sample);
+
+        Label steps = new Label(GuiText.get("heading.nextSteps"));
+        steps.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        VBox journey = new VBox(8,
+                new Label(GuiText.get("label.stepOne")),
+                new Label(GuiText.get("label.stepTwo")),
+                new Label(GuiText.get("label.stepThree")));
+        journey.setStyle("-fx-padding: 12px; -fx-background-color: #f4f6f8;"
+                + " -fx-background-radius: 6px;");
+
+        Label reassurance = new Label(GuiText.get("label.sourceSafety"));
+        reassurance.setWrapText(true);
+        VBox content = new VBox(16, title, introduction, projectActions, steps, journey, reassurance);
+        content.setPadding(new Insets(28));
+        return fixedTab(GuiText.get("tab.start"), content);
+    }
+
+    /** Keeps infrequently used configuration and diagnostics reachable without competing with work. */
+    private Tab toolsTab(Stage stage) {
+        TabPane tools = new TabPane(
+                projectInfoTab(),
+                schemaEditorTab(stage),
+                imageEditorTab(stage),
+                providerSettingsTab(),
+                pluginTab(stage),
+                fontCoverageTab(stage),
+                logTab());
+        return fixedTab(GuiText.get("tab.tools"), tools);
+    }
+
+    private void showEditor() {
+        navigationTabs.getSelectionModel().select(editorNavigationTab);
     }
 
     private Tab editorTab(Stage stage) {
@@ -217,26 +286,9 @@ public final class SsmtApplication extends Application {
         SplitPane previews = new SplitPane(sourcePreview, targetPreview);
         previews.setDividerPositions(0.5);
         Label status = new Label(GuiText.get("status.noProject"));
+        editorTable = table;
+        editorStatus = status;
         coverageLabel = new Label();
-        SplitMenuButton createSplit = new SplitMenuButton();
-        createSplit.setText(GuiText.get("button.create"));
-        createSplit.setAccessibleText(GuiText.get("accessible.create"));
-        createSplit.setOnAction(ignored -> createProject(stage, table, status, SchemaKind.NONE));
-        createSplit.getItems().addAll(
-                schemaVariantMenuItem(
-                        GuiText.get("button.createSchema"),
-                        GuiText.get("accessible.createSchema"),
-                        ignored -> createProject(stage, table, status, SchemaKind.JSON)),
-                schemaVariantMenuItem(
-                        GuiText.get("button.createCsvSchema"),
-                        GuiText.get("accessible.createCsvSchema"),
-                        ignored -> createProject(stage, table, status, SchemaKind.CSV)));
-        Button open = new Button(GuiText.get("button.open"));
-        open.setAccessibleText(GuiText.get("accessible.open"));
-        open.setOnAction(ignored -> openProject(stage, table, status));
-        Button sample = new Button(GuiText.get("button.sample"));
-        sample.setAccessibleText(GuiText.get("accessible.sample"));
-        sample.setOnAction(ignored -> openSampleProject(stage, table, status));
         Button save = new Button(GuiText.get("button.save"));
         save.setAccessibleText(GuiText.get("accessible.save"));
         save.setOnAction(ignored -> runProjectAction(
@@ -464,8 +516,10 @@ public final class SsmtApplication extends Application {
                 menuItem(GuiText.get("button.rejectDraft"), rejectDraft),
                 menuItem(GuiText.get("button.inspectEvidence"), inspectEvidence),
                 menuItem(GuiText.get("button.viewLineage"), viewLineage));
+        Label workspaceHeading = new Label(GuiText.get("heading.translationWorkspace"));
+        workspaceHeading.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
         HBox toolbarProject =
-                new HBox(8, createSplit, open, sample, save, refresh, previewBuild, build, moreActions);
+                new HBox(8, workspaceHeading, save, refresh, previewBuild, build, moreActions);
         HBox toolbarStatus = new HBox(8, status, coverageLabel);
         VBox toolbar = new VBox(4, toolbarProject, toolbarStatus);
         HBox filters =
@@ -521,7 +575,7 @@ public final class SsmtApplication extends Application {
     private enum SchemaKind { NONE, JSON, CSV }
 
     private void openSampleProject(
-            Stage stage, TableView<TranslationRow> table, Label status) {
+            Stage stage, TableView<TranslationRow> table, Label status, Runnable onCompleted) {
         Optional<File> destination = chooseDirectory(
                 stage, GuiText.get("chooser.sampleWorkspace"));
         if (destination.isEmpty()) {
@@ -538,6 +592,7 @@ public final class SsmtApplication extends Application {
             refreshEditor(table);
             updateStatus(status);
             log(GuiText.get("status.sampleOpened"));
+            onCompleted.run();
         } catch (java.io.IOException | ProjectException exception) {
             UserDiagnostic diagnostic = UserDiagnostic.failed("Create sample project", exception);
             showError(diagnostic.summary(), diagnostic.detail());
@@ -617,7 +672,8 @@ public final class SsmtApplication extends Application {
             Stage stage,
             TableView<TranslationRow> table,
             Label status,
-            SchemaKind schemaKind) {
+            SchemaKind schemaKind,
+            Runnable onCompleted) {
         Optional<File> source = chooseDirectory(stage, GuiText.get("chooser.source"));
         if (source.isEmpty()) {
             return;
@@ -696,6 +752,7 @@ public final class SsmtApplication extends Application {
         }, () -> {
             refreshEditor(table);
             updateStatus(status);
+            onCompleted.run();
         });
     }
 
@@ -1254,7 +1311,8 @@ public final class SsmtApplication extends Application {
                 .replace("{conflicts}", Integer.toString(result.conflicts()));
     }
 
-    private void openProject(Stage stage, TableView<TranslationRow> table, Label status) {
+    private void openProject(
+            Stage stage, TableView<TranslationRow> table, Label status, Runnable onCompleted) {
         Optional<File> source = chooseDirectory(stage, GuiText.get("chooser.source"));
         if (source.isEmpty()) {
             return;
@@ -1268,6 +1326,7 @@ public final class SsmtApplication extends Application {
             workspace.open(source.orElseThrow().toPath(), project.toPath());
             refreshEditor(table);
             updateStatus(status);
+            onCompleted.run();
         });
     }
 

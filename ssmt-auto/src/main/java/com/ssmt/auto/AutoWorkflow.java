@@ -15,6 +15,7 @@ import com.ssmt.project.ProjectRefreshResult;
 import com.ssmt.project.SourceLanguageDetector;
 import com.ssmt.scanner.ModInfoReader;
 import com.ssmt.tm.SqliteTranslationMemory;
+import com.ssmt.tm.MasterTranslationLibrary;
 import com.ssmt.tm.TranslationMemoryException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,14 +27,19 @@ import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Objects;
+import java.util.Locale;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
- * Source-safe state machine used by the drag-and-drop automation executable.
+ * Source-safe state machine that reuses and grows one master translation library.
  */
 public final class AutoWorkflow {
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final int STATE_VERSION = 1;
-    private static final String CATALOG_FILE = "project-go-catalog.db";
+    private static final String CATALOG_FILE = MasterTranslationLibrary.DEFAULT_FILENAME;
+    private static final int MAX_ARCHIVE_ENTRIES = 10_000;
+    private static final long MAX_ARCHIVE_BYTES = 1_073_741_824L;
 
     private final LocalizationProjectService projects =
             new LocalizationProjectService();
@@ -55,6 +61,43 @@ public final class AutoWorkflow {
     }
 
     /**
+     * Runs the drop-friendly workflow for a mod directory, its metadata file,
+     * or a ZIP archive containing one mod.
+     *
+     * @param dropped item supplied by the operating system
+     * @return result and next action
+     * @throws ProjectException when the dropped item is not a safe mod input
+     */
+    public AutoRunResult runDropped(Path dropped) throws ProjectException {
+        Path supplied = dropped.toAbsolutePath().normalize();
+        if (Files.isDirectory(supplied)) {
+            return run(supplied);
+        }
+        if (!Files.isRegularFile(supplied)) {
+            throw new ProjectException("The dropped item is not a file or folder: " + supplied);
+        }
+        if ("mod_info.json".equalsIgnoreCase(fileName(supplied))) {
+            Path parent = supplied.getParent();
+            if (parent == null) {
+                throw new ProjectException("The dropped mod_info.json has no mod folder");
+            }
+            return run(parent);
+        }
+        if (!fileName(supplied).toLowerCase(Locale.ROOT).endsWith(".zip")) {
+            throw new ProjectException("Drop a ZIP mod archive, mod_info.json, or mod folder");
+        }
+        Path parent = Objects.requireNonNull(supplied.getParent(), "archive parent");
+        Path workspace = parent.resolve("Project Go - " + safeName(
+                withoutExtension(fileName(supplied)), "Mod archive"));
+        try {
+            Files.createDirectories(workspace);
+            return run(extractArchive(supplied, workspace), workspace);
+        } catch (IOException exception) {
+            throw new ProjectException("Could not unpack dropped mod archive", exception);
+        }
+    }
+
+    /**
      * Executes one deterministic automation pass.
      *
      * @param sourceRoot source mod directory
@@ -63,19 +106,20 @@ public final class AutoWorkflow {
      */
     public AutoRunResult run(Path sourceRoot) throws ProjectException {
         Path source = sourceRoot.toAbsolutePath().normalize();
-        ModInfo mod;
-        try {
-            mod = modInfoReader.read(source);
-        } catch (com.ssmt.core.exception.SsmtParseException exception) {
-            throw new ProjectException("Could not read dropped mod_info.json", exception);
-        }
         Path parent = Objects.requireNonNull(source.getParent(), "source mod parent");
+        ModInfo mod = readMod(source);
+        return run(source, parent.resolve("Project Go - " + safeName(mod.name(), mod.id())));
+    }
+
+    private AutoRunResult run(Path sourceRoot, Path workspace) throws ProjectException {
+        Path source = sourceRoot.toAbsolutePath().normalize();
+        ModInfo mod = readMod(source);
+        workspace = workspace.toAbsolutePath().normalize();
         String originalName = safeName(mod.name(), mod.id());
-        Path workspace = parent.resolve("Project Go - " + originalName);
         Path stateFile = workspace.resolve("project-go-state.json");
         Path legacyCatalog = workspace.resolve(CATALOG_FILE);
-        Path missing = workspace.resolve(originalName + " - words-to-translate.json");
-        Path translated = workspace.resolve(originalName + " - words-translated.json");
+        Path missing = workspace.resolve(originalName + " - AI translation request.json");
+        Path translated = workspace.resolve(originalName + " - AI translation library.json");
         Path patch = workspace.resolve(safeName(mod.id(), "translation") + ".english");
         try {
             Files.createDirectories(workspace);
@@ -153,11 +197,15 @@ public final class AutoWorkflow {
                             fileName(projectFile),
                             responseHash));
             return new AutoRunResult(
-                    AutoRunResult.Status.WAITING_FOR_TRANSLATION,
+                    Files.isRegularFile(sharedCatalog)
+                            ? AutoRunResult.Status.MASTER_LIBRARY_INCOMPLETE
+                            : AutoRunResult.Status.MASTER_LIBRARY_NEEDED,
                     workspace,
-                    "Translate " + fileName(missing)
-                            + ", save the response as " + fileName(translated)
-                            + ", then drop mod_info.json again. Shared catalog: "
+                    "Send " + fileName(missing)
+                            + " to an AI. Save its validated JSON response as "
+                            + fileName(translated)
+                            + ", then drop the same mod again. The response is imported into "
+                            + "your master translation library. Master library: "
                             + sharedCatalog);
         }
 
@@ -175,7 +223,71 @@ public final class AutoWorkflow {
                         : AutoRunResult.Status.PATCH_UNCHANGED,
                 workspace,
                 "Translated clone: " + patch + "; pristine source backup: "
-                        + patch + "-source-backup; shared catalog: " + sharedCatalog);
+                        + patch + "-source-backup; master library: " + sharedCatalog);
+    }
+
+    private ModInfo readMod(Path source) throws ProjectException {
+        try {
+            return modInfoReader.read(source);
+        } catch (com.ssmt.core.exception.SsmtParseException exception) {
+            throw new ProjectException("Could not read dropped mod_info.json", exception);
+        }
+    }
+
+    private static Path extractArchive(Path archive, Path workspace)
+            throws IOException, ProjectException {
+        String archiveHash = sha256(archive);
+        Path extraction = workspace.resolve("archive-source-" + archiveHash.substring(0, 12));
+        if (Files.isDirectory(extraction)) {
+            return findArchiveModRoot(extraction);
+        }
+        Files.createDirectories(extraction);
+        int entries = 0;
+        long extractedBytes = 0;
+        try (ZipInputStream input = new ZipInputStream(Files.newInputStream(archive))) {
+            ZipEntry entry;
+            while ((entry = input.getNextEntry()) != null) {
+                entries++;
+                if (entries > MAX_ARCHIVE_ENTRIES) {
+                    throw new ProjectException("Mod archive contains too many files");
+                }
+                Path destination = extraction.resolve(entry.getName()).normalize();
+                if (!destination.startsWith(extraction)) {
+                    throw new ProjectException("Mod archive contains an unsafe file path");
+                }
+                if (entry.isDirectory()) {
+                    Files.createDirectories(destination);
+                    continue;
+                }
+                Files.createDirectories(Objects.requireNonNull(destination.getParent()));
+                try (var output = Files.newOutputStream(destination)) {
+                    byte[] buffer = new byte[8192];
+                    int read;
+                    while ((read = input.read(buffer)) >= 0) {
+                        extractedBytes += read;
+                        if (extractedBytes > MAX_ARCHIVE_BYTES) {
+                            throw new ProjectException("Mod archive expands beyond the 1 GB safety limit");
+                        }
+                        output.write(buffer, 0, read);
+                    }
+                }
+            }
+        }
+        return findArchiveModRoot(extraction);
+    }
+
+    private static Path findArchiveModRoot(Path extraction) throws IOException, ProjectException {
+        try (var paths = Files.walk(extraction)) {
+            List<Path> metadata = paths
+                    .filter(Files::isRegularFile)
+                    .filter(path -> "mod_info.json".equalsIgnoreCase(fileName(path)))
+                    .toList();
+            if (metadata.size() != 1) {
+                throw new ProjectException(
+                        "Mod archive must contain exactly one mod_info.json file");
+            }
+            return Objects.requireNonNull(metadata.getFirst().getParent(), "mod archive root");
+        }
     }
 
     private void prepareSharedCatalog(Path legacyCatalog) throws IOException {
@@ -189,20 +301,7 @@ public final class AutoWorkflow {
     }
 
     private static Path defaultSharedCatalog() {
-        String configured = System.getProperty("ssmt.catalog", "").strip();
-        if (configured.isEmpty()) {
-            configured = System.getenv().getOrDefault(
-                    "SSMT_TRANSLATION_MEMORY", "").strip();
-        }
-        if (!configured.isEmpty()) {
-            return Path.of(configured);
-        }
-        String localAppData = System.getenv().getOrDefault(
-                "LOCALAPPDATA", "").strip();
-        Path dataRoot = localAppData.isEmpty()
-                ? Path.of(System.getProperty("user.home"), ".ssmt")
-                : Path.of(localAppData, "Project Go");
-        return dataRoot.resolve(CATALOG_FILE);
+        return MasterTranslationLibrary.currentUserDefault();
     }
 
     private static LocalizationProject applyUniqueExactMatches(
@@ -295,6 +394,11 @@ public final class AutoWorkflow {
 
     private static String fileName(Path path) {
         return Objects.requireNonNull(path.getFileName(), "filename").toString();
+    }
+
+    private static String withoutExtension(String fileName) {
+        int separator = fileName.lastIndexOf('.');
+        return separator > 0 ? fileName.substring(0, separator) : fileName;
     }
 
     private static String safeName(String value, String fallback) {

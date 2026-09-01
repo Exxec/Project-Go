@@ -16,6 +16,7 @@ import com.ssmt.project.ReconciliationStatus;
 import com.ssmt.project.TranslationCoverageAuditor;
 import com.ssmt.project.TranslationCoverageReport;
 import com.ssmt.validation.font.BmFontGlyphSet;
+import com.ssmt.tm.MasterTranslationLibrary;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -63,8 +64,9 @@ public final class ProjectCommand implements Runnable {
                 description = "Transactionally replace the project after reporting.")
         private boolean apply;
 
-        @Option(names = "--tm", description = "Optional SQLite translation memory.")
-        private Optional<Path> translationMemory = Optional.empty();
+        @Option(names = "--tm", description = "Master translation library (defaults to shared).")
+        private Optional<Path> translationMemory = Optional.of(
+                MasterTranslationLibrary.currentUserDefault());
 
         @Option(
                 names = "--source-language",
@@ -221,8 +223,9 @@ public final class ProjectCommand implements Runnable {
 
         @Option(
                 names = "--tm",
-                description = "Optional SQLite translation memory to record drafts into.")
-        private Optional<Path> translationMemory = Optional.empty();
+                description = "Master translation library to record drafts into (defaults to shared).")
+        private Optional<Path> translationMemory = Optional.of(
+                MasterTranslationLibrary.currentUserDefault());
 
         @Option(
                 names = "--approve",

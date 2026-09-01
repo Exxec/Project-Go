@@ -10,6 +10,7 @@ import com.ssmt.ai.TranslateLocallyPlugin;
 import com.ssmt.ai.TranslationResourceLimits;
 import com.ssmt.project.TranslationMemoryApprovedGlossary;
 import com.ssmt.tm.SqliteTranslationMemory;
+import com.ssmt.tm.MasterTranslationLibrary;
 import com.ssmt.tm.TranslationMemoryException;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
@@ -35,8 +36,8 @@ public final class OfflineTranslateCommand implements Callable<Integer> {
     @Option(names = "--target-language", required = true)
     private String targetLanguage;
 
-    @Option(names = "--memory", required = true, description = "Approved glossary/TM database.")
-    private Path memoryPath;
+    @Option(names = "--memory", description = "Master translation library (defaults to the shared library).")
+    private Path memoryPath = MasterTranslationLibrary.currentUserDefault();
 
     @Option(names = "--argos", defaultValue = "argos-translate",
             description = "Argos Translate executable path.")

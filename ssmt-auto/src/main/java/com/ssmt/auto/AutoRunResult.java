@@ -12,7 +12,8 @@ public record AutoRunResult(Status status, java.nio.file.Path workspace, String 
      * Automation outcomes.
      */
     public enum Status {
-        WAITING_FOR_TRANSLATION,
+        MASTER_LIBRARY_NEEDED,
+        MASTER_LIBRARY_INCOMPLETE,
         PATCH_PUBLISHED,
         PATCH_UNCHANGED
     }

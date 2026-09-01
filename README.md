@@ -100,20 +100,25 @@ original, and keep the generated copy private.
 .\ssmt-gui\build\install\ssmt-gui\bin\ssmt-gui.bat
 ```
 
-The Translation Editor toolbar exposes standard project creation and
-opt-in-schema project creation for both JSON and CSV. Custom schemas are
-exact-path/pointer (JSON) or exact-path/column (CSV) catalogs; see
+The desktop app opens on a **Start** screen: start a new project, continue a
+saved project, or use a practice project. The primary path is then **Start**,
+**Translation Editor**, and **Tools and Settings**, so optional configuration,
+AI exchange, image localization, and diagnostics do not crowd the translation
+workflow. Custom schemas are exact-path/pointer (JSON) or exact-path/column
+(CSV) catalogs; see
 [JSON_SCHEMAS.md](JSON_SCHEMAS.md) and [CSV_SCHEMAS.md](CSV_SCHEMAS.md).
 
 ## Run Project Go Auto (drag-and-drop)
 
 ```powershell
-.\gradlew.bat :ssmt-auto:run --args='"C:\path\to\starsector\mods\ExampleMod\mod_info.json"'
+.\gradlew.bat :ssmt-auto:run --args='"C:\path\to\ExampleMod.zip"'
 ```
 
 Runs the same source-safe project/translation-memory/refresh/validation/patch
-pipeline headlessly against a dropped `mod_info.json`, sharing the same
-default SQLite catalog as the GUI. See [AUTO_GUIDE.md](AUTO_GUIDE.md).
+pipeline headlessly against a dropped mod ZIP (or unpacked mod), sharing the
+same default SQLite master translation library as the GUI. It makes a patch
+when the library is complete; otherwise it writes an AI translation request and
+imports the returned JSON into that library on the next drop. See [AUTO_GUIDE.md](AUTO_GUIDE.md).
 
 ## Native packaging
 
