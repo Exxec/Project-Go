@@ -3,8 +3,8 @@
 ## Reporting
 
 Do not open a public issue for a suspected vulnerability involving source-path
-escape, arbitrary process execution, credential disclosure, malicious plugin
-activation, or generated-patch publication.
+escape, arbitrary process execution, credential disclosure, or generated-patch
+publication.
 
 Report it privately through the repository host's security-advisory feature.
 Include the affected version, operating system, minimal reproduction, impact,
@@ -14,9 +14,7 @@ content or credentials.
 ## Supported Boundary
 
 SSMT parses untrusted data but does not execute mod classes. Source mods are
-read-only. Generated patches contain localization artifacts only. Plugin worker
-process isolation is a reliability boundary and is not represented as a complete
-Windows security sandbox.
+read-only. Generated patches contain localization artifacts only.
 
 Credentials are accepted through environment-variable references. Diagnostic
 exports omit translation content and redact path- and secret-like values.

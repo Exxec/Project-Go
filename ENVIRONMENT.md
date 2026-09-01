@@ -8,11 +8,9 @@
 
 Optional:
 
-- Tesseract for OCR
 - Ollama for local AI drafts
 - cloud-provider credentials for optional AI adapters
 - WiX for Windows installer packaging
-- Bubblewrap on Linux for optional plugin sandboxing
 - platform signing tools for releases
 
 ---

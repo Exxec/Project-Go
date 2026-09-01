@@ -9,11 +9,6 @@ import com.ssmt.ai.OfflineTranslationChain;
 import com.ssmt.ai.TranslateLocallyPlugin;
 import com.ssmt.ai.TranslationMode;
 import com.ssmt.ai.TranslationResourceLimits;
-import com.ssmt.ocr.ImageRenderStyle;
-import com.ssmt.ocr.ImageTranslation;
-import com.ssmt.ocr.OcrTextRegion;
-import com.ssmt.ocr.RegionCropExport;
-import com.ssmt.ocr.TesseractOcrEngine;
 import com.ssmt.project.ProjectBuildResult;
 import com.ssmt.project.ProjectBuildPreview;
 import com.ssmt.project.ProjectException;
@@ -37,7 +32,6 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
@@ -49,7 +43,6 @@ import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -82,7 +75,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 /**
- * JavaFX desktop shell for the translation, plugin, and diagnostic view models.
+ * JavaFX desktop shell for translation and diagnostic view models.
  */
 public final class SsmtApplication extends Application {
     public static final String WINDOW_TITLE = GuiText.get("window.title");
@@ -90,7 +83,6 @@ public final class SsmtApplication extends Application {
             .ofPattern("uuuu-MM-dd HH:mm:ss")
             .withZone(ZoneId.systemDefault());
     private static final String MEMORY_PREFERENCE = "translationMemoryPath";
-    private static final String TESSERACT_PREFERENCE = "tesseractExecutablePath";
     private static final String AI_GUIDANCE_PREFERENCE = "aiExchangeGuidanceShown";
     private static final String BROWSER_AI_NAME = "browserAiProviderName";
     private static final String BROWSER_AI_URL = "browserAiProviderUrl";
@@ -100,7 +92,6 @@ public final class SsmtApplication extends Application {
     private static final String PROVIDER_MODEL = "configuredProviderModel";
     private static final String PROVIDER_CREDENTIAL = "configuredProviderCredentialEnv";
 
-    private final PluginManagerViewModel pluginModel = new PluginManagerViewModel();
     private final LogDashboardViewModel logModel = new LogDashboardViewModel(1_000);
     private final TranslationEditorController editor = new TranslationEditorController();
     private final ProjectWorkspaceController workspace =
@@ -215,9 +206,7 @@ public final class SsmtApplication extends Application {
         TabPane tools = new TabPane(
                 projectInfoTab(),
                 schemaEditorTab(stage),
-                imageEditorTab(stage),
                 providerSettingsTab(),
-                pluginTab(stage),
                 fontCoverageTab(stage),
                 logTab());
         return fixedTab(GuiText.get("tab.tools"), tools);
@@ -1775,247 +1764,6 @@ public final class SsmtApplication extends Application {
         return fixedTab(GuiText.get("tab.schema"), new VBox(8, controls, summary));
     }
 
-    private Tab imageEditorTab(Stage stage) {
-        ImageLocalizationEditorViewModel model =
-                new ImageLocalizationEditorViewModel();
-        List<OcrTextRegion> regions = new ArrayList<>();
-        ImageView preview = new ImageView();
-        preview.setFitWidth(600);
-        preview.setFitHeight(300);
-        preview.setPreserveRatio(true);
-        preview.setAccessibleText(GuiText.get("accessible.imagePreview"));
-        TextField left = new TextField("0");
-        TextField top = new TextField("0");
-        TextField width = new TextField("100");
-        TextField height = new TextField("40");
-        TextField sourceText = new TextField(GuiText.get("default.sourceText"));
-        TextField ocrLanguage = new TextField(GuiText.get("default.ocrLanguage"));
-        ocrLanguage.setPrefColumnCount(6);
-        final File[] source = new File[1];
-
-        TableView<ImageTranslation> regionTable = new TableView<>();
-        regionTable.setPlaceholder(new Label(GuiText.get("placeholder.imageRegions")));
-        regionTable.getColumns().add(column(
-                GuiText.get("column.source"), row -> row.sourceRegion().text()));
-        regionTable.getColumns().add(column(
-                GuiText.get("column.position"), row -> "%d,%d %dx%d".formatted(
-                        row.sourceRegion().left(), row.sourceRegion().top(),
-                        row.sourceRegion().width(), row.sourceRegion().height())));
-        TableColumn<ImageTranslation, String> translatedColumn = column(
-                GuiText.get("column.translation"), ImageTranslation::translatedText);
-        translatedColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        translatedColumn.setOnEditCommit(event -> {
-            model.edit(event.getTablePosition().getRow(), event.getNewValue());
-            regionTable.setItems(FXCollections.observableArrayList(model.translations()));
-        });
-        regionTable.getColumns().add(translatedColumn);
-        regionTable.setEditable(true);
-
-        Button open = new Button(GuiText.get("button.openImage"));
-        open.setAccessibleText(GuiText.get("accessible.openImage"));
-        open.setOnAction(ignored -> {
-            FileChooser chooser = fileChooser();
-            chooser.setTitle(GuiText.get("chooser.imageOpen"));
-            chooser.getExtensionFilters().add(
-                    new FileChooser.ExtensionFilter(
-                            GuiText.get("filter.images"), "*.png", "*.jpg", "*.jpeg"));
-            File selected = chooser.showOpenDialog(stage);
-            if (selected != null) {
-                source[0] = selected;
-                preview.setImage(new Image(selected.toURI().toString()));
-                regions.clear();
-                model.load(selected.toPath(), regions);
-                regionTable.setItems(FXCollections.observableArrayList(model.translations()));
-            }
-        });
-        Button add = new Button(GuiText.get("button.addRegion"));
-        add.setAccessibleText(GuiText.get("accessible.addRegion"));
-        add.setOnAction(ignored -> {
-            if (source[0] == null) {
-                showError(
-                        GuiText.get("error.noImage"),
-                        GuiText.get("error.noImage.detail"));
-                return;
-            }
-            try {
-                regions.add(new OcrTextRegion(
-                        sourceText.getText(),
-                        Integer.parseInt(left.getText()),
-                        Integer.parseInt(top.getText()),
-                        Integer.parseInt(width.getText()),
-                        Integer.parseInt(height.getText()),
-                        100.0));
-                model.reload(regions);
-                regionTable.setItems(FXCollections.observableArrayList(model.translations()));
-            } catch (IllegalArgumentException exception) {
-                UserDiagnostic diagnostic = UserDiagnostic.failed("Add image region", exception);
-                showError(diagnostic.summary(), diagnostic.detail());
-            }
-        });
-        Button autoDetect = new Button(GuiText.get("button.autoDetectText"));
-        autoDetect.setAccessibleText(GuiText.get("accessible.autoDetectText"));
-        autoDetect.setOnAction(ignored -> {
-            if (source[0] == null) {
-                showError(
-                        GuiText.get("error.noImage"),
-                        GuiText.get("error.noImage.detail"));
-                return;
-            }
-            Optional<Path> executable = tesseractExecutable(stage);
-            if (executable.isEmpty()) {
-                return;
-            }
-            try {
-                List<OcrTextRegion> detected = new TesseractOcrEngine(
-                                executable.orElseThrow(), ocrLanguage.getText())
-                        .extract(source[0].toPath());
-                if (detected.isEmpty()) {
-                    showError(GuiText.get("error.ocrNoText"), GuiText.get("error.ocrNoText.detail"));
-                    return;
-                }
-                regions.clear();
-                regions.addAll(detected);
-                model.reload(regions);
-                regionTable.setItems(FXCollections.observableArrayList(model.translations()));
-                log(GuiText.get("status.ocrDetected")
-                        .replace("{0}", Integer.toString(detected.size())));
-            } catch (com.ssmt.ocr.OcrException exception) {
-                UserDiagnostic diagnostic = UserDiagnostic.failed("Auto-detect text", exception);
-                showError(diagnostic.summary(), diagnostic.detail());
-            }
-        });
-        Button render = new Button(GuiText.get("button.renderPng"));
-        render.setAccessibleText(GuiText.get("accessible.renderImage"));
-        render.setOnAction(ignored -> {
-            FileChooser chooser = fileChooser();
-            chooser.setTitle(GuiText.get("chooser.imageSave"));
-            chooser.getExtensionFilters().add(
-                    new FileChooser.ExtensionFilter(GuiText.get("filter.png"), "*.png"));
-            File destination = chooser.showSaveDialog(stage);
-            if (destination != null) {
-                try {
-                    model.render(destination.toPath(), new ImageRenderStyle(
-                            0xff000000, 0xffffffff, "Dialog", 8, 32));
-                    log(GuiText.get("status.imageRendered"));
-                } catch (com.ssmt.ocr.OcrException | IllegalStateException exception) {
-                    UserDiagnostic diagnostic =
-                            UserDiagnostic.failed("Render localized image (text)", exception);
-                    showError(diagnostic.summary(), diagnostic.detail());
-                }
-            }
-        });
-        Button exportForAi = new Button(GuiText.get("button.exportImageAi"));
-        exportForAi.setAccessibleText(GuiText.get("accessible.exportImageAi"));
-        exportForAi.setOnAction(ignored -> {
-            try {
-                List<RegionCropExport> exports = model.exportForImageAi();
-                DirectoryChooser chooser = new DirectoryChooser();
-                chooser.setTitle(GuiText.get("chooser.imageAiExportDirectory"));
-                File destinationDirectory = chooser.showDialog(stage);
-                if (destinationDirectory == null) {
-                    return;
-                }
-                for (int index = 0; index < exports.size(); index++) {
-                    RegionCropExport export = exports.get(index);
-                    Path imageFile = destinationDirectory.toPath()
-                            .resolve("region-" + (index + 1) + ".png");
-                    Path instructionsFile = destinationDirectory.toPath()
-                            .resolve("region-" + (index + 1) + "-instructions.txt");
-                    java.nio.file.Files.write(imageFile, export.pngBytes());
-                    java.nio.file.Files.writeString(instructionsFile, export.instructions());
-                }
-                log(GuiText.get("status.imageAiExported")
-                        .replace("{0}", Integer.toString(exports.size())));
-            } catch (com.ssmt.ocr.OcrException | IllegalStateException | java.io.IOException exception) {
-                UserDiagnostic diagnostic =
-                        UserDiagnostic.failed("Export image regions for AI", exception);
-                showError(diagnostic.summary(), diagnostic.detail());
-            }
-        });
-        Button importRegenerated = new Button(GuiText.get("button.importRegeneratedRegion"));
-        importRegenerated.setAccessibleText(GuiText.get("accessible.importRegeneratedRegion"));
-        importRegenerated.setOnAction(ignored -> {
-            int index = regionTable.getSelectionModel().getSelectedIndex();
-            if (index < 0) {
-                showError(GuiText.get("error.noRegionSelected"), "");
-                return;
-            }
-            FileChooser chooser = fileChooser();
-            chooser.setTitle(GuiText.get("chooser.regeneratedRegionOpen"));
-            chooser.getExtensionFilters().add(
-                    new FileChooser.ExtensionFilter(GuiText.get("filter.png"), "*.png"));
-            File selected = chooser.showOpenDialog(stage);
-            if (selected == null) {
-                return;
-            }
-            try {
-                model.importRegeneratedRegion(
-                        index, java.nio.file.Files.readAllBytes(selected.toPath()));
-                log(GuiText.get("status.regeneratedRegionImported")
-                        .replace("{0}", Integer.toString(model.regeneratedRegionCount())));
-            } catch (com.ssmt.ocr.OcrException | java.io.IOException exception) {
-                UserDiagnostic diagnostic =
-                        UserDiagnostic.failed("Import regenerated region", exception);
-                showError(diagnostic.summary(), diagnostic.detail());
-            }
-        });
-        Button renderAi = new Button(GuiText.get("button.renderImageAi"));
-        renderAi.setAccessibleText(GuiText.get("accessible.renderImageAi"));
-        renderAi.setOnAction(ignored -> {
-            FileChooser chooser = fileChooser();
-            chooser.setTitle(GuiText.get("chooser.imageSave"));
-            chooser.getExtensionFilters().add(
-                    new FileChooser.ExtensionFilter(GuiText.get("filter.png"), "*.png"));
-            File destination = chooser.showSaveDialog(stage);
-            if (destination != null) {
-                try {
-                    model.renderWithRegeneratedRegions(destination.toPath());
-                    log(GuiText.get("status.imageRendered"));
-                } catch (com.ssmt.ocr.OcrException | IllegalStateException exception) {
-                    UserDiagnostic diagnostic =
-                            UserDiagnostic.failed("Render localized image (AI)", exception);
-                    showError(diagnostic.summary(), diagnostic.detail());
-                }
-            }
-        });
-        HBox geometry = new HBox(
-                8,
-                new Label(GuiText.get("label.left")),
-                left,
-                new Label(GuiText.get("label.top")),
-                top,
-                new Label(GuiText.get("label.width")),
-                width,
-                new Label(GuiText.get("label.height")),
-                height);
-        HBox manualWorkflow = new HBox(8, sourceText, add);
-        HBox ocrWorkflow = new HBox(
-                8, new Label(GuiText.get("label.ocrLanguage")), ocrLanguage, autoDetect);
-        HBox textRenderWorkflow = new HBox(8, render);
-        HBox aiWorkflow = new HBox(8, exportForAi, importRegenerated, renderAi);
-        return fixedTab(
-                GuiText.get("tab.image"),
-                new VBox(8, new HBox(8, open), geometry, manualWorkflow, ocrWorkflow,
-                        textRenderWorkflow, regionTable, aiWorkflow, preview));
-    }
-
-    private Optional<Path> tesseractExecutable(Stage stage) {
-        Preferences preferences = Preferences.userNodeForPackage(SsmtApplication.class);
-        String remembered = preferences.get(TESSERACT_PREFERENCE, "");
-        if (!remembered.isBlank() && java.nio.file.Files.isRegularFile(Path.of(remembered))) {
-            return Optional.of(Path.of(remembered));
-        }
-        FileChooser chooser = fileChooser();
-        chooser.setTitle(GuiText.get("chooser.tesseractExecutable"));
-        File selected = chooser.showOpenDialog(stage);
-        if (selected == null) {
-            return Optional.empty();
-        }
-        Path executable = selected.toPath().toAbsolutePath().normalize();
-        preferences.put(TESSERACT_PREFERENCE, executable.toString());
-        return Optional.of(executable);
-    }
-
     private Tab providerSettingsTab() {
         AiProviderSettingsViewModel model = new AiProviderSettingsViewModel();
         Preferences saved = Preferences.userNodeForPackage(SsmtApplication.class);
@@ -2093,47 +1841,6 @@ public final class SsmtApplication extends Application {
         details.setPrefRowCount(6);
         alert.getDialogPane().setContent(details);
         alert.showAndWait();
-    }
-
-    private Tab pluginTab(Stage stage) {
-        TableView<PluginViewState> table = new TableView<>();
-        table.setPlaceholder(new Label(GuiText.get("placeholder.plugins")));
-        table.getColumns().add(column(
-                GuiText.get("column.plugin"), row -> row.descriptor().name()));
-        table.getColumns().add(column(
-                GuiText.get("column.version"), row -> row.descriptor().version()));
-        table.getColumns().add(column(
-                GuiText.get("column.status"), row -> row.status().name()));
-        table.getColumns().add(column(
-                GuiText.get("column.detail"), PluginViewState::detail));
-        table.getColumns().add(column(
-                GuiText.get("column.api"), row ->
-                        Integer.toString(row.descriptor().apiVersion())));
-        table.getColumns().add(column(
-                GuiText.get("column.archive"), row ->
-                        row.descriptor().archive().toString()));
-        table.setItems(FXCollections.observableArrayList(pluginModel.plugins()));
-        Button discover = new Button(GuiText.get("button.discoverPlugins"));
-        discover.setOnAction(event -> {
-            DirectoryChooser chooser = new DirectoryChooser();
-            chooser.setTitle(GuiText.get("chooser.plugins"));
-            File selected = chooser.showDialog(stage);
-            if (selected == null) {
-                return;
-            }
-            try {
-                pluginModel.discover(selected.toPath());
-                table.setItems(FXCollections.observableArrayList(pluginModel.plugins()));
-            } catch (com.ssmt.plugin.PluginCatalogException exception) {
-                UserDiagnostic diagnostic = UserDiagnostic.failed("Discover plugins", exception);
-                showError(diagnostic.summary(), diagnostic.detail());
-            }
-        });
-        Label boundary = new Label(GuiText.get("status.pluginBoundary"));
-        boundary.setWrapText(true);
-        VBox content = new VBox(8, new HBox(8, discover), boundary, table);
-        content.setPadding(new Insets(12));
-        return fixedTab(GuiText.get("tab.plugins"), content);
     }
 
     private Tab fontCoverageTab(Stage stage) {

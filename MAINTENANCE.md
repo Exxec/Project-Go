@@ -3,9 +3,9 @@
 ## Supported Versions
 
 Until the first stable release, only the newest `0.x` release receives fixes.
-Project documents and plugin metadata reject unknown future schema versions
-rather than guessing. A schema change requires an ADR, fixtures, backward-read
-tests, and an explicit migration path before release.
+Project documents reject unknown future schema versions rather than guessing.
+A schema change requires an ADR, fixtures, backward-read tests, and an explicit
+migration path before release.
 
 Deprecations remain documented for at least one minor release. Removal requires
 replacement guidance and a release-note entry. Stable extraction identities are
@@ -22,8 +22,6 @@ not deprecated without an update-reconciliation migration.
 | macOS | Not a release target | No CI or packaging commitment |
 | Starsector source | Data-only offline parsing | Owned fixtures and user-supplied smoke tests |
 | Project schema | Version 1 | Strict read/write tests |
-| Plugin metadata | Repository-documented versions | Catalog tests |
-| Tesseract | User-supplied optional process | Adapter tests |
 | OpenAI adapter | Responses endpoint `/v1/responses` | Mock-transport contract tests |
 | Gemini adapter | Interactions endpoint `/v1beta/interactions` | Mock-transport contract tests |
 | Ollama adapter | Chat endpoint `/api/chat` | Mock-transport contract tests |

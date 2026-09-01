@@ -78,14 +78,6 @@ class BackendCommandTest {
     }
 
     @Test
-    void pluginCatalogCommandAcceptsEmptyDirectory() throws Exception {
-        Path plugins = temporaryDirectory.resolve("plugins");
-        Files.createDirectories(plugins);
-
-        assertThat(new CommandLine(new Main()).execute("plugins", plugins.toString())).isZero();
-    }
-
-    @Test
     void projectCommandsCreateAndBuildAnEditableOverlay() throws Exception {
         Path source = temporaryDirectory.resolve("source-mod");
         Files.createDirectories(source.resolve("data/strings"));

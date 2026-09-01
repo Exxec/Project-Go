@@ -19,7 +19,6 @@ import picocli.CommandLine.IVersionProvider;
             TranslationMemoryCommand.class,
             OfflineTranslateCommand.class,
             ProjectTranslateCommand.class,
-            PluginCommand.class,
             ProjectCommand.class
         }
 )

@@ -10,7 +10,6 @@ dependencies {
     implementation(project(":ssmt-tm"))
     implementation(project(":ssmt-validation"))
     implementation(project(":ssmt-patcher"))
-    implementation(project(":ssmt-plugin-manager"))
     implementation(project(":ssmt-project"))
     implementation(libs.picocli)
     implementation(libs.slf4j.api)

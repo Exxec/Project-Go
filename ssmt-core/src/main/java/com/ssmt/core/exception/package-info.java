@@ -1,4 +1,4 @@
 /**
- * Typed domain exceptions for parse, validation, and plugin load failures.
+ * Typed domain exceptions for parse and validation failures.
  */
 package com.ssmt.core.exception;

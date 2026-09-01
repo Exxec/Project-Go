@@ -10,25 +10,25 @@ The core pipeline is:
 
 ```text
 Source Mod
-   ↓
+   Ã¢â€ â€œ
 Scanner
-   ↓
+   Ã¢â€ â€œ
 Compatibility Boundary
-   ↓
+   Ã¢â€ â€œ
 Format Parser / Extractor
-   ↓
+   Ã¢â€ â€œ
 Normalization + Stable Identity
-   ↓
+   Ã¢â€ â€œ
 Portable Project
-   ↓
+   Ã¢â€ â€œ
 Translation Memory / Optional AI Drafts
-   ↓
+   Ã¢â€ â€œ
 Validation
-   ↓
+   Ã¢â€ â€œ
 Reinjection
-   ↓
+   Ã¢â€ â€œ
 Staged Patch Builder
-   ↓
+   Ã¢â€ â€œ
 Pristine Source Clone + Translated Clone
 ```
 
@@ -72,18 +72,9 @@ The compatibility boundary is deliberately narrow. It accepts documented ecosyst
   - deterministic fingerprints;
   - source/output overlap protection.
 
-- `ssmt-plugin-manager`
-  - bounded plugin metadata inspection;
-  - out-of-process activation;
-  - optional OS sandbox profiles.
-
 - `ssmt-ai`
   - optional provider-neutral AI draft generation;
   - no core dependency on AI.
-
-- `ssmt-ocr`
-  - optional OCR adapters;
-  - deterministic image localization.
 
 - `ssmt-project`
   - portable project schema;
@@ -107,7 +98,7 @@ The compatibility boundary is deliberately narrow. It accepts documented ecosyst
 
 # Compatibility Boundary
 
-The compatibility layer is not a generic “lenient mode.”
+The compatibility layer is not a generic Ã¢â‚¬Å“lenient mode.Ã¢â‚¬Â
 
 It exists to normalize known, observed Starsector ecosystem conventions into strict internal representations.
 
@@ -376,18 +367,6 @@ The launcher is therefore part of compatibility testing.
 
 ---
 
-# Plugin Boundary
-
-Plugin metadata discovery never loads plugin classes.
-
-Activation occurs in a short-lived worker JVM with bounded runtime and sanitized process state.
-
-Process isolation is not claimed to be a complete OS security sandbox.
-
-Optional sandbox profiles may wrap workers where supported.
-
----
-
 # AI Boundary
 
 AI assistance is optional.
@@ -397,18 +376,6 @@ AI providers return drafts only.
 Core extraction, validation, project handling, and patch building must work fully offline.
 
 AI may suggest corrections to malformed source, but must never apply source fixes automatically.
-
----
-
-# OCR / Image Localization Boundary
-
-OCR is optional and non-destructive.
-
-Detected regions and translations are explicit inputs.
-
-Rendering is deterministic and works on an in-memory copy.
-
-Complex artistic reconstruction requires explicit styling or a specialized plugin.
 
 ---
 
@@ -471,19 +438,19 @@ For every new compatibility case:
 
 ```text
 observe
-  ↓
+  Ã¢â€ â€œ
 isolate
-  ↓
+  Ã¢â€ â€œ
 fixture
-  ↓
+  Ã¢â€ â€œ
 failing regression
-  ↓
+  Ã¢â€ â€œ
 narrow compatibility rule
-  ↓
+  Ã¢â€ â€œ
 module tests
-  ↓
+  Ã¢â€ â€œ
 full corpus
-  ↓
+  Ã¢â€ â€œ
 source immutability verification
 ```
 

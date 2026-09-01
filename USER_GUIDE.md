@@ -83,7 +83,7 @@ translation-memory database, JSON/CSV schema catalogs, and recovery snapshot
 directory. **Open Folder** is enabled only after that location exists.
 
 For an open project, autosave snapshots live in `.ssmt-recovery` next to the
-project document—not inside the source mod. The first-run message also explains
+project documentÃ¢â‚¬â€not inside the source mod. The first-run message also explains
 that builds produce two clones: keep the pristine backup safe and enable the
 translated clone instead of the original mod. Never enable both copies.
 
@@ -138,7 +138,7 @@ human edits, and author translations are preserved. Results remain drafts and
 the status/log reports the backends actually used and unresolved work.
 
 The AI Provider Settings tab stores provider type, endpoint, model, and only
-the *name* of a credential environment variable—never the credential value.
+the *name* of a credential environment variableÃ¢â‚¬â€never the credential value.
 Before a remote provider can receive routed text, SSMT displays a per-run
 disclosure and requires confirmation. With no configured AI, routing stays
 offline. Argos remains the preferred default; TranslateLocally uses
@@ -188,7 +188,7 @@ optional API-provider workflow below.
    different target language. Set the batch size (default 250) to the maximum
    entries one AI response should contain. SSMT writes `<Mod Name> words.json`
    when the project fits in one file, or numbered sibling files
-   (`<Mod Name> words1.json`, `<Mod Name> words2.json`, ...) when it doesn't —
+   (`<Mod Name> words1.json`, `<Mod Name> words2.json`, ...) when it doesn't Ã¢â‚¬â€
    this keeps a single AI response from being silently truncated on a large mod.
 4. Upload that JSON to the online AI of your choice without editing its IDs or
    source fields. Upload/translate each numbered file separately if the
@@ -238,42 +238,6 @@ Custom schemas opt specific JSON files and pointers into extraction.
 Incorrect schemas can extract internal identifiers or omit visible text. Review
 the mod structure and use the narrowest pointers possible.
 
-## Image Localization
-
-- **Open Image** loads an image for preview.
-- **Auto-Detect Text** runs Tesseract OCR to find text regions automatically
-  (requires a user-supplied Tesseract executable, remembered after first
-  use). Alternatively, use the geometry fields plus **Add Region** to enter a
-  region manually.
-- The region table lists every current region; double-click the Translation
-  column to edit a region's translated text inline.
-- **Render Localized Image (Text)** creates a deterministic localized PNG by
-  drawing a panel and retyped text over each region — a simple, reliable
-  default.
-
-For text baked into shaded or textured artwork, where a flat text overlay
-would look wrong, use the AI-assisted region regeneration workflow instead:
-
-- **Export Image Regions for AI** crops each region (with proportionate
-  padding for style context) and writes a PNG plus a plain-text
-  instructions file per region to a folder you choose. Hand each pair to
-  whatever AI image tool you use (SSMT never calls one itself) and ask it
-  to regenerate the crop with the translated text.
-- **Import Regenerated Region** loads the AI's regenerated crop for the
-  selected table row. It must be the exact same pixel dimensions as the
-  exported crop, or it is rejected — a resized asset could break in-game
-  texture/UI placement.
-- **Render Localized Image (AI)** composites every imported regenerated crop
-  into a copy of the source image and writes a new PNG.
-
-A visible seam at a crop's edge is possible if the regenerated art doesn't
-perfectly match the surrounding context; this workflow validates size and
-readability only; a human still visually approves the result before it goes
-into a patch.
-
-OCR is optional and requires a user-supplied Tesseract executable. Image output
-is generated separately; the source image is not overwritten.
-
 ## AI Provider Settings
 
 Providers generate drafts only. Their output is never accepted automatically.
@@ -300,7 +264,7 @@ model. TranslateLocally also needs the installed model ID shown by
 Run one glossary-first draft like this (quote paths containing spaces):
 
 ```text
-ssmt offline-translate "你好，舰长" --source-language zh --target-language en --argos path/to/argos-translate --translate-locally path/to/translateLocally
+ssmt offline-translate "Ã¤Â½Â Ã¥Â¥Â½Ã¯Â¼Å’Ã¨Ë†Â°Ã©â€¢Â¿" --source-language zh --target-language en --argos path/to/argos-translate --translate-locally path/to/translateLocally
 ```
 
 Argos uses CPU by default. Add `--argos-device AUTO` to let Argos/CTranslate2
@@ -349,8 +313,8 @@ Planned routing modes are deliberately simple:
 - **AI Assisted:** permits routed refinement of long-form or complex entries,
   while preserving the same validation and review gates.
 
-Routing scores are not translation-quality scores: `0–2` uses the local draft,
-`3–4` queues optional AI review, and `5+` permits AI only when enabled. The
+Routing scores are not translation-quality scores: `0Ã¢â‚¬â€œ2` uses the local draft,
+`3Ã¢â‚¬â€œ4` queues optional AI review, and `5+` permits AI only when enabled. The
 project-level mode/router UI and final AI call are roadmap work, not active
 behavior yet.
 
@@ -389,16 +353,6 @@ where needed. Do not invent lore or mechanics. Return only the translation.
 Secrets must not be entered into project files or committed configuration.
 Network providers send selected text to that provider; Ollama can remain local.
 
-## Plugins and diagnostics
-
-The Plugin Manager lists cataloged plugin metadata, compatibility status, and
-failure details without loading plugin classes during discovery. Activation
-uses a bounded worker process with timeouts. Windows process separation is not
-a verified security sandbox, so test only plugins you trust.
-
-The Diagnostics tab shows bounded application messages. Structured diagnostic
-exports redact known credential and sensitive-path fields.
-
 ## Font coverage and translation progress
 
 The Translation Editor toolbar shows a live "Translated X/Y (Z%)" summary as
@@ -409,7 +363,7 @@ under `starsector-core/graphics/fonts/` in a Starsector installation, with the
 currently active one named by `data/config/settings.json`'s `defaultFont`
 key) and checks every translated entry's text against that font's actual
 glyph coverage. It reports entries containing characters the font cannot
-render — useful for catching incomplete or wrong-script translations before
+render Ã¢â‚¬â€ useful for catching incomplete or wrong-script translations before
 they show up in-game as `???`. This is a warning only, never a build
 failure, and it is not a substitute for extraction-schema coverage: a field
 SSMT never extracted at all won't appear here, since it never became a
@@ -483,7 +437,6 @@ ssmt-cli project check-fonts PROJECT FONT.fnt
 ssmt-cli project coverage PROJECT
 ssmt-cli project import-ai-response PROJECT RESPONSE.json
 ssmt-cli project import-ai-response PROJECT RESPONSE.json --tm MEMORY --approve
-ssmt-cli plugins PLUGIN_DIRECTORY
 ssmt-cli tm export DATABASE json OUTPUT
 ssmt-cli tm export DATABASE csv OUTPUT
 ssmt-cli tm import DATABASE json INPUT
