@@ -57,7 +57,17 @@ public final class StandardCsvSchemas {
             // background format. Found missing the same way.
             Map.entry("data/config/exerelin/character_backgrounds.csv",
                     new CsvExtractionSpec("id", List.of("name"),
-                            List.of("shortDescription", "longDescription"))));
+                            List.of("shortDescription", "longDescription"))),
+            // Unofficial New Game Plus rules integrate as a normal mod data
+            // file. Its name, summary, full description, and attribution are
+            // all shown to the player.
+            Map.entry("data/campaign/ungp_rules.csv",
+                    new CsvExtractionSpec("id", List.of("name", "short", "desc"),
+                            List.of("source"))),
+            // Chatter's officer-to-character table provides the displayable
+            // first and last names used when resolving a configured officer.
+            Map.entry("data/config/chatter/officer_name_to_character.csv",
+                    new CsvExtractionSpec("id", List.of("first name", "last name"))));
 
     private StandardCsvSchemas() {
     }

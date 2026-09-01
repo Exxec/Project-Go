@@ -250,20 +250,29 @@ public final class JsonExtractor implements FileExtractor {
         }
         String token = tokens[index];
         if ("*".equals(token)) {
-            if (!node.isObject()) {
-                return;
-            }
-            List<String> fields = new ArrayList<>();
-            node.fieldNames().forEachRemaining(fields::add);
-            fields.sort(Comparator.naturalOrder());
-            for (String field : fields) {
-                matchPattern(
-                        node.get(field),
-                        tokens,
-                        index + 1,
-                        pointer + "/" + escapePointerToken(field),
-                        request,
-                        extracted);
+            if (node.isObject()) {
+                List<String> fields = new ArrayList<>();
+                node.fieldNames().forEachRemaining(fields::add);
+                fields.sort(Comparator.naturalOrder());
+                for (String field : fields) {
+                    matchPattern(
+                            node.get(field),
+                            tokens,
+                            index + 1,
+                            pointer + "/" + escapePointerToken(field),
+                            request,
+                            extracted);
+                }
+            } else if (node.isArray()) {
+                for (int element = 0; element < node.size(); element++) {
+                    matchPattern(
+                            node.get(element),
+                            tokens,
+                            index + 1,
+                            pointer + "/" + element,
+                            request,
+                            extracted);
+                }
             }
         } else {
             matchPattern(
@@ -277,7 +286,17 @@ public final class JsonExtractor implements FileExtractor {
     }
 
     private static JsonNode child(JsonNode node, String token) {
-        return node.isObject() ? node.get(unescapePointerToken(token)) : null;
+        if (node.isObject()) {
+            return node.get(unescapePointerToken(token));
+        }
+        if (node.isArray()) {
+            try {
+                return node.get(Integer.parseInt(token));
+            } catch (NumberFormatException invalidIndex) {
+                return null;
+            }
+        }
+        return null;
     }
 
     private static String unescapePointerToken(String token) {

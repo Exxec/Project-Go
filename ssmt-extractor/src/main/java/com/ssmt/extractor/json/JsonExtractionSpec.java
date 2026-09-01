@@ -12,8 +12,8 @@ import java.util.Set;
  * @param extractsAllTextLeaves whether every textual leaf in the whole document is eligible
  * @param pointers sorted RFC 6901 pointers when selection is explicit
  * @param patterns sorted pointer-shaped patterns where a segment may be the
- *     literal {@code *}, meaning "any object field name at this level"; array
- *     indices are never matched by a wildcard
+ *     literal {@code *}, meaning "any object field name or array element at
+ *     this level"
  * @param allTextLeavesUnder sorted RFC 6901 pointers to subtrees (of arbitrary,
  *     mixed object/array shape) whose every textual leaf is eligible -- for
  *     content shaped like an array of {@code {"text": "..."}} objects nested

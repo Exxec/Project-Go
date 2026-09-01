@@ -53,6 +53,22 @@ public final class StandardJsonFileExtractor implements FileExtractor {
     // wrongly grab those too. Found missing the same way.
     private static final JsonExtractionSpec CHATTER_CHARACTER_SPEC =
             JsonExtractionSpec.selectedWithSubtrees(Set.of("/name"), Set.of("/lines"));
+    private static final JsonExtractionSpec EXERELIN_CUSTOM_STARTS_SPEC =
+            JsonExtractionSpec.selected(
+                    Set.of(), Set.of("/starts/*/name", "/starts/*/difficulty", "/starts/*/desc"));
+    private static final JsonExtractionSpec EXERELIN_FACTION_CONFIG_SPEC =
+            JsonExtractionSpec.selectedWithSubtrees(
+                    Set.of(
+                            "/rebelFleetSuffix",
+                            "/invasionSupportFleetName",
+                            "/responseFleetName",
+                            "/defenceFleetName"),
+                    Set.of(
+                            "/vengeanceLevelNames",
+                            "/vengeanceFleetNames",
+                            "/vengeanceFleetNamesSingle"));
+    private static final JsonExtractionSpec MISSION_DESCRIPTOR_SPEC =
+            JsonExtractionSpec.selectedPointers(Set.of("/title", "/difficulty"));
 
     @Override
     public boolean supports(Path sourceFile) {
@@ -67,6 +83,9 @@ public final class StandardJsonFileExtractor implements FileExtractor {
                 || normalized.equals("data/config/modfiles/magicbounty_data.json")
                 || normalized.endsWith("/data/config/modfiles/magicbounty_data.json")
                 || isChatterCharacterFile(normalized)
+                || isExerelinCustomStartsFile(normalized)
+                || isExerelinFactionConfigFile(normalized)
+                || isMissionDescriptorFile(normalized)
                 || normalized.endsWith(".faction")
                 || normalized.endsWith(".variant");
     }
@@ -77,6 +96,23 @@ public final class StandardJsonFileExtractor implements FileExtractor {
         return normalized.endsWith(".json")
                 && (directory.equals("data/config/chatter/characters")
                         || directory.endsWith("/data/config/chatter/characters"));
+    }
+
+    private static boolean isExerelinCustomStartsFile(String normalized) {
+        return normalized.equals("data/config/exerelin/customstarts.json")
+                || normalized.endsWith("/data/config/exerelin/customstarts.json");
+    }
+
+    private static boolean isExerelinFactionConfigFile(String normalized) {
+        int lastSlash = normalized.lastIndexOf('/');
+        String directory = lastSlash < 0 ? "" : normalized.substring(0, lastSlash);
+        return normalized.endsWith(".json")
+                && (directory.equals("data/config/exerelinfactionconfig")
+                        || directory.endsWith("/data/config/exerelinfactionconfig"));
+    }
+
+    private static boolean isMissionDescriptorFile(String normalized) {
+        return normalized.matches("(?:.*/)?data/missions/[^/]+/descriptor\\.json");
     }
 
     @Override
@@ -104,6 +140,12 @@ public final class StandardJsonFileExtractor implements FileExtractor {
             spec = MAGIC_BOUNTY_SPEC;
         } else if (isChatterCharacterFile(relative)) {
             spec = CHATTER_CHARACTER_SPEC;
+        } else if (isExerelinCustomStartsFile(relative)) {
+            spec = EXERELIN_CUSTOM_STARTS_SPEC;
+        } else if (isExerelinFactionConfigFile(relative)) {
+            spec = EXERELIN_FACTION_CONFIG_SPEC;
+        } else if (isMissionDescriptorFile(relative)) {
+            spec = MISSION_DESCRIPTOR_SPEC;
         } else {
             throw new SsmtParseException(
                     "No standard JSON schema for source", request.sourceFile());
