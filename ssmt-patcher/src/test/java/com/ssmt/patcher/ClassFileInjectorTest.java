@@ -6,7 +6,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.objectweb.asm.ClassReader;
@@ -60,6 +65,103 @@ class ClassFileInjectorTest {
                 .isInstanceOf(PatchBuilderException.class);
     }
 
+    @Test
+    void rewritesInvokeDynamicBootstrapStrings() throws Exception {
+        Files.write(temporaryDirectory.resolve("Danger.class"), dangerousClass());
+        TranslationReplacement replacement = new TranslationReplacement(
+                Path.of("Danger.class"),
+                "class:example/Danger#method:status()Ljava/lang/String;:indy:0:bootstrap:0",
+                "Status: \u0001",
+                "Updated: \u0001");
+
+        PatchArtifact artifact = new ClassFileInjector().inject(
+                temporaryDirectory, List.of(replacement));
+
+        assertThat(readStrings(artifact.content()))
+                .contains("Updated: \u0001")
+                .doesNotContain("Status: \u0001");
+    }
+
+    @Test
+    void jarRewritesOnlyTheTargetedClassEntryAndCopiesEverythingElseUnchanged()
+            throws Exception {
+        writeJar(temporaryDirectory, new LinkedHashMap<>(Map.of(
+                "example/Danger.class", dangerousClass(),
+                "resources/notes.txt", "not a class, must pass through untouched"
+                        .getBytes(java.nio.charset.StandardCharsets.UTF_8))));
+        List<TranslationReplacement> replacements = List.of(
+                new TranslationReplacement(
+                        Path.of("jars/Example.jar"),
+                        "class:example/Danger#field:LABEL:Ljava/lang/String;",
+                        "Hello field",
+                        "Bonjour champ"));
+
+        PatchArtifact artifact = new ClassFileInjector().inject(
+                temporaryDirectory, replacements);
+
+        Map<String, byte[]> rewritten = readJarEntries(artifact.content());
+        assertThat(readStrings(rewritten.get("example/Danger.class")))
+                .contains("Bonjour champ")
+                .doesNotContain("Hello field");
+        assertThat(rewritten.get("resources/notes.txt"))
+                .isEqualTo("not a class, must pass through untouched"
+                        .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void jarRejectsStaleTextInAnEntry() throws Exception {
+        writeJar(temporaryDirectory, Map.of("example/Danger.class", dangerousClass()));
+        TranslationReplacement stale = new TranslationReplacement(
+                Path.of("jars/Example.jar"),
+                "class:example/Danger#field:LABEL:Ljava/lang/String;",
+                "Old",
+                "New");
+
+        assertThatThrownBy(() ->
+                        new ClassFileInjector().inject(temporaryDirectory, List.of(stale)))
+                .isInstanceOf(PatchBuilderException.class);
+    }
+
+    @Test
+    void jarRejectsAReplacementKeyNoEntryEverMatches() throws Exception {
+        writeJar(temporaryDirectory, Map.of("example/Danger.class", dangerousClass()));
+        TranslationReplacement unmatched = new TranslationReplacement(
+                Path.of("jars/Example.jar"),
+                "class:example/NoSuchClass#field:LABEL:Ljava/lang/String;",
+                "Hello field",
+                "Bonjour champ");
+
+        assertThatThrownBy(() ->
+                        new ClassFileInjector().inject(temporaryDirectory, List.of(unmatched)))
+                .isInstanceOf(PatchBuilderException.class)
+                .hasMessageContaining("Missing class string");
+    }
+
+    private static Path writeJar(Path root, Map<String, byte[]> entries) throws Exception {
+        Path source = root.resolve("jars/Example.jar");
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(source))) {
+            for (Map.Entry<String, byte[]> entry : entries.entrySet()) {
+                zip.putNextEntry(new ZipEntry(entry.getKey()));
+                zip.write(entry.getValue());
+                zip.closeEntry();
+            }
+        }
+        return source;
+    }
+
+    private static Map<String, byte[]> readJarEntries(byte[] jarBytes) throws Exception {
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        try (var zip = new java.util.zip.ZipInputStream(
+                new java.io.ByteArrayInputStream(jarBytes))) {
+            ZipEntry entry;
+            while ((entry = zip.getNextEntry()) != null) {
+                entries.put(entry.getName(), zip.readAllBytes());
+            }
+        }
+        return entries;
+    }
+
     private static byte[] dangerousClass() {
         ClassWriter writer = new ClassWriter(0);
         writer.visit(
@@ -97,6 +199,28 @@ class ClassFileInjectorTest {
         method.visitInsn(Opcodes.ARETURN);
         method.visitMaxs(1, 1);
         method.visitEnd();
+        MethodVisitor status = writer.visitMethod(
+                Opcodes.ACC_PUBLIC,
+                "status",
+                "()Ljava/lang/String;",
+                null,
+                null);
+        status.visitCode();
+        status.visitInvokeDynamicInsn(
+                "makeConcatWithConstants",
+                "()Ljava/lang/String;",
+                new org.objectweb.asm.Handle(
+                        Opcodes.H_INVOKESTATIC,
+                        "java/lang/invoke/StringConcatFactory",
+                        "makeConcatWithConstants",
+                        "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;"
+                                + "Ljava/lang/invoke/MethodType;Ljava/lang/String;"
+                                + "[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;",
+                        false),
+                "Status: \u0001");
+        status.visitInsn(Opcodes.ARETURN);
+        status.visitMaxs(1, 1);
+        status.visitEnd();
         writer.visitEnd();
         return writer.toByteArray();
     }
@@ -129,6 +253,19 @@ class ClassFileInjectorTest {
                     public void visitLdcInsn(Object value) {
                         if (value instanceof String text) {
                             strings.add(text);
+                        }
+                    }
+
+                    @Override
+                    public void visitInvokeDynamicInsn(
+                            String name,
+                            String descriptor,
+                            org.objectweb.asm.Handle bootstrapMethodHandle,
+                            Object... bootstrapMethodArguments) {
+                        for (Object argument : bootstrapMethodArguments) {
+                            if (argument instanceof String text) {
+                                strings.add(text);
+                            }
                         }
                     }
                 };

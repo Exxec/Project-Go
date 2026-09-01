@@ -57,7 +57,32 @@ class JsonExtractionSpecTest {
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> JsonExtractionSpec.selected(Set.of(), Set.of()))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new JsonExtractionSpec(true, List.of(), List.of("/ranks/*")))
+        assertThatThrownBy(() ->
+                        new JsonExtractionSpec(true, List.of(), List.of("/ranks/*"), List.of()))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void defensivelyCopiesAndSortsSubtreePointers() {
+        Set<String> subtrees = new LinkedHashSet<>(Set.of("/z", "/a"));
+
+        JsonExtractionSpec spec = JsonExtractionSpec.selectedWithSubtrees(Set.of(), subtrees);
+        subtrees.add("/later");
+
+        assertThat(spec.allTextLeavesUnder()).containsExactly("/a", "/z");
+        assertThatThrownBy(() -> spec.allTextLeavesUnder().add("/forbidden"))
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void rejectsInvalidSubtreePointersAndAllTextLeavesCombinedWithSubtrees() {
+        assertThatThrownBy(() ->
+                        JsonExtractionSpec.selectedWithSubtrees(Set.of(), Set.of("missing-slash")))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> JsonExtractionSpec.selectedWithSubtrees(Set.of(), Set.of()))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() ->
+                        new JsonExtractionSpec(true, List.of(), List.of(), List.of("/lines")))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

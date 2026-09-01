@@ -28,7 +28,8 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
 /**
- * Reinjects stable-key translations into standard CSV and JSON-like files.
+ * Reinjects stable-key translations into standard CSV, JSON-like, and
+ * whole-file plain-text sources.
  */
 public final class StandardFileInjector {
     private static final Pattern CSV_KEY = Pattern.compile("^csv:([^=]+)=([^:]+):(.+)$");
@@ -70,7 +71,37 @@ public final class StandardFileInjector {
         if (name.endsWith(".json") || name.endsWith(".faction") || name.endsWith(".variant")) {
             return injectJson(source, relative, copy);
         }
+        if (name.endsWith(".txt")) {
+            return injectPlainText(source, relative, copy);
+        }
         throw new PatchBuilderException("Unsupported reinjection format: " + relative);
+    }
+
+    private static PatchArtifact injectPlainText(
+            Path source,
+            Path relative,
+            List<TranslationReplacement> replacements) throws PatchBuilderException {
+        if (replacements.size() != 1) {
+            throw new PatchBuilderException(
+                    "Plain-text files hold exactly one translatable unit: " + relative);
+        }
+        TranslationReplacement replacement = replacements.getFirst();
+        if (!"text:file".equals(replacement.key())) {
+            throw new PatchBuilderException("Invalid plain-text key " + replacement.key());
+        }
+        String currentText;
+        try {
+            currentText = decodeUtf8OrGb18030TextSource(source);
+        } catch (IOException exception) {
+            throw new PatchBuilderException(
+                    "Could not inject plain-text file " + relative + ": "
+                            + exception.getMessage(),
+                    exception);
+        }
+        if (!currentText.equals(replacement.originalText())) {
+            throw new PatchBuilderException("Stale plain-text source text at " + relative);
+        }
+        return PatchArtifact.utf8(relative, replacement.translatedText());
     }
 
     private static PatchArtifact injectJson(
@@ -166,7 +197,7 @@ public final class StandardFileInjector {
                 .setAllowMissingColumnNames(true)
                 .get();
         try {
-            String sourceText = decodeCsvSource(source);
+            String sourceText = decodeUtf8OrGb18030TextSource(source);
             List<String> headers;
             List<CSVRecord> records;
             try (CSVParser parser = inputFormat.parse(new StringReader(sourceText))) {
@@ -211,7 +242,7 @@ public final class StandardFileInjector {
 
     private static final char BYTE_ORDER_MARK = (char) 0xFEFF;
 
-    private static String decodeCsvSource(Path source) throws IOException {
+    private static String decodeUtf8OrGb18030TextSource(Path source) throws IOException {
         byte[] bytes = Files.readAllBytes(source);
         String decoded;
         try {

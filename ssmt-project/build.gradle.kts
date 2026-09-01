@@ -7,4 +7,5 @@ dependencies {
     implementation(project(":ssmt-patcher"))
     implementation(project(":ssmt-tm"))
     implementation(libs.jackson.databind)
+    testImplementation(libs.asm)
 }

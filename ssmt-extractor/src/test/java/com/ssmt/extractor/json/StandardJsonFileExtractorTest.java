@@ -18,9 +18,117 @@ class StandardJsonFileExtractorTest {
     @Test
     void recognizesOnlyStandardStringJsonFactionAndVariantPaths() {
         assertThat(extractor.supports(Path.of("data/strings/strings.json"))).isTrue();
+        assertThat(extractor.supports(Path.of("data/strings/tips.json"))).isTrue();
+        assertThat(extractor.supports(Path.of("data/strings/ship_names.json"))).isTrue();
+        assertThat(extractor.supports(
+                Path.of("data/config/modFiles/magicBounty_data.json"))).isTrue();
+        assertThat(extractor.supports(
+                Path.of("data/config/chatter/characters/AF_yuyuyumao.json"))).isTrue();
         assertThat(extractor.supports(Path.of("data/world/factions/test.faction"))).isTrue();
         assertThat(extractor.supports(Path.of("data/variants/test.variant"))).isTrue();
         assertThat(extractor.supports(Path.of("data/config/settings.json"))).isFalse();
+        assertThat(extractor.supports(Path.of("data/config/chatter/boss_ships.csv"))).isFalse();
+    }
+
+    @Test
+    void magicBountyExtractsOnlyConfirmedPlayerVisibleFieldsAcrossArbitraryBountyIds(
+            @TempDir Path modRoot) throws Exception {
+        Path source = modRoot.resolve("data/config/modFiles/magicBounty_data.json");
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        Files.writeString(source, """
+                {
+                  "adversary_Example": {
+                    "trigger_marketFaction_any": ["independent"],
+                    "job_name": "Placeholder Job",
+                    "job_description": "Placeholder description.",
+                    "job_comm_reply": "Placeholder reply.",
+                    "job_intel_success": "Placeholder success text.",
+                    "job_difficultyDescription": "auto",
+                    "job_credit_reward": 1000000
+                  }
+                }
+                """);
+
+        List<ExtractedString> strings =
+                extractor.extract(new ExtractionRequest("test", modRoot, source));
+
+        assertThat(strings).extracting(ExtractedString::key)
+                .containsExactlyInAnyOrder(
+                        "json:/adversary_Example/job_name",
+                        "json:/adversary_Example/job_description",
+                        "json:/adversary_Example/job_comm_reply",
+                        "json:/adversary_Example/job_intel_success");
+    }
+
+    @Test
+    void chatterCharacterExtractsNameAndEveryLineTextButNotFixedKeywords(
+            @TempDir Path modRoot) throws Exception {
+        Path source = modRoot.resolve("data/config/chatter/characters/example.json");
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        Files.writeString(source, """
+                {
+                  "name": "Placeholder Name",
+                  "personalities": ["timid", "cautious"],
+                  "gender": ["f"],
+                  "categoryTags": ["othermedia"],
+                  "lines": {
+                    "start": [
+                      {"text": "Placeholder line one."},
+                      {"text": "Placeholder line two."}
+                    ],
+                    "death": [
+                      {"text": "Placeholder death line."}
+                    ]
+                  }
+                }
+                """);
+
+        List<ExtractedString> strings =
+                extractor.extract(new ExtractionRequest("test", modRoot, source));
+
+        assertThat(strings).extracting(ExtractedString::originalText)
+                .containsExactlyInAnyOrder(
+                        "Placeholder Name",
+                        "Placeholder line one.",
+                        "Placeholder line two.",
+                        "Placeholder death line.");
+    }
+
+    @Test
+    void tipsExtractsBothPlainAndFrequencyWrappedTipStrings(@TempDir Path modRoot)
+            throws Exception {
+        Path source = modRoot.resolve("data/strings/tips.json");
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        Files.writeString(source, """
+                {
+                  "tips": [
+                    {"freq": "0", "tip": "Wrapped tip."},
+                    "Plain tip."
+                  ]
+                }
+                """);
+
+        List<ExtractedString> strings =
+                extractor.extract(new ExtractionRequest("test", modRoot, source));
+
+        assertThat(strings).extracting(ExtractedString::originalText)
+                .contains("Wrapped tip.", "Plain tip.");
+    }
+
+    @Test
+    void shipNamesExtractsEveryNameAcrossAnArbitraryTopLevelKey(@TempDir Path modRoot)
+            throws Exception {
+        Path source = modRoot.resolve("data/strings/ship_names.json");
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        Files.writeString(source, """
+                {"AF": ["Placeholder One", "Placeholder Two"]}
+                """);
+
+        List<ExtractedString> strings =
+                extractor.extract(new ExtractionRequest("test", modRoot, source));
+
+        assertThat(strings).extracting(ExtractedString::originalText)
+                .containsExactlyInAnyOrder("Placeholder One", "Placeholder Two");
     }
 
     @Test

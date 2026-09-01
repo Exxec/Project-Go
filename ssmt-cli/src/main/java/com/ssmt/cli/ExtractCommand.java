@@ -9,6 +9,7 @@ import com.ssmt.extractor.ExtractionReport;
 import com.ssmt.extractor.bytecode.ClassStringExtractor;
 import com.ssmt.extractor.csv.StandardCsvFileExtractor;
 import com.ssmt.extractor.json.StandardJsonFileExtractor;
+import com.ssmt.extractor.text.MissionTextExtractor;
 import com.ssmt.scanner.ModInfoReader;
 import java.nio.file.Path;
 import java.util.List;
@@ -42,7 +43,8 @@ public final class ExtractCommand implements Callable<Integer> {
                 new ExtractionCoordinator(List.of(
                         new StandardCsvFileExtractor(),
                         new StandardJsonFileExtractor(),
-                        new ClassStringExtractor())),
+                        new ClassStringExtractor(),
+                        new MissionTextExtractor())),
                 new CoverageGapAuditor());
     }
 

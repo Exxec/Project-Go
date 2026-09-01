@@ -100,6 +100,12 @@ public final class JsonExtractor implements FileExtractor {
             if (!spec.patterns().isEmpty()) {
                 collectPatternMatches(root, request, extracted);
             }
+            for (String subtreePointer : spec.allTextLeavesUnder()) {
+                JsonNode subtreeRoot = root.at(subtreePointer);
+                if (!subtreeRoot.isMissingNode() && !subtreeRoot.isNull()) {
+                    collectTextLeaves(subtreeRoot, subtreePointer, request, extracted);
+                }
+            }
         }
         extracted.sort(Comparator.comparing(ExtractedString::key));
         return List.copyOf(extracted);

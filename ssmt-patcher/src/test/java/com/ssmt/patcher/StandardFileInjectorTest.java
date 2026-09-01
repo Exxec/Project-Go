@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -202,5 +203,47 @@ class StandardFileInjectorTest {
                 .isInstanceOf(PatchBuilderException.class);
         assertThatThrownBy(() -> injector.inject(temporaryDirectory, List.of(stale, other)))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void injectsPlainTextFileAsOneWholeUnit() throws Exception {
+        Path source = temporaryDirectory.resolve("data/missions/aglaia/mission_text.txt");
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        Files.writeString(source, "Line one.\n\nLine two.", StandardCharsets.UTF_8);
+        TranslationReplacement replacement = new TranslationReplacement(
+                Path.of("data/missions/aglaia/mission_text.txt"),
+                "text:file",
+                "Line one.\n\nLine two.",
+                "Ligne un.\n\nLigne deux.");
+
+        PatchArtifact artifact =
+                new StandardFileInjector().inject(temporaryDirectory, List.of(replacement));
+
+        assertThat(new String(artifact.content(), StandardCharsets.UTF_8))
+                .isEqualTo("Ligne un.\n\nLigne deux.");
+    }
+
+    @Test
+    void rejectsStalePlainTextAndMultipleReplacementsForOneFile() throws Exception {
+        Path source = temporaryDirectory.resolve("data/missions/aglaia/mission_text.txt");
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        Files.writeString(source, "Current text.", StandardCharsets.UTF_8);
+        TranslationReplacement stale = new TranslationReplacement(
+                Path.of("data/missions/aglaia/mission_text.txt"),
+                "text:file",
+                "Old text.",
+                "New text.");
+        TranslationReplacement duplicate = new TranslationReplacement(
+                Path.of("data/missions/aglaia/mission_text.txt"),
+                "text:file",
+                "Current text.",
+                "New text.");
+        StandardFileInjector injector = new StandardFileInjector();
+
+        assertThatThrownBy(() -> injector.inject(temporaryDirectory, List.of(stale)))
+                .isInstanceOf(PatchBuilderException.class);
+        assertThatThrownBy(() ->
+                        injector.inject(temporaryDirectory, List.of(duplicate, duplicate)))
+                .isInstanceOf(PatchBuilderException.class);
     }
 }

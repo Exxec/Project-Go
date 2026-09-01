@@ -44,7 +44,20 @@ public final class StandardCsvSchemas {
                     new CsvExtractionSpec("id", List.of("name"),
                             List.of("tech/manufacturer", "desc"))),
             Map.entry("data/campaign/submarkets.csv",
-                    new CsvExtractionSpec("id", List.of("name"), List.of("desc"))));
+                    new CsvExtractionSpec("id", List.of("name"), List.of("desc"))),
+            // Vanilla Starsector's campaign-rules table (RelationshipLevelDesc and
+            // similar rows carry the actual dialogue/description text shown to the
+            // player in the "text" column; "options" is a structured mini-language
+            // in vanilla and was never observed non-blank, so it stays unverified;
+            // "notes" is a developer-only comment field). Found missing via a real
+            // mod's `ssmt extract` diagnostic (AzureFederation).
+            Map.entry("data/campaign/rules.csv",
+                    new CsvExtractionSpec("id", List.of("text"))),
+            // Nexerelin's (a declared, widely-used companion mod) own custom-start
+            // background format. Found missing the same way.
+            Map.entry("data/config/exerelin/character_backgrounds.csv",
+                    new CsvExtractionSpec("id", List.of("name"),
+                            List.of("shortDescription", "longDescription"))));
 
     private StandardCsvSchemas() {
     }

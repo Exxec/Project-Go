@@ -14,10 +14,18 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.Opcodes;
 
 class LocalizationProjectServiceTest {
     @Test
@@ -136,6 +144,107 @@ class LocalizationProjectServiceTest {
         assertThat(Files.readString(sourceBackup.resolve("mod_info.json")))
                 .isEqualTo(Files.readString(source.resolve("mod_info.json")));
         assertThat(sha256(strings)).isEqualTo(sourceHash);
+    }
+
+    @Test
+    void createAndBuildRoundTripEveryStandardExtractorTypeThroughTheDefaultPipeline()
+            throws Exception {
+        // Regression for a real wiring bug: MissionTextExtractor (and,
+        // separately, jar support in ClassStringExtractor) was added to the
+        // extractor list `createWithSchemas` builds locally, but a differently
+        // indented copy of the same list literal on the `extraction` instance
+        // field -- the one create()/build() actually use -- was missed by a
+        // blanket find-and-replace, so the GUI and `project create` silently
+        // never extracted mission text or jar-embedded strings at all despite
+        // every extractor-level unit test passing. Only a real create()->
+        // edit->build() round trip through this exact field catches that
+        // class of bug.
+        Path source = temporaryDirectory.resolve("mixed-source");
+        Files.createDirectories(source.resolve("data/missions/aglaia"));
+        Files.createDirectories(source.resolve("jars"));
+        Files.writeString(
+                source.resolve("mod_info.json"),
+                "{\"id\":\"mixed.mod\",\"name\":\"Mixed\",\"version\":\"1\"}");
+        Path missionText = source.resolve("data/missions/aglaia/mission_text.txt");
+        Files.writeString(missionText, "Briefing text.");
+        Path jar = source.resolve("jars/Mixed.jar");
+        try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(jar))) {
+            zip.putNextEntry(new ZipEntry("example/Danger.class"));
+            zip.write(dangerousClass());
+            zip.closeEntry();
+        }
+        LocalizationProjectService service = new LocalizationProjectService();
+
+        LocalizationProject project = service.create(source, "mixed.fr", "Mixed French");
+        assertThat(project.entries())
+                .extracting(ProjectEntry::sourceFile)
+                .contains(
+                        Path.of("data/missions/aglaia/mission_text.txt"),
+                        Path.of("jars/Mixed.jar"));
+        ProjectEntry missionEntry = project.entries().stream()
+                .filter(entry -> entry.sourceFile().equals(
+                        Path.of("data/missions/aglaia/mission_text.txt")))
+                .findFirst().orElseThrow();
+        ProjectEntry jarEntry = project.entries().stream()
+                .filter(entry -> entry.sourceFile().equals(Path.of("jars/Mixed.jar")))
+                .findFirst().orElseThrow();
+        LocalizationProject translated = project.withEntries(List.of(
+                missionEntry.withTranslatedText("Texte de briefing."),
+                jarEntry.withTranslatedText(jarEntry.originalText() + " (translated)")));
+        Path output = temporaryDirectory.resolve("mixed-output");
+
+        ProjectBuildResult result = service.build(source, output, translated);
+
+        assertThat(result.artifactCount()).isEqualTo(2);
+        assertThat(Files.readString(
+                        output.resolve("data/missions/aglaia/mission_text.txt"),
+                        StandardCharsets.UTF_8))
+                .isEqualTo("Texte de briefing.");
+        try (ZipFile zip = new ZipFile(output.resolve("jars/Mixed.jar").toFile())) {
+            ZipEntry entry = zip.getEntry("example/Danger.class");
+            assertThat(entry).isNotNull();
+            byte[] classBytes;
+            try (var input = zip.getInputStream(entry)) {
+                classBytes = input.readAllBytes();
+            }
+            assertThat(fieldConstant(classBytes)).isEqualTo("Hello field (translated)");
+        }
+    }
+
+    private static String fieldConstant(byte[] classBytes) {
+        String[] found = new String[1];
+        new ClassReader(classBytes).accept(
+                new ClassVisitor(Opcodes.ASM9) {
+                    @Override
+                    public FieldVisitor visitField(
+                            int access, String name, String descriptor,
+                            String signature, Object value) {
+                        if (value instanceof String text) {
+                            found[0] = text;
+                        }
+                        return null;
+                    }
+                }, 0);
+        return found[0];
+    }
+
+    private static byte[] dangerousClass() {
+        ClassWriter writer = new ClassWriter(0);
+        writer.visit(
+                Opcodes.V17,
+                Opcodes.ACC_PUBLIC,
+                "example/Danger",
+                null,
+                "java/lang/Object",
+                null);
+        writer.visitField(
+                Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL,
+                "LABEL",
+                "Ljava/lang/String;",
+                null,
+                "Hello field").visitEnd();
+        writer.visitEnd();
+        return writer.toByteArray();
     }
 
     @Test

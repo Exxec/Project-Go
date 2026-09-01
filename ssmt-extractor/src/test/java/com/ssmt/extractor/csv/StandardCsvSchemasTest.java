@@ -58,6 +58,12 @@ class StandardCsvSchemasTest {
         assertThat(StandardCsvSchemas.find(Path.of("data/campaign/submarkets.csv")))
                 .hasValue(new CsvExtractionSpec("id", java.util.List.of("name"),
                         java.util.List.of("desc")));
+        assertThat(StandardCsvSchemas.find(Path.of("data/campaign/rules.csv")))
+                .hasValue(new CsvExtractionSpec("id", java.util.List.of("text")));
+        assertThat(StandardCsvSchemas.find(
+                Path.of("data/config/exerelin/character_backgrounds.csv")))
+                .hasValue(new CsvExtractionSpec("id", java.util.List.of("name"),
+                        java.util.List.of("shortDescription", "longDescription")));
     }
 
     @Test

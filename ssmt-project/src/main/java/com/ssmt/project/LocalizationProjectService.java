@@ -18,6 +18,7 @@ import com.ssmt.extractor.csv.StandardCsvFileExtractor;
 import com.ssmt.extractor.json.ConfiguredJsonFileExtractor;
 import com.ssmt.extractor.json.OptInJsonSchemaCatalog;
 import com.ssmt.extractor.json.StandardJsonFileExtractor;
+import com.ssmt.extractor.text.MissionTextExtractor;
 import com.ssmt.patcher.ClassFileInjector;
 import com.ssmt.patcher.PatchArtifact;
 import com.ssmt.patcher.PatchBuildResult;
@@ -52,7 +53,8 @@ public final class LocalizationProjectService {
     private final ExtractionCoordinator extraction = new ExtractionCoordinator(List.of(
             new StandardCsvFileExtractor(),
             new StandardJsonFileExtractor(),
-            new ClassStringExtractor()));
+            new ClassStringExtractor(),
+            new MissionTextExtractor()));
     private final TranslationValidator validator = new TranslationValidator();
     private final StandardFileInjector standardInjector = new StandardFileInjector();
     private final ClassFileInjector classInjector = new ClassFileInjector();
@@ -259,7 +261,8 @@ public final class LocalizationProjectService {
         List<FileExtractor> extractors = new ArrayList<>(List.of(
                 new StandardCsvFileExtractor(),
                 new StandardJsonFileExtractor(),
-                new ClassStringExtractor()));
+                new ClassStringExtractor(),
+                new MissionTextExtractor()));
         if (jsonSchemaCatalog.isPresent()) {
             try {
                 extractors.add(new ConfiguredJsonFileExtractor(
@@ -689,7 +692,8 @@ public final class LocalizationProjectService {
             for (List<TranslationReplacement> replacements : grouped.values()) {
                 cancellation.throwIfCancellationRequested();
                 Path relative = replacements.getFirst().sourceFile();
-                if (relative.toString().toLowerCase(java.util.Locale.ROOT).endsWith(".class")) {
+                String lowerCaseName = relative.toString().toLowerCase(java.util.Locale.ROOT);
+                if (lowerCaseName.endsWith(".class") || lowerCaseName.endsWith(".jar")) {
                     artifacts.add(classInjector.inject(sourceRoot, replacements));
                 } else {
                     artifacts.add(standardInjector.inject(sourceRoot, replacements));
