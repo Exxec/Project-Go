@@ -52,6 +52,14 @@ class JsonExtractionSpecTest {
     }
 
     @Test
+    void acceptsPatternsThatSelectArrayElements() {
+        JsonExtractionSpec spec = JsonExtractionSpec.selected(
+                Set.of(), Set.of("/starts/*/name"));
+
+        assertThat(spec.patterns()).containsExactly("/starts/*/name");
+    }
+
+    @Test
     void rejectsInvalidPatternsAndAllTextLeavesCombinedWithPatterns() {
         assertThatThrownBy(() -> JsonExtractionSpec.selected(Set.of(), Set.of("missing-slash")))
                 .isInstanceOf(IllegalArgumentException.class);

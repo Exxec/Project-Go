@@ -24,6 +24,10 @@ class StandardJsonFileExtractorTest {
                 Path.of("data/config/modFiles/magicBounty_data.json"))).isTrue();
         assertThat(extractor.supports(
                 Path.of("data/config/chatter/characters/AF_yuyuyumao.json"))).isTrue();
+        assertThat(extractor.supports(Path.of("data/config/exerelin/customStarts.json"))).isTrue();
+        assertThat(extractor.supports(
+                Path.of("data/config/exerelinFactionConfig/example.json"))).isTrue();
+        assertThat(extractor.supports(Path.of("data/missions/example/descriptor.json"))).isTrue();
         assertThat(extractor.supports(Path.of("data/world/factions/test.faction"))).isTrue();
         assertThat(extractor.supports(Path.of("data/variants/test.variant"))).isTrue();
         assertThat(extractor.supports(Path.of("data/config/settings.json"))).isFalse();
@@ -92,6 +96,36 @@ class StandardJsonFileExtractorTest {
                         "Placeholder line one.",
                         "Placeholder line two.",
                         "Placeholder death line.");
+    }
+
+    @Test
+    void extractsOnlyPlayerVisibleExerelinAndMissionFields(@TempDir Path modRoot) throws Exception {
+        Path starts = modRoot.resolve("data/config/exerelin/customStarts.json");
+        Path faction = modRoot.resolve("data/config/exerelinFactionConfig/example.json");
+        Path mission = modRoot.resolve("data/missions/example/descriptor.json");
+        Files.createDirectories(Objects.requireNonNull(starts.getParent()));
+        Files.createDirectories(Objects.requireNonNull(faction.getParent()));
+        Files.createDirectories(Objects.requireNonNull(mission.getParent()));
+        Files.writeString(starts, """
+                {"starts":[{"id":"internal","name":"Start","difficulty":"Hard","desc":"Description"}]}
+                """);
+        Files.writeString(faction, """
+                {"rebelFleetSuffix":"Raiders","vengeanceLevelNames":["One","Two"],
+                 "invasionSupportFleetName":"Expedition","marketSpawnWeight":2}
+                """);
+        Files.writeString(mission, """
+                {"title":"Mission","difficulty":"Easy","icon":"icon.jpg"}
+                """);
+
+        assertThat(extractor.extract(new ExtractionRequest("test", modRoot, starts)))
+                .extracting(ExtractedString::originalText)
+                .containsExactlyInAnyOrder("Start", "Hard", "Description");
+        assertThat(extractor.extract(new ExtractionRequest("test", modRoot, faction)))
+                .extracting(ExtractedString::originalText)
+                .containsExactlyInAnyOrder("Raiders", "One", "Two", "Expedition");
+        assertThat(extractor.extract(new ExtractionRequest("test", modRoot, mission)))
+                .extracting(ExtractedString::originalText)
+                .containsExactlyInAnyOrder("Mission", "Easy");
     }
 
     @Test

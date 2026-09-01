@@ -47,6 +47,22 @@ class JsonExtractorTest {
     }
 
     @Test
+    void extractsSelectedTextFromArrayWildcardPatterns(@TempDir Path modRoot) throws Exception {
+        Path source = modRoot.resolve("starts.json");
+        Files.writeString(source, """
+                {"starts":[{"id":"one","name":"First"},{"id":"two","name":"Second"}]}
+                """);
+        JsonExtractor extractor = new JsonExtractor(
+                JsonExtractionSpec.selected(Set.of(), Set.of("/starts/*/name")));
+
+        List<ExtractedString> strings = extractor.extract(
+                new ExtractionRequest("test_mod", modRoot, source));
+
+        assertThat(strings).extracting(ExtractedString::originalText)
+                .containsExactly("First", "Second");
+    }
+
+    @Test
     void toleratesStarsectorLooseJsonFeatures() throws Exception {
         JsonExtractor extractor = new JsonExtractor(JsonExtractionSpec.allTextLeaves());
 
