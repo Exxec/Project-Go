@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
  * {@code StandardCsvSchemas} or an opt-in schema.
  */
 public final class CoverageGapAuditor {
-    private static final Pattern NON_ASCII_RUN = Pattern.compile("[^\\x00-\\x7F]{2,}");
+    private static final Pattern NON_ASCII = Pattern.compile("[^\\x00-\\x7F]");
     private static final int SAMPLE_RADIUS = 40;
 
     /**
@@ -49,7 +49,7 @@ public final class CoverageGapAuditor {
                 continue;
             }
             String text = decode(normalizedRoot.resolve(relative));
-            Matcher matcher = NON_ASCII_RUN.matcher(text);
+            Matcher matcher = NON_ASCII.matcher(text);
             if (matcher.find()) {
                 findings.add(new CoverageGapFinding(relative, sample(text, matcher.start())));
             }

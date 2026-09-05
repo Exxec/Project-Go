@@ -230,16 +230,21 @@ case-insensitive):
    (after `stripLeading`) and all-blank rows — the same structural-row
    convention `CsvExtractor` skips and `StandardFileInjector` preserves.
 3. **Identity column** (single column; composite suggestions are out of scope):
-   1. a header equal to `id` case-insensitively; else
-   2. the first header (file order) whose value is non-blank in every data row
-      and pairwise-unique across data rows; else
+   1. a header equal to `id` case-insensitively, but only when its values are
+      non-blank in every data row and pairwise-unique across data rows (an
+      `id` header with blank or duplicate values is rejected like any other
+      column); else
+   2. the first header (file order, excluding the rejected `id` header) whose
+      value is non-blank in every data row and pairwise-unique across data
+      rows; else
    3. `NO_ID_COLUMN` (the file stays advisory — row order must never become
       identity, per ARCHITECTURE.md stable-identity invariants, and the
-      injector matches rows by identity values).
+      injector matches rows by identity values; a composite identity may
+      still exist, which the user must hand-author).
 4. **Text columns**: every non-identity header that is non-blank and has at
-   least one data-row cell matching the auditor's run pattern
-   `[^\x00-\x7F]{2,}` (same as
-   [`CoverageGapAuditor.NON_ASCII_RUN`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/CoverageGapAuditor.java:30)),
+   least one data-row cell matching the auditor's non-ASCII pattern
+   `[^\x00-\x7F]` (a single non-ASCII character suffices; same as
+   [`CoverageGapAuditor.NON_ASCII`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/CoverageGapAuditor.java:30)),
    in file order. Blank/anonymous headers are never suggested. None → 
    `NO_TEXT_COLUMNS`.
 5. Construct `new OptInCsvFileSchema(relativeSourceFile, List.of(idColumn),

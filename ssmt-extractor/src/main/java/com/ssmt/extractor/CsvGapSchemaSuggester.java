@@ -36,7 +36,7 @@ import org.apache.commons.csv.CSVRecord;
  */
 public final class CsvGapSchemaSuggester {
 
-    private static final Pattern NON_ASCII_RUN = Pattern.compile("[^\\x00-\\x7F]{2,}");
+    private static final Pattern NON_ASCII = Pattern.compile("[^\\x00-\\x7F]");
     private static final char BYTE_ORDER_MARK = '\uFEFF';
     private static final String ID_HEADER = "id";
 
@@ -157,30 +157,45 @@ public final class CsvGapSchemaSuggester {
                 Optional.empty(), reason, 0);
     }
 
+    // A header named "id" is preferred, but only when it would also qualify as a
+    // fallback candidate: blank or duplicate values disqualify it like any other
+    // column, so a broken id header can never yield an unusable schema.
     private static int identityIndex(List<String> headers, List<List<String>> dataRows) {
+        int preferred = findIdHeader(headers);
+        if (preferred >= 0 && isValidIdentityColumn(dataRows, preferred)) {
+            return preferred;
+        }
+        for (int index = 0; index < headers.size(); index++) {
+            if (headers.get(index).isBlank() || index == preferred) {
+                continue;
+            }
+            if (isValidIdentityColumn(dataRows, index)) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    private static int findIdHeader(List<String> headers) {
         for (int index = 0; index < headers.size(); index++) {
             if (headers.get(index).trim().equalsIgnoreCase(ID_HEADER)) {
                 return index;
             }
         }
-        for (int index = 0; index < headers.size(); index++) {
-            if (headers.get(index).isBlank()) {
-                continue;
-            }
-            Set<String> values = new HashSet<>();
-            boolean identifies = true;
-            for (List<String> row : dataRows) {
-                String value = cell(row, index);
-                if (value.isBlank() || !values.add(value)) {
-                    identifies = false;
-                    break;
-                }
-            }
-            if (identifies) {
-                return index;
+        return -1;
+    }
+
+    // Non-blank and pairwise-unique in every data row; vacuously true when the
+    // file has no data rows, matching the pre-validation behavior.
+    private static boolean isValidIdentityColumn(List<List<String>> dataRows, int index) {
+        Set<String> values = new HashSet<>();
+        for (List<String> row : dataRows) {
+            String value = cell(row, index);
+            if (value.isBlank() || !values.add(value)) {
+                return false;
             }
         }
-        return -1;
+        return true;
     }
 
     private static List<String> textColumns(
@@ -193,7 +208,7 @@ public final class CsvGapSchemaSuggester {
             }
             boolean hasNonAscii = false;
             for (List<String> row : dataRows) {
-                if (NON_ASCII_RUN.matcher(cell(row, index)).find()) {
+                if (NON_ASCII.matcher(cell(row, index)).find()) {
                     hasNonAscii = true;
                     break;
                 }
@@ -209,7 +224,7 @@ public final class CsvGapSchemaSuggester {
         int count = 0;
         for (List<String> row : dataRows) {
             for (String value : row) {
-                if (NON_ASCII_RUN.matcher(value).find()) {
+                if (NON_ASCII.matcher(value).find()) {
                     count++;
                 }
             }

@@ -11,7 +11,12 @@ public enum GapSchemaStatus {
     /** A complete {@code OptInCsvFileSchema} was inferred and is reviewable. */
     SUGGESTED,
 
-    /** No header named {@code id} and no all-unique non-blank column exists. */
+    /**
+     * No usable single identity column: a header named {@code id} is only
+     * chosen when it is non-blank and unique in every data row, and no other
+     * all-unique non-blank column exists either. The file may rely on a
+     * composite identity, which inference never suggests.
+     */
     NO_ID_COLUMN,
 
     /** An identity column was found, but no column holds non-ASCII data cells. */

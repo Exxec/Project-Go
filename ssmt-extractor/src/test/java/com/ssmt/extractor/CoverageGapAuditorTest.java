@@ -28,6 +28,37 @@ class CoverageGapAuditorTest {
     }
 
     @Test
+    void flagsCsvWithSingleNonAsciiCharacter(@TempDir Path modRoot) throws Exception {
+        write(modRoot.resolve("data/hullmods/single.csv"),
+                "name,id\n圣,AeCoat\n");
+        ExtractionReport report = new ExtractionReport(
+                List.of(), List.of(Path.of("data/hullmods/single.csv")));
+
+        List<CoverageGapFinding> findings = new CoverageGapAuditor().audit(modRoot, report);
+
+        assertThat(findings)
+                .extracting(CoverageGapFinding::relativeSourceFile)
+                .containsExactly(Path.of("data/hullmods/single.csv"));
+        assertThat(findings.getFirst().sample()).contains("圣");
+    }
+
+    @Test
+    void flagsCsvWithOneNonAsciiCharacterBetweenAsciiCharacters(@TempDir Path modRoot)
+            throws Exception {
+        write(modRoot.resolve("data/hullmods/mixed.csv"),
+                "name,id\nA圣B,AeCoat\n");
+        ExtractionReport report = new ExtractionReport(
+                List.of(), List.of(Path.of("data/hullmods/mixed.csv")));
+
+        List<CoverageGapFinding> findings = new CoverageGapAuditor().audit(modRoot, report);
+
+        assertThat(findings)
+                .extracting(CoverageGapFinding::relativeSourceFile)
+                .containsExactly(Path.of("data/hullmods/mixed.csv"));
+        assertThat(findings.getFirst().sample()).contains("A圣B");
+    }
+
+    @Test
     void ignoresSkippedCsvFilesWithOnlyAsciiContent(@TempDir Path modRoot) throws Exception {
         write(modRoot.resolve("data/config/mechanics_only.csv"),
                 "id,value\nplaceholder,42\n");

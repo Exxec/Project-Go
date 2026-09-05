@@ -73,6 +73,65 @@ class CsvGapSchemaSuggesterTest {
     }
 
     @Test
+    void fallsBackToOtherColumnWhenIdHeaderHasDuplicateValues(@TempDir Path modRoot)
+            throws Exception {
+        write(modRoot.resolve("data/hulls/extra.csv"),
+                "id,code,name\ndup,A,圣物\ndup,B,圣水\n");
+
+        GapSchemaSuggestion suggestion = suggestOne(modRoot, EXTRA);
+
+        assertThat(suggestion.status()).isEqualTo(GapSchemaStatus.SUGGESTED);
+        assertThat(suggestion.schema().orElseThrow().identityColumns()).containsExactly("code");
+        assertThat(suggestion.schema().orElseThrow().textColumns()).containsExactly("name");
+    }
+
+    @Test
+    void reportsNoIdColumnWhenIdDuplicatesAndNoOtherColumnIsUnique(@TempDir Path modRoot)
+            throws Exception {
+        write(modRoot.resolve("data/hulls/extra.csv"), "id,name\ndup,圣物\ndup,圣物\n");
+
+        GapSchemaSuggestion suggestion = suggestOne(modRoot, EXTRA);
+
+        assertThat(suggestion.status()).isEqualTo(GapSchemaStatus.NO_ID_COLUMN);
+        assertThat(suggestion.schema()).isEmpty();
+    }
+
+    @Test
+    void fallsBackToOtherColumnWhenIdHeaderHasBlankValue(@TempDir Path modRoot) throws Exception {
+        write(modRoot.resolve("data/hulls/extra.csv"),
+                "id,code,name\n,A,圣物\nrelic,B,圣水\n");
+
+        GapSchemaSuggestion suggestion = suggestOne(modRoot, EXTRA);
+
+        assertThat(suggestion.status()).isEqualTo(GapSchemaStatus.SUGGESTED);
+        assertThat(suggestion.schema().orElseThrow().identityColumns()).containsExactly("code");
+        assertThat(suggestion.schema().orElseThrow().textColumns()).containsExactly("name");
+    }
+
+    @Test
+    void reportsNoIdColumnWhenIdBlankAndNoOtherColumnIsUnique(@TempDir Path modRoot)
+            throws Exception {
+        write(modRoot.resolve("data/hulls/extra.csv"), "id,name\n,圣物\ndup,圣物\n");
+
+        GapSchemaSuggestion suggestion = suggestOne(modRoot, EXTRA);
+
+        assertThat(suggestion.status()).isEqualTo(GapSchemaStatus.NO_ID_COLUMN);
+        assertThat(suggestion.schema()).isEmpty();
+    }
+
+    @Test
+    void countsSingleNonAsciiCharacterCellsAsTextColumns(@TempDir Path modRoot) throws Exception {
+        write(modRoot.resolve("data/hulls/extra.csv"), "id,name\nrelic,圣\nwater,水\n");
+
+        GapSchemaSuggestion suggestion = suggestOne(modRoot, EXTRA);
+
+        assertThat(suggestion.status()).isEqualTo(GapSchemaStatus.SUGGESTED);
+        assertThat(suggestion.schema().orElseThrow().identityColumns()).containsExactly("id");
+        assertThat(suggestion.schema().orElseThrow().textColumns()).containsExactly("name");
+        assertThat(suggestion.nonAsciiCellCount()).isEqualTo(2);
+    }
+
+    @Test
     void reportsNoTextColumnsWhenAllCellsAreAscii(@TempDir Path modRoot) throws Exception {
         write(modRoot.resolve("data/config/mechanics.csv"), "id,value\nplaceholder,42\n");
 

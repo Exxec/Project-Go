@@ -72,12 +72,18 @@ ssmt extract MOD_DIRECTORY --suggest-csv-schema draft.csv.json --merge-into cust
 ```
 
 For each gap finding, SSMT infers one identity column — a header named `id`
-(case-insensitive) when present, otherwise the first column that is non-blank
-and unique in every data row — plus every other named column holding non-ASCII
-data cells, in file order. `#`-prefixed and blank rows are structural and never
-contribute. Findings that cannot yield a schema are reported with a status
-instead: `NO_ID_COLUMN`, `NO_TEXT_COLUMNS`, or `UNPARSEABLE`. Row order is never
-used as identity, because the injector matches rows by identity values.
+(case-insensitive) when present *and* non-blank and unique in every data row,
+otherwise the first other column with that property — plus every other named
+column holding non-ASCII data cells, in file order. A header named `id` whose
+values are blank or duplicated is rejected like any other column, and
+inference falls back to the remaining columns. `#`-prefixed and blank rows are
+structural and never contribute. Findings that cannot yield a schema are
+reported with a status instead: `NO_ID_COLUMN`, `NO_TEXT_COLUMNS`, or
+`UNPARSEABLE`. `NO_ID_COLUMN` can also mean that no *single* column identifies
+each row (for example when the true identity is composite across several
+columns); such files stay advisory until a hand-authored catalog entry covers
+them. Row order is never used as identity, because the injector matches rows
+by identity values.
 
 The draft is a normal version-1 catalog and nothing is extracted until you
 accept it: review the file, edit or delete entries you disagree with, then pass
