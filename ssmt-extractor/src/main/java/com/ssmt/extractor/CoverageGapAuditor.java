@@ -17,20 +17,22 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Read-only scan of a mod's unrecognized CSV files for likely non-English text, so a
- * missing {@code StandardCsvSchemas} entry surfaces as a reviewable finding instead of
- * shipping untranslated (as happened with {@code data/shipsystems/ship_systems.csv} until
- * BUG-011). Never extracts, translates, approves, or changes any file — findings are
- * advisory only, matching {@code ADR-032}'s evidence-gated coverage policy: expanding
- * standard coverage still requires a human to confirm the field is genuinely
- * player-visible before it's added to {@code StandardCsvSchemas} or an opt-in schema.
+ * Read-only scan of a mod's unrecognized CSV and hull ({@code .ship}) files for likely
+ * non-English text, so a missing {@code StandardCsvSchemas} entry surfaces as a reviewable
+ * finding instead of shipping untranslated (as happened with
+ * {@code data/shipsystems/ship_systems.csv} until BUG-011). Never extracts, translates,
+ * approves, or changes any file — findings are advisory only, matching {@code ADR-032}'s
+ * evidence-gated coverage policy: expanding standard coverage still requires a human to
+ * confirm the field is genuinely player-visible before it's added to
+ * {@code StandardCsvSchemas} or an opt-in schema.
  */
 public final class CoverageGapAuditor {
     private static final Pattern NON_ASCII_RUN = Pattern.compile("[^\\x00-\\x7F]{2,}");
     private static final int SAMPLE_RADIUS = 40;
 
     /**
-     * Scans every {@code .csv} file an {@link ExtractionCoordinator} run left unsupported.
+     * Scans every {@code .csv} or {@code .ship} file an {@link ExtractionCoordinator} run
+     * left unsupported.
      *
      * @param modRoot mod root the report was generated from
      * @param report prior extraction result for the same mod
@@ -43,7 +45,7 @@ public final class CoverageGapAuditor {
         List<CoverageGapFinding> findings = new ArrayList<>();
         for (Path relative : report.skippedFiles()) {
             String fileName = String.valueOf(relative.getFileName()).toLowerCase(Locale.ROOT);
-            if (!fileName.endsWith(".csv")) {
+            if (!fileName.endsWith(".csv") && !fileName.endsWith(".ship")) {
                 continue;
             }
             String text = decode(normalizedRoot.resolve(relative));

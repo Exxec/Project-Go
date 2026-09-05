@@ -1,0 +1,21 @@
+{
+  // Starsector hull files use the same comment-tolerant JSON dialect as .variant files.
+  hullId: 'example_hull',
+  hullName: 'Example Hull',
+  description: 'A sturdy example hull.',
+  spriteName: 'graphics/ships/example.png',
+  bounds: [[-10, -5], [10, 5]],
+  weaponSlots: [
+    {
+      id: 'WS001',
+      locations: [5, 0],
+      angle: 0,
+      arc: 10,
+      type: 'BUILT_IN',
+      size: 'SMALL',
+    },
+  ],
+  engineSlots: [
+    {location: [-12, 0], width: 6, length: 14, style: 'LOW_TECH'},
+  ],
+}

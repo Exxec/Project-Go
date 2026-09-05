@@ -208,6 +208,97 @@ class PatchBuilderTest {
                 .isEqualTo("old source");
     }
 
+    @Test
+    void publishesTranslatedShipCloneFromInjectorReplacements() throws Exception {
+        Path source = temporaryDirectory.resolve("source");
+        Path hullFile = source.resolve("data/hulls/example.ship");
+        Files.createDirectories(Objects.requireNonNull(hullFile.getParent()));
+        Files.writeString(hullFile, """
+                {
+                  // lenient hull dialect
+                  hullId: 'example_hull',
+                  hullName: 'Example Hull',
+                  description: 'A sturdy example hull.',
+                  bounds: [[-10, -5], [10, 5]],
+                }
+                """, StandardCharsets.UTF_8);
+        PatchArtifact artifact = new StandardFileInjector().inject(source, List.of(
+                new TranslationReplacement(
+                        Path.of("data/hulls/example.ship"),
+                        "json:/hullName",
+                        "Example Hull",
+                        "示例船体"),
+                new TranslationReplacement(
+                        Path.of("data/hulls/example.ship"),
+                        "json:/description",
+                        "A sturdy example hull.",
+                        "坚固的示例船体。")));
+        Path output = temporaryDirectory.resolve("output");
+
+        new PatchBuilder().build(new PatchRequest(
+                source, output, "source.zh", "Source Chinese", "source", "Source",
+                null, List.of(artifact)));
+
+        JsonNode translated = new ObjectMapper().readTree(
+                output.resolve("data/hulls/example.ship").toFile());
+        assertThat(translated.path("hullName").asText()).isEqualTo("示例船体");
+        assertThat(translated.path("description").asText()).isEqualTo("坚固的示例船体。");
+        assertThat(Files.readString(
+                PatchBuilder.sourceBackupRoot(output).resolve("data/hulls/example.ship"),
+                StandardCharsets.UTF_8))
+                .contains("hullName: 'Example Hull'")
+                .contains("description: 'A sturdy example hull.'");
+    }
+
+    @Test
+    void publishesVariantFactionAndJsonArtifactsUnchangedByShipSupport() throws Exception {
+        Path source = temporaryDirectory.resolve("source");
+        Path variantFile = source.resolve("data/variants/example.variant");
+        Path factionFile = source.resolve("data/world/factions/example.faction");
+        Path jsonFile = source.resolve("data/strings/strings.json");
+        Files.createDirectories(Objects.requireNonNull(variantFile.getParent()));
+        Files.createDirectories(Objects.requireNonNull(factionFile.getParent()));
+        Files.createDirectories(Objects.requireNonNull(jsonFile.getParent()));
+        Files.writeString(variantFile, """
+                {
+                  # variant comment
+                  "displayName": "Original Variant",
+                }
+                """, StandardCharsets.UTF_8);
+        Files.writeString(factionFile,
+                "{\"displayName\": \"Original Faction\"}", StandardCharsets.UTF_8);
+        Files.writeString(jsonFile, "{\"title\":\"Original Title\"}", StandardCharsets.UTF_8);
+        StandardFileInjector injector = new StandardFileInjector();
+        PatchArtifact variant = injector.inject(source, List.of(new TranslationReplacement(
+                Path.of("data/variants/example.variant"),
+                "json:/displayName",
+                "Original Variant",
+                "Translated Variant")));
+        PatchArtifact faction = injector.inject(source, List.of(new TranslationReplacement(
+                Path.of("data/world/factions/example.faction"),
+                "json:/displayName",
+                "Original Faction",
+                "Translated Faction")));
+        PatchArtifact json = injector.inject(source, List.of(new TranslationReplacement(
+                Path.of("data/strings/strings.json"),
+                "json:/title",
+                "Original Title",
+                "Translated Title")));
+        Path output = temporaryDirectory.resolve("output");
+
+        new PatchBuilder().build(new PatchRequest(
+                source, output, "source.zh", "Source Chinese", "source", "Source",
+                null, List.of(variant, faction, json)));
+
+        ObjectMapper mapper = new ObjectMapper();
+        assertThat(mapper.readTree(output.resolve("data/variants/example.variant").toFile())
+                .path("displayName").asText()).isEqualTo("Translated Variant");
+        assertThat(mapper.readTree(output.resolve("data/world/factions/example.faction").toFile())
+                .path("displayName").asText()).isEqualTo("Translated Faction");
+        assertThat(mapper.readTree(output.resolve("data/strings/strings.json").toFile())
+                .path("title").asText()).isEqualTo("Translated Title");
+    }
+
     private static byte[] hash(Path file) throws IOException, NoSuchAlgorithmException {
         return MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(file));
     }

@@ -66,6 +66,53 @@ class OptInJsonSchemaCatalogTest {
     }
 
     @Test
+    void acceptsShipPathsForModSpecificHullFields(@TempDir Path root) throws Exception {
+        Path catalogFile = root.resolve("schema.json");
+        Files.writeString(catalogFile, """
+                {
+                  "schemaVersion": 1,
+                  "files": [{
+                    "path": "data/config/custom_hulls/example.ship",
+                    "pointers": ["/hullName"]
+                  }]
+                }
+                """);
+        OptInJsonSchema schema = new OptInJsonSchemaCatalog().read(catalogFile);
+        ConfiguredJsonFileExtractor extractor = new ConfiguredJsonFileExtractor(schema);
+        Path source = root.resolve("data/config/custom_hulls/example.ship");
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        Files.writeString(source, """
+                {"hullName": "Visible hull", "hullId": "internal"}
+                """);
+
+        List<ExtractedString> extracted =
+                extractor.extract(new ExtractionRequest("example", root, source));
+
+        assertThat(extracted).extracting(ExtractedString::key)
+                .containsExactly("json:/hullName");
+        assertThat(extracted).extracting(ExtractedString::originalText)
+                .doesNotContain("internal");
+    }
+
+    @Test
+    void rejectsOptInShipPathAlreadyCoveredByStandardHullHandler(@TempDir Path root)
+            throws Exception {
+        Path catalogFile = root.resolve("schema.json");
+        Files.writeString(catalogFile, """
+                {
+                  "schemaVersion": 1,
+                  "files": [{
+                    "path": "data/hulls/example.ship",
+                    "pointers": ["/hullName"]
+                  }]
+                }
+                """);
+
+        assertThatThrownBy(() -> new OptInJsonSchemaCatalog().read(catalogFile))
+                .isInstanceOf(com.ssmt.core.exception.SsmtParseException.class);
+    }
+
+    @Test
     void rejectsUnsupportedSchemaVersion(@TempDir Path root) throws Exception {
         Path catalogFile = root.resolve("schema.json");
         Files.writeString(catalogFile, """

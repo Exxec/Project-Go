@@ -68,7 +68,8 @@ public final class StandardFileInjector {
         if (name.endsWith(".csv")) {
             return injectCsv(source, relative, copy);
         }
-        if (name.endsWith(".json") || name.endsWith(".faction") || name.endsWith(".variant")) {
+        if (name.endsWith(".json") || name.endsWith(".faction") || name.endsWith(".variant")
+                || name.endsWith(".ship")) {
             return injectJson(source, relative, copy);
         }
         if (name.endsWith(".txt")) {
@@ -208,8 +209,12 @@ public final class StandardFileInjector {
             for (int index = 0; index < records.size(); index++) {
                 CSVRecord record = records.get(index);
                 Map<String, String> original = new LinkedHashMap<>();
-                for (String header : headers) {
-                    original.put(header, record.get(header));
+                for (int column = 0; column < headers.size(); column++) {
+                    // Short rows are legal source content: structural `#`/blank sentinel
+                    // rows often carry fewer cells than the header, and looking every
+                    // header up by name would reject them instead of preserving them.
+                    original.put(headers.get(column),
+                            column < record.size() ? record.get(column) : "");
                 }
                 long start = record.getCharacterPosition();
                 long end = index + 1 < records.size()

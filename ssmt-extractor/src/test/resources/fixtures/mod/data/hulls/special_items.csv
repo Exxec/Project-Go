@@ -1,0 +1,4 @@
+id,name,desc,cost
+#舰船特殊物品表：结构注释行，不参与推断与提取
+church_relic,圣物,古老的教会圣物,500
+holy_water,圣水,经过祝福的清水,250

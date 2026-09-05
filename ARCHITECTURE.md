@@ -1,6 +1,6 @@
 # System Architecture
 
-`Last updated: 2026-09-01 by Claude (jar-packed bytecode and plain-text extraction/reinjection, mojibake corruption fixed throughout this file)`
+`Last updated: 2026-09-05 by Zoo (standard .ship hull-file extraction and reinjection added to JSON-like coverage; reviewable CSV gap-schema suggestions added to the extract command)`
 
 ## Overview
 
@@ -255,6 +255,8 @@ Default eligibility:
   cannot address on their own;
 - verified root display-name fields in `.faction`;
 - `/displayName` in `.variant`;
+- `/hullName` and `/description` in `.ship` hull files under `data/hulls/`,
+  whose remaining fields are structural;
 - fixed pointers and `*`-wildcard patterns against known fields in other
   standard, evidence-backed formats (vanilla and widely-used companion-mod
   conventions alike, e.g. MagicLib's bounty format, Nexerelin's faction

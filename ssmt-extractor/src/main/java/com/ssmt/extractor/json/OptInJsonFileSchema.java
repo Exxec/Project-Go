@@ -20,7 +20,8 @@ public record OptInJsonFileSchema(Path path, List<String> pointers) {
         String lower = path.toString().toLowerCase(Locale.ROOT);
         if (!(lower.endsWith(".json")
                 || lower.endsWith(".faction")
-                || lower.endsWith(".variant"))) {
+                || lower.endsWith(".variant")
+                || lower.endsWith(".ship"))) {
             throw new IllegalArgumentException("Schema path must be JSON-like");
         }
         pointers = JsonExtractionSpec.selectedPointers(Set.copyOf(pointers)).pointers();

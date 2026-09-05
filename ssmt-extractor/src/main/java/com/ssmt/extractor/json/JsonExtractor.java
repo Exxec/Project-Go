@@ -48,7 +48,8 @@ public final class JsonExtractor implements FileExtractor {
         String lowerName = name.toString().toLowerCase(Locale.ROOT);
         return lowerName.endsWith(".json")
                 || lowerName.endsWith(".faction")
-                || lowerName.endsWith(".variant");
+                || lowerName.endsWith(".variant")
+                || lowerName.endsWith(".ship");
     }
 
     @Override

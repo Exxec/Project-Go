@@ -40,6 +40,33 @@ class CoverageGapAuditorTest {
     }
 
     @Test
+    void flagsUnrecognizedShipFileContainingNonAsciiText(@TempDir Path modRoot) throws Exception {
+        write(modRoot.resolve("data/hulls/legacy.ship"),
+                "{\n  \"hullName\": \"偏光耗散镀层\",\n}\n");
+        ExtractionReport report = new ExtractionReport(
+                List.of(), List.of(Path.of("data/hulls/legacy.ship")));
+
+        List<CoverageGapFinding> findings = new CoverageGapAuditor().audit(modRoot, report);
+
+        assertThat(findings)
+                .extracting(CoverageGapFinding::relativeSourceFile)
+                .containsExactly(Path.of("data/hulls/legacy.ship"));
+        assertThat(findings.getFirst().sample()).contains("偏光耗散镀层");
+    }
+
+    @Test
+    void ignoresSkippedShipFilesWithOnlyAsciiContent(@TempDir Path modRoot) throws Exception {
+        write(modRoot.resolve("data/hulls/plain.ship"),
+                "{\"hullName\": \"Plain Hull\"}\n");
+        ExtractionReport report = new ExtractionReport(
+                List.of(), List.of(Path.of("data/hulls/plain.ship")));
+
+        List<CoverageGapFinding> findings = new CoverageGapAuditor().audit(modRoot, report);
+
+        assertThat(findings).isEmpty();
+    }
+
+    @Test
     void ignoresSkippedNonCsvFilesRegardlessOfContent(@TempDir Path modRoot) throws Exception {
         write(modRoot.resolve("graphics/icons/note.txt"), "偏光耗散镀层");
         ExtractionReport report = new ExtractionReport(

@@ -28,6 +28,12 @@ public final class StandardJsonFileExtractor implements FileExtractor {
                             "/fleetTypeNames/*"));
     private static final JsonExtractionSpec VARIANT_SPEC =
             JsonExtractionSpec.selectedPointers(Set.of("/displayName"));
+    // Hull files under data/hulls/: "hullName" is the player-visible display
+    // name and "description" the hull flavor text. Every other field
+    // ("hullId", "spriteName", "bounds", "weaponSlots", "engineSlots", ...)
+    // is structural and must not be extracted.
+    private static final JsonExtractionSpec HULL_SPEC =
+            JsonExtractionSpec.selectedPointers(Set.of("/hullName", "/description"));
     // MagicLib's bounty-board format (a declared dependency of any mod using
     // it, not a per-mod convention): a fixed file keyed by arbitrary bounty
     // ids, each holding several confirmed player-visible fields --
@@ -86,6 +92,7 @@ public final class StandardJsonFileExtractor implements FileExtractor {
                 || isExerelinCustomStartsFile(normalized)
                 || isExerelinFactionConfigFile(normalized)
                 || isMissionDescriptorFile(normalized)
+                || isHullFile(normalized)
                 || normalized.endsWith(".faction")
                 || normalized.endsWith(".variant");
     }
@@ -115,6 +122,14 @@ public final class StandardJsonFileExtractor implements FileExtractor {
         return normalized.matches("(?:.*/)?data/missions/[^/]+/descriptor\\.json");
     }
 
+    private static boolean isHullFile(String normalized) {
+        int lastSlash = normalized.lastIndexOf('/');
+        String directory = lastSlash < 0 ? "" : normalized.substring(0, lastSlash);
+        return normalized.endsWith(".ship")
+                && (directory.equals("data/hulls")
+                        || directory.endsWith("/data/hulls"));
+    }
+
     @Override
     public List<ExtractedString> extract(ExtractionRequest request)
             throws SsmtParseException {
@@ -136,6 +151,8 @@ public final class StandardJsonFileExtractor implements FileExtractor {
             spec = FACTION_SPEC;
         } else if (relative.endsWith(".variant")) {
             spec = VARIANT_SPEC;
+        } else if (isHullFile(relative)) {
+            spec = HULL_SPEC;
         } else if (relative.equals("data/config/modfiles/magicbounty_data.json")) {
             spec = MAGIC_BOUNTY_SPEC;
         } else if (isChatterCharacterFile(relative)) {

@@ -59,3 +59,30 @@ file-type coverage independently.
 Stable keys remain `csv:<identity-columns>=<identity-values>:<column>`, so the
 normal stale-source verification and non-destructive patch workflow apply
 exactly as they do for standard CSV extraction.
+
+## Gap coverage suggestions
+
+`ssmt extract` reports unrecognized CSV files that appear to hold non-English
+text as advisory coverage gaps. Instead of hand-authoring a catalog from those
+warnings, ask for a reviewable draft:
+
+```powershell
+ssmt extract MOD_DIRECTORY --suggest-csv-schema draft.csv.json
+ssmt extract MOD_DIRECTORY --suggest-csv-schema draft.csv.json --merge-into custom-csv-schema.json
+```
+
+For each gap finding, SSMT infers one identity column — a header named `id`
+(case-insensitive) when present, otherwise the first column that is non-blank
+and unique in every data row — plus every other named column holding non-ASCII
+data cells, in file order. `#`-prefixed and blank rows are structural and never
+contribute. Findings that cannot yield a schema are reported with a status
+instead: `NO_ID_COLUMN`, `NO_TEXT_COLUMNS`, or `UNPARSEABLE`. Row order is never
+used as identity, because the injector matches rows by identity values.
+
+The draft is a normal version-1 catalog and nothing is extracted until you
+accept it: review the file, edit or delete entries you disagree with, then pass
+it via `--csv-schema`. Suggestions are advisory data, never applied behavior, so
+the evidence-gated coverage policy is unchanged. `--merge-into` is only valid
+together with `--suggest-csv-schema` and skips paths the existing catalog
+already contains.
+

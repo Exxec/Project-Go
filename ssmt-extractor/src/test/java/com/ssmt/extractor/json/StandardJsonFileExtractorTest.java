@@ -30,8 +30,11 @@ class StandardJsonFileExtractorTest {
         assertThat(extractor.supports(Path.of("data/missions/example/descriptor.json"))).isTrue();
         assertThat(extractor.supports(Path.of("data/world/factions/test.faction"))).isTrue();
         assertThat(extractor.supports(Path.of("data/variants/test.variant"))).isTrue();
+        assertThat(extractor.supports(Path.of("data/hulls/example.ship"))).isTrue();
+        assertThat(extractor.supports(Path.of("data/hulls/Example.SHIP"))).isTrue();
         assertThat(extractor.supports(Path.of("data/config/settings.json"))).isFalse();
         assertThat(extractor.supports(Path.of("data/config/chatter/boss_ships.csv"))).isFalse();
+        assertThat(extractor.supports(Path.of("data/config/example.ship"))).isFalse();
     }
 
     @Test
@@ -239,5 +242,33 @@ class StandardJsonFileExtractorTest {
         assertThat(strings).singleElement()
                 .extracting(ExtractedString::originalText)
                 .isEqualTo("Assault");
+    }
+
+    @Test
+    void hullExtractsOnlyHullNameAndDescription(@TempDir Path modRoot) throws Exception {
+        Path source = modRoot.resolve("data/hulls/example.ship");
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        Files.writeString(source, """
+                {
+                  "hullId": "example_hull",
+                  "hullName": "Example Hull",
+                  "description": "A sturdy example hull.",
+                  "spriteName": "graphics/ships/example.png",
+                  "bounds": [[-10, -5], [10, 5]],
+                  "weaponSlots": [{"id": "WS001", "type": "BUILT_IN", "size": "SMALL"}],
+                  "engineSlots": [{"location": [-12, 0], "width": 6, "length": 14}]
+                }
+                """);
+
+        List<ExtractedString> strings =
+                extractor.extract(new ExtractionRequest("test", modRoot, source));
+
+        assertThat(strings).extracting(ExtractedString::key)
+                .containsExactly("json:/description", "json:/hullName");
+        assertThat(strings).extracting(ExtractedString::originalText)
+                .containsExactly("A sturdy example hull.", "Example Hull");
+        assertThat(strings).extracting(ExtractedString::originalText)
+                .doesNotContain(
+                        "example_hull", "graphics/ships/example.png", "WS001", "BUILT_IN");
     }
 }

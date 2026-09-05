@@ -3,8 +3,12 @@ package com.ssmt.patcher;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,6 +18,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class StandardFileInjectorTest {
+    private static final ObjectMapper LENIENT_JSON = JsonMapper.builder()
+            .enable(JsonReadFeature.ALLOW_JAVA_COMMENTS)
+            .enable(JsonReadFeature.ALLOW_YAML_COMMENTS)
+            .enable(JsonReadFeature.ALLOW_TRAILING_COMMA)
+            .enable(JsonReadFeature.ALLOW_UNQUOTED_FIELD_NAMES)
+            .enable(JsonReadFeature.ALLOW_SINGLE_QUOTES)
+            .build();
+
     @TempDir
     Path temporaryDirectory;
 
@@ -188,6 +200,29 @@ class StandardFileInjectorTest {
     }
 
     @Test
+    void preservesShortHashCommentRowDuringCsvInjection() throws Exception {
+        Path source = temporaryDirectory.resolve("special_items.csv");
+        Files.writeString(source, """
+                id,name,desc,cost
+                #舰船特殊物品表：结构注释行
+                church_relic,圣物,古老的教会圣物,500
+                """, StandardCharsets.UTF_8);
+        TranslationReplacement replacement = new TranslationReplacement(
+                Path.of("special_items.csv"),
+                "csv:id=church_relic:name",
+                "圣物",
+                "Church Relic");
+
+        PatchArtifact artifact =
+                new StandardFileInjector().inject(temporaryDirectory, List.of(replacement));
+        String output = new String(artifact.content(), StandardCharsets.UTF_8);
+
+        assertThat(output).contains("church_relic,Church Relic,古老的教会圣物,500");
+        assertThat(output).contains("#舰船特殊物品表：结构注释行");
+        assertThat(output).doesNotContain(",圣物,");
+    }
+
+    @Test
     void rejectsStaleOriginalTextAndMixedFiles() throws Exception {
         Files.writeString(
                 temporaryDirectory.resolve("strings.json"),
@@ -224,6 +259,82 @@ class StandardFileInjectorTest {
     }
 
     @Test
+    void injectsShipHullNameAndDescriptionPreservingStructuralFields() throws Exception {
+        byte[] fixture = readFixtureBytes("/fixtures/json/hull.ship");
+        Path source = temporaryDirectory.resolve("data/hulls/example.ship");
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        Files.write(source, fixture);
+        TranslationReplacement hullName = new TranslationReplacement(
+                Path.of("data/hulls/example.ship"),
+                "json:/hullName",
+                "Example Hull",
+                "示例船体");
+        TranslationReplacement description = new TranslationReplacement(
+                Path.of("data/hulls/example.ship"),
+                "json:/description",
+                "A sturdy example hull.",
+                "坚固的示例船体。");
+
+        PatchArtifact artifact = new StandardFileInjector().inject(
+                temporaryDirectory, List.of(hullName, description));
+        JsonNode output = LENIENT_JSON.readTree(artifact.content());
+        JsonNode original = LENIENT_JSON.readTree(fixture);
+
+        assertThat(output.at("/hullName").asText()).isEqualTo("示例船体");
+        assertThat(output.at("/description").asText()).isEqualTo("坚固的示例船体。");
+        for (String structuralField
+                : List.of("hullId", "spriteName", "bounds", "weaponSlots", "engineSlots")) {
+            assertThat(LENIENT_JSON.writeValueAsBytes(output.get(structuralField)))
+                    .as("structural field %s", structuralField)
+                    .isEqualTo(LENIENT_JSON.writeValueAsBytes(original.get(structuralField)));
+        }
+    }
+
+    @Test
+    void injectsShipFileWithUpperCaseExtension() throws Exception {
+        Path source = temporaryDirectory.resolve("data/hulls/example.SHIP");
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        Files.write(source, readFixtureBytes("/fixtures/json/hull.ship"));
+        TranslationReplacement replacement = new TranslationReplacement(
+                Path.of("data/hulls/example.SHIP"),
+                "json:/hullName",
+                "Example Hull",
+                "Translated Hull");
+
+        PatchArtifact artifact =
+                new StandardFileInjector().inject(temporaryDirectory, List.of(replacement));
+        JsonNode output = LENIENT_JSON.readTree(artifact.content());
+
+        assertThat(output.at("/hullName").asText()).isEqualTo("Translated Hull");
+        assertThat(output.at("/hullId").asText()).isEqualTo("example_hull");
+    }
+
+    @Test
+    void rejectsUnknownOrStaleShipPointerWithExistingJsonErrorSemantics() throws Exception {
+        Path source = temporaryDirectory.resolve("data/hulls/example.ship");
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        Files.write(source, readFixtureBytes("/fixtures/json/hull.ship"));
+        StandardFileInjector injector = new StandardFileInjector();
+        TranslationReplacement unknown = new TranslationReplacement(
+                Path.of("data/hulls/example.ship"),
+                "json:/nonexistent",
+                "anything",
+                "translated");
+        TranslationReplacement stale = new TranslationReplacement(
+                Path.of("data/hulls/example.ship"),
+                "json:/hullName",
+                "Outdated Hull Name",
+                "translated");
+
+        assertThatThrownBy(() -> injector.inject(temporaryDirectory, List.of(unknown)))
+                .isInstanceOf(PatchBuilderException.class)
+                .hasMessageContaining("Stale JSON source text at json:/nonexistent");
+        assertThatThrownBy(() -> injector.inject(temporaryDirectory, List.of(stale)))
+                .isInstanceOf(PatchBuilderException.class)
+                .hasMessageContaining("Stale JSON source text at json:/hullName");
+    }
+
+    @Test
     void rejectsStalePlainTextAndMultipleReplacementsForOneFile() throws Exception {
         Path source = temporaryDirectory.resolve("data/missions/aglaia/mission_text.txt");
         Files.createDirectories(Objects.requireNonNull(source.getParent()));
@@ -245,5 +356,12 @@ class StandardFileInjectorTest {
         assertThatThrownBy(() ->
                         injector.inject(temporaryDirectory, List.of(duplicate, duplicate)))
                 .isInstanceOf(PatchBuilderException.class);
+    }
+
+    private static byte[] readFixtureBytes(String resourcePath) throws IOException {
+        try (InputStream stream = Objects.requireNonNull(
+                StandardFileInjectorTest.class.getResourceAsStream(resourcePath))) {
+            return stream.readAllBytes();
+        }
     }
 }

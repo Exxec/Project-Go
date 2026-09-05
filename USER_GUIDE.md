@@ -425,6 +425,8 @@ The CLI distribution requires JDK 25 and is mainly intended for automation:
 ```text
 ssmt-cli scan MODS_DIRECTORY
 ssmt-cli extract MOD_DIRECTORY
+ssmt-cli extract MOD_DIRECTORY --suggest-csv-schema DRAFT.json
+ssmt-cli extract MOD_DIRECTORY --suggest-csv-schema DRAFT.json --merge-into SCHEMA
 ssmt-cli validate "SOURCE TEXT" "TRANSLATED TEXT"
 ssmt-cli project create SOURCE PROJECT --patch-id ID --patch-name NAME
 ssmt-cli project create SOURCE PROJECT --patch-id ID --patch-name NAME --json-schema SCHEMA

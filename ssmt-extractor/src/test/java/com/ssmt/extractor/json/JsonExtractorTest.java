@@ -73,6 +73,29 @@ class JsonExtractorTest {
     }
 
     @Test
+    void supportsShipHullFileExtension() {
+        JsonExtractor extractor = new JsonExtractor(JsonExtractionSpec.allTextLeaves());
+
+        assertThat(extractor.supports(Path.of("data/hulls/example.ship"))).isTrue();
+        assertThat(extractor.supports(Path.of("data/hulls/EXAMPLE.SHIP"))).isTrue();
+        assertThat(extractor.supports(Path.of("data/hulls/example.ship.bak"))).isFalse();
+    }
+
+    @Test
+    void extractsSelectedHullFieldsFromLenientShipFile() throws Exception {
+        JsonExtractor extractor = new JsonExtractor(
+                JsonExtractionSpec.selectedPointers(Set.of("/hullName", "/description")));
+
+        List<ExtractedString> strings = extractor.extract(request("hull.ship"));
+
+        assertThat(strings).extracting(ExtractedString::key, ExtractedString::originalText)
+                .containsExactly(
+                        org.assertj.core.groups.Tuple.tuple(
+                                "json:/description", "A sturdy example hull."),
+                        org.assertj.core.groups.Tuple.tuple("json:/hullName", "Example Hull"));
+    }
+
+    @Test
     void toleratesUppercaseStarsectorBooleanWithoutChangingStringText(
             @TempDir Path modRoot
     ) throws Exception {
