@@ -18,6 +18,7 @@ val javafxPlatform = run {
 }
 
 dependencies {
+    testImplementation(libs.jackson.databind)
     implementation(project(":ssmt-core"))
     implementation(project(":ssmt-ai"))
     implementation(project(":ssmt-validation"))

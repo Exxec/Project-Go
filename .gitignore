@@ -6,8 +6,11 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 
 # Local test corpus and packaged artifacts
+/releases/
 Test mods/
 *.zip
+!ssmt-project/src/test/resources/edmund/workflow.zip
+!ssmt-gui/src/test/resources/edmund/workflow.zip
 *.7z
 
 # IDE

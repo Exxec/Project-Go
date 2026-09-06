@@ -157,14 +157,15 @@ class CsvGapSchemaSuggesterTest {
     }
 
     @Test
-    void reportsNoTextColumnsWhenOnlyCommentRowsHoldNonAscii(@TempDir Path modRoot)
+    void suggestsAsciiNamesEvenWhenNonAsciiAppearsOnlyInComments(@TempDir Path modRoot)
             throws Exception {
         write(modRoot.resolve("data/hulls/extra.csv"), "id,name\n#舰船注释行：结构行\nrelic,Relic\n");
 
         GapSchemaSuggestion suggestion = suggestOne(modRoot, EXTRA);
 
-        assertThat(suggestion.status()).isEqualTo(GapSchemaStatus.NO_TEXT_COLUMNS);
-        assertThat(suggestion.schema()).isEmpty();
+        assertThat(suggestion.status()).isEqualTo(GapSchemaStatus.SUGGESTED);
+        assertThat(suggestion.schema().orElseThrow().textColumns()).containsExactly("name");
+        assertThat(suggestion.nonAsciiCellCount()).isZero();
     }
 
     @Test
@@ -203,7 +204,7 @@ class CsvGapSchemaSuggesterTest {
     @Test
     void toCatalogEmitsOnlySuggestedEntries(@TempDir Path modRoot) throws Exception {
         write(modRoot.resolve("data/hulls/good.csv"), "id,name\nrelic,圣物\n");
-        write(modRoot.resolve("data/hulls/ascii.csv"), "id,name\nrelic,Relic\n");
+        write(modRoot.resolve("data/hulls/ascii.csv"), "id,value\nrelic,42\n");
 
         List<GapSchemaSuggestion> suggestions = suggester.suggest(modRoot, List.of(
                 new CoverageGapFinding(Path.of("data/hulls/good.csv"), "圣物"),

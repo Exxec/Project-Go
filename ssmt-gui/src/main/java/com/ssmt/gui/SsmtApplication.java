@@ -116,13 +116,18 @@ public final class SsmtApplication extends Application {
 
     @Override
     public void start(Stage stage) {
-        initializeTranslationMemory();
         editorNavigationTab = editorTab(stage);
         navigationTabs = new TabPane(
                 welcomeTab(stage),
                 editorNavigationTab,
                 toolsTab(stage));
-        BorderPane root = new BorderPane(navigationTabs);
+        Tab advanced = fixedTab(GuiText.get("normal.advanced"), navigationTabs);
+        java.util.concurrent.atomic.AtomicBoolean initialized = new java.util.concurrent.atomic.AtomicBoolean();
+        advanced.setOnSelectionChanged(event -> {
+            if (advanced.isSelected() && initialized.compareAndSet(false, true)) { initializeTranslationMemory(); }
+        });
+        BorderPane root = new BorderPane(new TabPane(
+                fixedTab(GuiText.get("normal.title"), new TranslationWorkflowPane(stage)), advanced));
         root.setPadding(new Insets(8));
         stage.setTitle(WINDOW_TITLE);
         stage.getIcons().add(new Image(java.util.Objects.requireNonNull(
@@ -146,7 +151,6 @@ public final class SsmtApplication extends Application {
             }
         });
         stage.show();
-        showFirstRunGuidance(stage);
     }
 
     /**
@@ -741,6 +745,21 @@ public final class SsmtApplication extends Application {
         }, () -> {
             refreshEditor(table);
             updateStatus(status);
+            workspace.lastRefreshResult().ifPresent(result -> {
+                var changed = result.report().entries().stream()
+                        .filter(entry -> entry.status() == ReconciliationStatus.CHANGED).toList();
+                if (!changed.isEmpty()) {
+                    changed.forEach(entry -> editor.setSuggestions(
+                            new TranslationRowId(entry.sourceFile(), entry.key()), entry.suggestions()));
+                    String details = changed.stream()
+                            .map(entry -> entry.sourceFile() + "#" + entry.key())
+                            .collect(java.util.stream.Collectors.joining("\n"));
+                    Alert review = new Alert(Alert.AlertType.INFORMATION,
+                            GuiText.get("dialog.refresh.changedReview") + "\n\n" + details, ButtonType.OK);
+                    review.setTitle(GuiText.get("dialog.refresh.title"));
+                    review.showAndWait();
+                }
+            });
             onCompleted.run();
         });
     }

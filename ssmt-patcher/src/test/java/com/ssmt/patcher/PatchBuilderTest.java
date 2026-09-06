@@ -185,18 +185,21 @@ class PatchBuilderTest {
         Files.createDirectories(output);
         Files.createDirectories(sourceBackup);
         Files.writeString(output.resolve("value.txt"), "old translated");
+        Files.writeString(output.resolve("Project Go Changes.csv"), "old report");
         Files.writeString(sourceBackup.resolve("value.txt"), "old source");
         java.util.concurrent.atomic.AtomicBoolean failed =
                 new java.util.concurrent.atomic.AtomicBoolean();
         PatchBuilder builder = new PatchBuilder((staging, destination) -> {
             if (destination.equals(output) && failed.compareAndSet(false, true)) {
+                assertThat(Files.readString(staging.resolve("Project Go Changes.csv"))).isEqualTo("new report");
                 throw new IOException("injected translated publication failure");
             }
             PatchBuilder.publishPath(staging, destination);
         });
         PatchRequest request = new PatchRequest(
                 source, output, "source.fr", "Source French", "source", "Source",
-                null, List.of(PatchArtifact.utf8(Path.of("value.txt"), "translated")));
+                null, List.of(PatchArtifact.utf8(Path.of("value.txt"), "translated"),
+                        PatchArtifact.utf8(Path.of("Project Go Changes.csv"), "new report")));
 
         assertThatThrownBy(() -> builder.build(request))
                 .isInstanceOf(PatchBuilderException.class)
@@ -206,6 +209,33 @@ class PatchBuilderTest {
                 .isEqualTo("old translated");
         assertThat(Files.readString(sourceBackup.resolve("value.txt")))
                 .isEqualTo("old source");
+        assertThat(Files.readString(output.resolve("Project Go Changes.csv"))).isEqualTo("old report");
+    }
+
+    @Test
+    void stagingOverlapNeverDeletesTheSourceDuringFailureCleanup() throws Exception {
+        Path source = temporaryDirectory.resolve(".output.ssmt-translated-staging");
+        Files.createDirectories(source);
+        Files.writeString(source.resolve("keep.txt"), "pristine");
+        var request = new PatchRequest(source, temporaryDirectory.resolve("output"),
+                "source.translation", "Translation", "source", "Source", null, List.of());
+        assertThatThrownBy(() -> new PatchBuilder().build(request)).hasMessageContaining("overlap");
+        assertThat(Files.readString(source.resolve("keep.txt"))).isEqualTo("pristine");
+    }
+
+    @Test
+    void missingRequiredReportInvalidatesTheBuildCache() throws Exception {
+        Path source = temporaryDirectory.resolve("source");
+        Files.createDirectories(source);
+        Files.writeString(source.resolve("keep.txt"), "pristine");
+        Path output = temporaryDirectory.resolve("output");
+        var request = new PatchRequest(source, output, "source.translation", "Translation", "source", "Source",
+                null, List.of(PatchArtifact.utf8(Path.of("Project Go Changes.csv"), "report")));
+        var builder = new PatchBuilder();
+        builder.build(request);
+        Files.delete(output.resolve("Project Go Changes.csv"));
+        assertThat(builder.build(request).changed()).isTrue();
+        assertThat(Files.readString(output.resolve("Project Go Changes.csv"))).isEqualTo("report");
     }
 
     @Test

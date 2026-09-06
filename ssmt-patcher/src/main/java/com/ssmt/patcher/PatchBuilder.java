@@ -16,6 +16,7 @@ import java.util.HexFormat;
  * Stages and publishes pristine and translated source clones.
  */
 public final class PatchBuilder {
+    private static final System.Logger LOG = System.getLogger(PatchBuilder.class.getName());
     private static final String CACHE_FILE = ".ssmt-build-fingerprint";
     private final Publisher publisher;
 
@@ -57,18 +58,26 @@ public final class PatchBuilder {
                 + ".ssmt-previous-source");
         Path fingerprintFile = output.resolve(CACHE_FILE);
         String fingerprint = fingerprint(request);
+        // Validate before entering cleanup scope: an invalid staging path may be the source itself.
+        for (Path managed : java.util.List.of(translatedStaging, sourceStaging, previousTranslated, previousSource)) {
+                if (managed.startsWith(request.sourceRoot()) || request.sourceRoot().startsWith(managed)) {
+                    throw new PatchBuilderException("Build staging and source roots must not overlap");
+                }
+        }
         try {
+            if (Files.exists(previousTranslated) || Files.exists(previousSource)) {
+                throw new PatchBuilderException("Previous build recovery data remains; preserve it before retrying publication");
+            }
             if (Files.isDirectory(output)
                     && Files.isDirectory(sourceBackup)
                     && Files.isRegularFile(fingerprintFile)
                     && Files.readString(fingerprintFile, StandardCharsets.UTF_8)
-                            .equals(fingerprint)) {
+                            .equals(fingerprint)
+                    && artifactsMatch(output, request)) {
                 return new PatchBuildResult(false, request.artifacts().size());
             }
             deleteTree(translatedStaging);
             deleteTree(sourceStaging);
-            deleteTree(previousTranslated);
-            deleteTree(previousSource);
             copyTree(request.sourceRoot(), sourceStaging, true);
             copyTree(sourceStaging, translatedStaging, false);
             for (PatchArtifact artifact : request.artifacts()) {
@@ -100,8 +109,11 @@ public final class PatchBuilder {
                     sourceStaging,
                     previousTranslated,
                     previousSource);
-            deleteTree(previousTranslated);
-            deleteTree(previousSource);
+            // Publication has committed. Cleanup must not turn success into an apparent rollback.
+            try { deleteTree(previousTranslated); }
+            catch (IOException exception) { LOG.log(System.Logger.Level.WARNING, "Published output; prior translated recovery data remains", exception); }
+            try { deleteTree(previousSource); }
+            catch (IOException exception) { LOG.log(System.Logger.Level.WARNING, "Published output; prior source recovery data remains", exception); }
             return new PatchBuildResult(true, request.artifacts().size());
         } catch (PatchBuilderException exception) {
             cleanup(translatedStaging, exception);
@@ -115,6 +127,16 @@ public final class PatchBuilder {
             cleanup(sourceStaging, failure);
             throw failure;
         }
+    }
+
+    private static boolean artifactsMatch(Path output, PatchRequest request) throws IOException {
+        for (PatchArtifact artifact : request.artifacts()) {
+            Path file = output.resolve(artifact.relativePath());
+            if (!Files.isRegularFile(file) || !java.util.Arrays.equals(Files.readAllBytes(file), artifact.content())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static void copyTree(Path source, Path destination, boolean preserveAttributes)
@@ -206,37 +228,34 @@ public final class PatchBuilder {
             Path sourceStaging,
             Path previousTranslated,
             Path previousSource) throws IOException {
+        boolean movedTranslated = false;
+        boolean movedSource = false;
+        boolean attemptedSource = false;
+        boolean attemptedTranslated = false;
         try {
             if (Files.exists(output)) {
                 Files.move(output, previousTranslated);
+                movedTranslated = true;
             }
             if (Files.exists(sourceBackup)) {
                 Files.move(sourceBackup, previousSource);
+                movedSource = true;
             }
+            attemptedSource = true;
             publisher.publish(sourceStaging, sourceBackup);
+            attemptedTranslated = true;
             publisher.publish(translatedStaging, output);
         } catch (IOException exception) {
-            rollbackPublishedPair(
-                    output, sourceBackup, previousTranslated, previousSource, exception);
+            if (movedTranslated || attemptedTranslated) { restore(output, previousTranslated, movedTranslated, exception); }
+            if (movedSource || attemptedSource) { restore(sourceBackup, previousSource, movedSource, exception); }
             throw exception;
         }
     }
 
-    private void rollbackPublishedPair(
-            Path output,
-            Path sourceBackup,
-            Path previousTranslated,
-            Path previousSource,
-            IOException failure) {
+    private void restore(Path output, Path previous, boolean existed, IOException failure) {
         try {
             deleteTree(output);
-            deleteTree(sourceBackup);
-            if (Files.exists(previousTranslated)) {
-                publisher.publish(previousTranslated, output);
-            }
-            if (Files.exists(previousSource)) {
-                publisher.publish(previousSource, sourceBackup);
-            }
+            if (existed) { publisher.publish(previous, output); }
         } catch (IOException rollbackFailure) {
             failure.addSuppressed(rollbackFailure);
         }

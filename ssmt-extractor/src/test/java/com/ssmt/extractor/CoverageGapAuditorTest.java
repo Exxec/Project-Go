@@ -13,6 +13,20 @@ import org.junit.jupiter.api.io.TempDir;
 class CoverageGapAuditorTest {
 
     @Test
+    void suggestsAsciiTextWithoutIncludingTechnicalColumns(@TempDir Path modRoot) throws Exception {
+        Path relative = Path.of("data/custom/augments.csv");
+        write(modRoot.resolve(relative),
+                "augmentID,name,description,script\nreactor,Reactor,More flux.,example.Script\n");
+        var findings = new CoverageGapAuditor().audit(modRoot,
+                new ExtractionReport(List.of(), List.of(relative)));
+        assertThat(findings).hasSize(1);
+        var suggested = new CsvGapSchemaSuggester().suggest(modRoot, findings).getFirst();
+        assertThat(suggested.schema().orElseThrow().textColumns())
+                .containsExactly("name", "description");
+        assertThat(suggested.schema().orElseThrow().identityColumns()).containsExactly("augmentID");
+    }
+
+    @Test
     void flagsUnrecognizedCsvFileContainingNonAsciiText(@TempDir Path modRoot) throws Exception {
         write(modRoot.resolve("data/hullmods/hull_mods.csv"),
                 "name,id\n偏光耗散镀层,AeCoat\n");

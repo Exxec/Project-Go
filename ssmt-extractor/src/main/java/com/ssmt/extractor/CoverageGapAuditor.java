@@ -52,6 +52,9 @@ public final class CoverageGapAuditor {
             Matcher matcher = NON_ASCII.matcher(text);
             if (matcher.find()) {
                 findings.add(new CoverageGapFinding(relative, sample(text, matcher.start())));
+            } else if (fileName.endsWith(".csv")) {
+                CsvTextEvidence.sample(text).ifPresent(value ->
+                        findings.add(new CoverageGapFinding(relative, sample(value, 0))));
             }
         }
         findings.sort(Comparator.comparing(finding -> finding.relativeSourceFile().toString()));

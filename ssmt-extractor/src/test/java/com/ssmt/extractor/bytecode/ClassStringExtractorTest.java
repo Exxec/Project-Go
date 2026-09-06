@@ -23,6 +23,22 @@ class ClassStringExtractorTest {
     private static final String SIDE_EFFECT_PROPERTY = "ssmt.bytecode.test.executed";
     private final ClassStringExtractor extractor = new ClassStringExtractor();
 
+    @Test
+    void authorAllowlistRestrictsLocationsAndRejectsStaleText(@TempDir Path modRoot) throws Exception {
+        Path source = writeClass(modRoot, classWithDangerousInitializer());
+        String key = "class:com/example/Dangerous#field:GREETING:Ljava/lang/String;";
+        Path catalog = modRoot.resolve(com.ssmt.core.BytecodeTextAllowlist.FILE_NAME);
+        String row = modRoot.relativize(source).toString().replace('\\', '/') + "\t" + key + "\t";
+        Files.writeString(catalog, "# ssmt-bytecode-allowlist-v1\n" + row
+                + com.ssmt.core.BytecodeTextAllowlist.sha256("Constant greeting") + "\n");
+        assertThat(extractor.extract(new ExtractionRequest("test_mod", modRoot, source)))
+                .extracting(ExtractedString::key).containsExactly(key);
+        Files.writeString(catalog, "# ssmt-bytecode-allowlist-v1\n" + row
+                + com.ssmt.core.BytecodeTextAllowlist.sha256("Old greeting") + "\n");
+        assertThatThrownBy(() -> extractor.extract(new ExtractionRequest("test_mod", modRoot, source)))
+                .isInstanceOf(SsmtParseException.class).hasMessageContaining("Stale bytecode allowlist");
+    }
+
     @AfterEach
     void clearSideEffectProperty() {
         System.clearProperty(SIDE_EFFECT_PROPERTY);

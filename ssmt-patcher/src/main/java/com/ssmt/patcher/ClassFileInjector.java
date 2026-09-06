@@ -1,5 +1,7 @@
 package com.ssmt.patcher;
 
+import com.ssmt.core.BytecodeTextAllowlist;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,6 +61,17 @@ public final class ClassFileInjector {
         }
 
         Map<String, TranslationReplacement> replacementsByKey = new HashMap<>();
+        try {
+            BytecodeTextAllowlist allowlist = BytecodeTextAllowlist.read(root);
+            for (TranslationReplacement replacement : copy) {
+                if (!replacement.originalText().equals(replacement.translatedText())
+                        && !allowlist.permits(relative, replacement.key(), replacement.originalText())) {
+                    throw new PatchBuilderException("Protected bytecode constant: " + replacement.key());
+                }
+            }
+        } catch (IOException exception) {
+            throw new PatchBuilderException("Invalid bytecode allowlist: " + exception.getMessage(), exception);
+        }
         for (TranslationReplacement replacement : copy) {
             if (replacementsByKey.put(replacement.key(), replacement) != null) {
                 throw new IllegalArgumentException("Duplicate replacement key " + replacement.key());

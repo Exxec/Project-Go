@@ -19,7 +19,7 @@ public enum GapSchemaStatus {
      */
     NO_ID_COLUMN,
 
-    /** An identity column was found, but no column holds non-ASCII data cells. */
+    /** An identity column was found, but no column holds non-ASCII or named text evidence. */
     NO_TEXT_COLUMNS,
 
     /** CSV parsing or schema validation failed; the reason carries the detail. */

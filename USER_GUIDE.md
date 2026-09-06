@@ -103,7 +103,7 @@ translated clone instead of the original mod. Never enable both copies.
 | Refresh with Translation Memory | Adds translation-memory suggestions to refresh results. Suggestions are never applied automatically. |
 | Open Translation Memory | Opens and integrity-checks an existing SQLite `.db`/`.sqlite` catalog and remembers it for later GUI sessions. |
 | Compare / Merge Catalog | Compares another database with the active catalog before writing. Missing entries and strictly higher-confidence provenance can be merged; equal/lower-confidence disagreements remain reported conflicts. |
-| Export for Online AI | Writes every project entry to an ID-keyed JSON document with source text, context, existing provenance, and strict output instructions. |
+| Export for Online AI | Writes every project entry to an ID-keyed JSON document with source text, context, existing provenance, and strict output instructions. Ship CSV names and SHIP descriptions include shared context matched by exact ship ID, including across export parts. |
 | Import AI Response | Validates a complete AI response, then imports reviewable drafts or explicitly bulk-approves every validated result. It can also update the patch name and translation memory. |
 | Make My Personal Copy | Validates entries and transactionally creates a pristine source backup plus a translated copy for your own use. A failure restores prior outputs and does not modify the source. The copy includes `Project Go Changes.csv`, a simple record of every source file, key, status, and translation. |
 | Search | Filters by source text, translated text, identity, or related displayed content. |
@@ -226,6 +226,16 @@ review status remain in translation-memory lineage metadata.
 The embedded prompt requests natural, polished Starsector English, consistent
 terminology, use of IDs and context for ambiguous names, exact preservation of
 schema/source/tokens/formatting/line breaks, and no invented lore or mechanics.
+
+Existing translations populate the export's `translation` and `existingTranslation`
+fields. Only new or untranslated entries have blank response slots. Starting again
+at an existing project destination refreshes that saved project through the normal
+refresh service instead of replacing its translations with fresh extraction. If that
+project is open, current editor edits are included.
+
+Mods can restrict bytecode translation to reviewed text with a
+[bytecode allowlist](BYTECODE_ALLOWLIST.md). VoidTec r13 includes one; use an updated
+SSMT build to enforce it.
 
 ## JSON Schema Editor
 
@@ -474,3 +484,15 @@ Include:
 - whether a second unchanged build differs.
 
 Do not attach proprietary mod contents unless distribution permission allows it.
+# Simplified desktop workflow
+
+The default screen now offers **Choose Mod → Export Translation File → Import
+Translated File → Build**. Choose the mod folder, give the exported JSON to your
+AI, import the completed JSON, and choose where to build the translated copy.
+Existing translations are saved automatically outside the source mod. The current
+simple path translates into English. The original mod stays untouched.
+
+Build currently creates a complete translated copy and a pristine-backup sibling,
+not a standalone overlay. The earlier editor and optional tools remain under
+**Advanced**. See [workflow migration details](docs/translation-workflow-migration.md)
+for persistence, compatibility, CLI commands, and release gates.

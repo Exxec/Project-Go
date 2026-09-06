@@ -8,6 +8,18 @@ class TranslationValidatorTest {
     private final TranslationValidator validator = new TranslationValidator();
 
     @Test
+    void protectsPairedVoidTecHighlightMarkers() {
+        assertThat(validator.validate("More ==flux==.", "Plus de ==flux==.")).isEmpty();
+        assertThat(validator.validate("More ==flux==.", "Plus de flux."))
+                .extracting(ValidationIssue::code).contains(ValidationCode.HIGHLIGHT_MARKER_MISMATCH);
+        assertThat(validator.validate("More ==flux==.", "Plus de ==flux== =="))
+                .extracting(ValidationIssue::code).contains(ValidationCode.HIGHLIGHT_MARKER_MISMATCH);
+        assertThat(validator.validate("More ==flux==.", "Plus de ==== flux."))
+                .extracting(ValidationIssue::code).contains(ValidationCode.HIGHLIGHT_MARKER_MISMATCH);
+        assertThat(validator.validate("x == y", "x equals y")).isEmpty();
+    }
+
+    @Test
     void acceptsReorderedEquivalentPlaceholders() {
         assertThat(validator.validate(
                         "%1$s has {0} $color points and %% morale",

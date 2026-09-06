@@ -1,0 +1,177 @@
+package com.ssmt.project;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.channels.FileChannel;
+import java.nio.file.StandardOpenOption;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+class TranslationWorkflowTest {
+    @TempDir Path directory;
+    private final ObjectMapper json = new ObjectMapper();
+
+    private Path source() throws Exception {
+        Path source = directory.resolve("mod");
+        Files.createDirectories(source.resolve("data/strings"));
+        Files.writeString(source.resolve("mod_info.json"), "{\"id\":\"example\",\"name\":\"Example\",\"version\":\"1\"}");
+        strings(source, "{\"a\":\"Hello\",\"b\":\"Goodbye\"}");
+        return source;
+    }
+
+    private void strings(Path source, String text) throws Exception {
+        Files.writeString(source.resolve("data/strings/strings.json"), text);
+    }
+
+    private Path response(TranslationWorkflow workflow, TranslationWorkflow.Session session) throws Exception {
+        Path file = directory.resolve("translation.json");
+        workflow.exportTranslation(session, file);
+        var root = json.readTree(file.toFile());
+        for (var entry : root.path("entries")) {
+            ((com.fasterxml.jackson.databind.node.ObjectNode) entry)
+                .put("translation", "Translated " + entry.path("source").asText());
+        }
+        json.writeValue(file.toFile(), root);
+        return file;
+    }
+
+    @Test void restartRefreshesWithoutVersionChangeAndRetainsRemovedHistory() throws Exception {
+        Path source = source();
+        var workflow = new TranslationWorkflow(directory.resolve("workspaces"));
+        var first = workflow.loadMod(source);
+        var translated = workflow.importTranslation(first, response(workflow, first));
+        strings(source, "{\"a\":\"Hello\",\"b\":\"Goodbye\",\"c\":\"New\"}");
+        var restart = new TranslationWorkflow(directory.resolve("workspaces"));
+        var grown = restart.loadMod(source);
+        assertThat(grown.project().entries()).hasSize(3);
+        assertThat(grown.project().entries().stream().filter(e -> !e.translatedText().isBlank())).hasSize(2);
+        strings(source, "{\"a\":\"Changed\",\"c\":\"New\"}");
+        var changed = restart.loadMod(source);
+        assertThat(changed.project().entries()).hasSize(2).allMatch(e -> e.translatedText().isBlank());
+        assertThat(changed.needsReview()).isEqualTo(1);
+        assertThat(restart.loadMod(source).needsReview()).isEqualTo(1);
+        var metadata = json.readTree(changed.workspace().resolve("project.ssmt.json").toFile()).path("workspace");
+        assertThat(metadata.path("history").toString()).contains("Translated Goodbye", "Translated Hello");
+        assertThat(translated.project().entries()).allMatch(e -> !e.translatedText().isBlank());
+    }
+
+    @Test void invalidImportAndPersistenceFailureLeaveCommittedStateUnchanged() throws Exception {
+        var workflow = new TranslationWorkflow(directory.resolve("workspaces"));
+        var session = workflow.loadMod(source());
+        Path file = session.workspace().resolve("project.ssmt.json");
+        byte[] before = Files.readAllBytes(file);
+        Path response = response(workflow, session);
+        var body = json.readTree(response.toFile());
+        ((com.fasterxml.jackson.databind.node.ObjectNode) body.path("entries").get(1)).put("source", "tampered");
+        json.writeValue(response.toFile(), body);
+        assertThatThrownBy(() -> workflow.importTranslation(session, response)).isInstanceOf(ProjectException.class);
+        assertThat(Files.readAllBytes(file)).isEqualTo(before);
+        Path valid = response(workflow, session);
+        try (var channel = FileChannel.open(session.workspace().resolve(".lock"), StandardOpenOption.WRITE);
+                var lock = channel.lock()) {
+            assertThat(lock.isValid()).isTrue();
+            assertThatThrownBy(() -> workflow.importTranslation(session, valid)).isInstanceOf(ProjectException.class);
+        }
+        assertThat(Files.readAllBytes(file)).isEqualTo(before);
+        assertThat(session.project().entries()).allMatch(e -> e.translatedText().isBlank());
+    }
+
+    @Test void rejectsStaleSessionCorruptWorkspaceAndSourceOutputOverlap() throws Exception {
+        Path source = source();
+        var workflow = new TranslationWorkflow(directory.resolve("workspaces"));
+        var session = workflow.loadMod(source);
+        Path response = response(workflow, session);
+        workflow.importTranslation(session, response);
+        assertThatThrownBy(() -> workflow.importTranslation(session, response)).hasMessageContaining("another window");
+        assertThatThrownBy(() -> workflow.exportTranslation(session, source.resolve("words.json")))
+                .hasMessageContaining("overlap");
+        Files.writeString(session.workspace().resolve("project.ssmt.json"), "broken");
+        assertThatThrownBy(() -> workflow.loadMod(source)).isInstanceOf(ProjectException.class);
+        assertThat(Files.readString(session.workspace().resolve("project.ssmt.json"))).isEqualTo("broken");
+    }
+
+    @Test void currentArrayIdentityRemainsPositionalAndSourceMismatchNeverReusesText() throws Exception {
+        Path source = source();
+        strings(source, "{\"list\":[\"First\",\"Second\"]}");
+        var workflow = new TranslationWorkflow(directory.resolve("workspaces"));
+        var first = workflow.loadMod(source);
+        assertThat(first.project().entries()).extracting(ProjectEntry::key).containsExactly("json:/list/0", "json:/list/1");
+        workflow.importTranslation(first, response(workflow, first));
+        strings(source, "{\"list\":[\"Second\",\"First\"]}");
+        var reordered = workflow.loadMod(source);
+        assertThat(reordered.project().entries()).allMatch(e -> e.translatedText().isBlank());
+        assertThat(reordered.needsReview()).isEqualTo(2);
+    }
+
+    @Test void failedPublicationAfterValidationPreservesProjectAndHistory() throws Exception {
+        var fail = new java.util.concurrent.atomic.AtomicBoolean();
+        var workflow = new TranslationWorkflow(directory.resolve("owned"), (stage, target) -> {
+            if (fail.get()) { throw new java.io.IOException("Injected publication failure"); }
+            Files.move(stage, target, java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        });
+        var session = workflow.loadMod(source());
+        Path response = response(workflow, session);
+        Path saved = session.workspace().resolve("project.ssmt.json");
+        byte[] before = Files.readAllBytes(saved);
+        fail.set(true);
+        assertThatThrownBy(() -> workflow.importTranslation(session, response))
+                .hasMessageContaining("previous state was retained");
+        assertThat(Files.readAllBytes(saved)).isEqualTo(before);
+        assertThat(session.project().entries()).allMatch(e -> e.translatedText().isBlank());
+    }
+
+    @Test void oldResponseImportsAfterCoverageGrowthAndBuildIncludesReportWithoutTouchingSource() throws Exception {
+        Path source = source();
+        var workflow = new TranslationWorkflow(directory.resolve("owned"));
+        var session = workflow.loadMod(source);
+        Path response = response(workflow, session);
+        strings(source, "{\"a\":\"Hello\",\"b\":\"Goodbye\",\"c\":\"New\"}");
+        var grown = workflow.importTranslation(session, response);
+        assertThat(grown.project().entries()).hasSize(3);
+        assertThat(grown.project().entries().stream().filter(e -> !e.translatedText().isBlank())).hasSize(2);
+        var completed = workflow.importTranslation(grown, response(workflow, grown));
+        byte[] before = Files.readAllBytes(source.resolve("data/strings/strings.json"));
+        Path output = directory.resolve("output");
+        workflow.buildPatch(completed, output);
+        assertThat(output.resolve("Project Go Changes.csv")).isRegularFile();
+        assertThat(Files.readAllBytes(source.resolve("data/strings/strings.json"))).isEqualTo(before);
+        assertThat(workflow.buildPatch(completed, output).changed()).isFalse();
+    }
+
+    @Test void bytecodeOrdinalsRemainPositionalAndInsertedConstantsDoNotInheritTranslations() throws Exception {
+        Path source = source();
+        Files.delete(source.resolve("data/strings/strings.json"));
+        Path file = source.resolve("Example.class");
+        Files.write(file, bytecode("First", "Second"));
+        var workflow = new TranslationWorkflow(directory.resolve("owned"));
+        var first = workflow.loadMod(source);
+        assertThat(first.project().entries()).extracting(ProjectEntry::key)
+                .containsExactly("class:Example#method:run()V:ldc:0", "class:Example#method:run()V:ldc:1");
+        workflow.importTranslation(first, response(workflow, first));
+        Files.write(file, bytecode("Inserted", "First", "Second"));
+        var shifted = workflow.loadMod(source);
+        assertThat(shifted.project().entries()).hasSize(3).allMatch(e -> e.translatedText().isBlank());
+    }
+
+    private static byte[] bytecode(String... strings) {
+        var writer = new org.objectweb.asm.ClassWriter(0);
+        writer.visit(org.objectweb.asm.Opcodes.V1_8, org.objectweb.asm.Opcodes.ACC_PUBLIC, "Example", null, "java/lang/Object", null);
+        var method = writer.visitMethod(org.objectweb.asm.Opcodes.ACC_PUBLIC | org.objectweb.asm.Opcodes.ACC_STATIC,
+                "run", "()V", null, null);
+        method.visitCode();
+        for (String text : strings) {
+            method.visitLdcInsn(text);
+            method.visitInsn(org.objectweb.asm.Opcodes.POP);
+        }
+        method.visitInsn(org.objectweb.asm.Opcodes.RETURN);
+        method.visitMaxs(1, 0);
+        method.visitEnd();
+        writer.visitEnd();
+        return writer.toByteArray();
+    }
+}

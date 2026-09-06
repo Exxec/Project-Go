@@ -26,6 +26,20 @@ class ClassFileInjectorTest {
     Path temporaryDirectory;
 
     @Test
+    void allowlistBlocksOldProjectsFromChangingProtectedConstants() throws Exception {
+        Files.write(temporaryDirectory.resolve("Danger.class"), dangerousClass());
+        Files.writeString(temporaryDirectory.resolve(com.ssmt.core.BytecodeTextAllowlist.FILE_NAME),
+                "# ssmt-bytecode-allowlist-v1\n");
+        var replacement = new TranslationReplacement(Path.of("Danger.class"),
+                "class:example/Danger#field:LABEL:Ljava/lang/String;", "Hello field", "Changed");
+        assertThatThrownBy(() -> new ClassFileInjector().inject(temporaryDirectory, List.of(replacement)))
+                .isInstanceOf(PatchBuilderException.class).hasMessageContaining("Protected bytecode constant");
+        var unchanged = new TranslationReplacement(replacement.sourceFile(), replacement.key(),
+                replacement.originalText(), replacement.originalText());
+        assertThat(new ClassFileInjector().inject(temporaryDirectory, List.of(unchanged))).isNotNull();
+    }
+
+    @Test
     void rewritesFieldAndLdcWithoutLoadingClass() throws Exception {
         Path source = temporaryDirectory.resolve("Danger.class");
         Files.write(source, dangerousClass());

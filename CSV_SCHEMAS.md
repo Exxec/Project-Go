@@ -62,8 +62,8 @@ exactly as they do for standard CSV extraction.
 
 ## Gap coverage suggestions
 
-`ssmt extract` reports unrecognized CSV files that appear to hold non-English
-text as advisory coverage gaps. Instead of hand-authoring a catalog from those
+`ssmt extract` reports unrecognized CSV files with non-ASCII content or likely
+ASCII text in named text columns as advisory coverage gaps. Instead of hand-authoring a catalog from those
 warnings, ask for a reviewable draft:
 
 ```powershell
@@ -74,7 +74,9 @@ ssmt extract MOD_DIRECTORY --suggest-csv-schema draft.csv.json --merge-into cust
 For each gap finding, SSMT infers one identity column — a header named `id`
 (case-insensitive) when present *and* non-blank and unique in every data row,
 otherwise the first other column with that property — plus every other named
-column holding non-ASCII data cells, in file order. A header named `id` whose
+column holding non-ASCII data cells or nonblank alphabetic content under a
+recognized text header (such as `name`, `description`, `message`, or `help`),
+in file order. A header named `id` whose
 values are blank or duplicated is rejected like any other column, and
 inference falls back to the remaining columns. `#`-prefixed and blank rows are
 structural and never contribute. Findings that cannot yield a schema are
@@ -91,4 +93,3 @@ it via `--csv-schema`. Suggestions are advisory data, never applied behavior, so
 the evidence-gated coverage policy is unchanged. `--merge-into` is only valid
 together with `--suggest-csv-schema` and skips paths the existing catalog
 already contains.
-

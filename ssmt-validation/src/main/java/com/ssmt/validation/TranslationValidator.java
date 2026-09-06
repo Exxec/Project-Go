@@ -19,6 +19,8 @@ public final class TranslationValidator {
     private static final Pattern MESSAGE = Pattern.compile("\\{(\\d+)(?:,[^{}]*)?}");
     private static final Pattern DOLLAR = Pattern.compile("\\$[A-Za-z][A-Za-z0-9_]*");
     private static final Pattern LINE_BREAK = Pattern.compile("\\r\\n|\\r|\\n");
+    private static final Pattern HIGHLIGHT = Pattern.compile("==.+?==");
+    private static final Pattern HIGHLIGHT_MARKER = Pattern.compile("==");
 
     /**
      * Validates translated protected tokens against their source.
@@ -32,6 +34,14 @@ public final class TranslationValidator {
             throw new IllegalArgumentException("texts must not be null");
         }
         List<ValidationIssue> issues = new ArrayList<>();
+        if (HIGHLIGHT.matcher(sourceText).find()
+                && (HIGHLIGHT.matcher(sourceText).results().count()
+                        != HIGHLIGHT.matcher(translatedText).results().count()
+                    || HIGHLIGHT_MARKER.matcher(sourceText).results().count()
+                        != HIGHLIGHT_MARKER.matcher(translatedText).results().count())) {
+            issues.add(new ValidationIssue(ValidationCode.HIGHLIGHT_MARKER_MISMATCH,
+                    "Paired ==highlight== spans differ"));
+        }
         if (hasMalformedPrintf(sourceText, translatedText)) {
             issues.add(new ValidationIssue(
                     ValidationCode.MALFORMED_PRINTF,

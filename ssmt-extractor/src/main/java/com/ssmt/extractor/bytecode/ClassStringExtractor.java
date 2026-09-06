@@ -1,6 +1,7 @@
 package com.ssmt.extractor.bytecode;
 
 import com.ssmt.core.exception.SsmtParseException;
+import com.ssmt.core.BytecodeTextAllowlist;
 import com.ssmt.core.model.ExtractedString;
 import com.ssmt.core.plugin.ExtractionRequest;
 import com.ssmt.core.plugin.FileExtractor;
@@ -61,6 +62,19 @@ public final class ClassStringExtractor implements FileExtractor {
         List<ExtractedString> extracted = isJar
                 ? extractJar(request)
                 : extractClassFile(request);
+        try {
+            BytecodeTextAllowlist allowlist = BytecodeTextAllowlist.read(request.modRoot());
+            List<ExtractedString> permitted = new ArrayList<>();
+            for (ExtractedString entry : extracted) {
+                if (allowlist.permits(entry.sourceFile(), entry.key(), entry.originalText())) {
+                    permitted.add(entry);
+                }
+            }
+            extracted = permitted;
+        } catch (IOException exception) {
+            throw new SsmtParseException("Invalid bytecode allowlist: " + exception.getMessage(),
+                    request.sourceFile(), exception);
+        }
         extracted.sort(Comparator.comparing(ExtractedString::key));
         return List.copyOf(extracted);
     }

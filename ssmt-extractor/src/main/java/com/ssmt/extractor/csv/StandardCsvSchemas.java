@@ -12,6 +12,15 @@ import java.util.Optional;
 public final class StandardCsvSchemas {
 
     private static final Map<String, CsvExtractionSpec> SCHEMAS = Map.ofEntries(
+            // VoidTec loaders confirm these cells are displayed, while manufacturer,
+            // faction IDs, slot/stat names and script paths remain technical inputs.
+            Map.entry("data/config/voidtec/vt_augment_data.csv",
+                    new CsvExtractionSpec("augmentID", List.of("name", "description"),
+                            List.of("additionalDescription"))),
+            Map.entry("data/config/voidtec/vt_welcome_messages.csv",
+                    new CsvExtractionSpec("id", List.of("message"))),
+            Map.entry("data/console/commands.csv",
+                    new CsvExtractionSpec("command", List.of("help"))),
             Map.entry("data/strings/descriptions.csv",
                     new CsvExtractionSpec(
                             List.of("id", "type"),

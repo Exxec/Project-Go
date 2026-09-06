@@ -120,8 +120,12 @@ public final class BrowserAiReviewService {
         for (var node : entries) {
             ObjectNode entry = (ObjectNode) node;
             entry.put("localMachineDraft", findExistingDraft(entry));
+            // Explicit review requests solicit a fresh draft; imports retain accepted translations.
+            entry.put("translation", "");
             entry.put("context", entry.path("relativeFilePath").asText()
-                    + "#" + entry.path("internalId").asText());
+                    + "#" + entry.path("internalId").asText()
+                    + (entry.path("context").asText().isEmpty()
+                            ? "" : "\n" + entry.path("context").asText()));
             entry.put("terminology", terminology);
         }
         writeJson(request, root);

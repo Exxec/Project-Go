@@ -46,6 +46,7 @@ public final class ProjectTranslationCoordinator {
         int preserved = 0;
         int reused = 0;
         int unresolved = 0;
+        ShipTranslationContext shipContext = new ShipTranslationContext(project);
         for (int batchStart = 0; batchStart < result.size();
                 batchStart += settings.maximumBatchSize()) {
             cancellation.throwIfCancellationRequested();
@@ -59,7 +60,7 @@ public final class ProjectTranslationCoordinator {
                 String identity = identity(entry);
                 AiTranslationRequest request = new AiTranslationRequest(
                         entry.originalText(), settings.sourceLanguage(),
-                        settings.targetLanguage(), context(project, entry),
+                        settings.targetLanguage(), context(project, entry, shipContext),
                         settings.terminology());
                 try {
                     var approved = engine.findApproved(request);
@@ -112,12 +113,14 @@ public final class ProjectTranslationCoordinator {
                 new ArrayList<>(backends), metadata);
     }
 
-    private static String context(LocalizationProject project, ProjectEntry entry) {
+    private static String context(LocalizationProject project, ProjectEntry entry,
+            ShipTranslationContext shipContext) {
         String path = entry.sourceFile().toString().replace('\\', '/');
         int extension = path.lastIndexOf('.');
         String type = extension < 0 ? "unknown" : path.substring(extension + 1);
         return "mod=" + project.sourceModId() + "; file=" + path
-                + "; contentType=" + type + "; internalId=" + entry.key();
+                + "; contentType=" + type + "; internalId=" + entry.key()
+                + (shipContext.forEntry(entry).isEmpty() ? "" : "\n" + shipContext.forEntry(entry));
     }
 
     private static String identity(ProjectEntry entry) {

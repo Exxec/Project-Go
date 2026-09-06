@@ -13,6 +13,7 @@ import picocli.CommandLine.IVersionProvider;
         versionProvider = Main.VersionProvider.class,
         description = "Scan and process Starsector mods without modifying their source files.",
         subcommands = {
+            TranslationCommand.class,
             ScanCommand.class,
             ExtractCommand.class,
             ValidateCommand.class,

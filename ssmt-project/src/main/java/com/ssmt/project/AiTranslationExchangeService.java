@@ -93,13 +93,14 @@ public final class AiTranslationExchangeService {
         root.put("instructions", instructions(targetLanguage));
         ArrayNode entries = root.putArray("entries");
         List<String> exportedIds = new ArrayList<>();
+        ShipTranslationContext shipContext = new ShipTranslationContext(project);
         for (ProjectEntry entry : List.copyOf(selectedEntries)) {
             ObjectNode item = entries.addObject();
             String id = identity(entry);
             exportedIds.add(id);
             item.put("id", id);
             item.put("source", entry.originalText());
-            item.put("translation", "");
+            item.put("translation", entry.translatedText());
             item.put("relativeFilePath",
                     entry.sourceFile().toString().replace('\\', '/'));
             item.put("internalId", entry.key());
@@ -107,6 +108,10 @@ public final class AiTranslationExchangeService {
             item.put("provenance", entry.provenance().name());
             item.put("existingTranslation", entry.translatedText());
             item.put("modName", originalModName);
+            String context = shipContext.forEntry(entry);
+            if (!context.isEmpty()) {
+                item.put("context", context);
+            }
             if (entry.provenance() == TranslationProvenance.AUTHOR_LOCALIZATION
                     && !entry.translatedText().isBlank()) {
                 item.put("authorLocalization", entry.translatedText());
@@ -409,8 +414,9 @@ public final class AiTranslationExchangeService {
                 + "consistent across duplicate/repeated strings. Prefer polished "
                 + "localization over overly literal translation, but do not invent lore "
                 + "or mechanics absent from the source. Prefer bundled author localization "
-                + "when supplied. Translate translatedModName and "
-                + "every entries[].translation. Return the complete JSON object only, "
+                + "when supplied. Preserve nonblank entries[].translation values. "
+                + "Translate translatedModName and fill only blank entries[].translation values. "
+                + "Return the complete JSON object only, "
                 + "without commentary or code fences. Do not change schemaVersion, "
                 + "sourceModId, any id, or any source.");
     }

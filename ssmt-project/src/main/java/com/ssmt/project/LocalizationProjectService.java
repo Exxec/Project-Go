@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.ssmt.core.CancellationToken;
+import com.ssmt.core.BytecodeTextAllowlist;
 import com.ssmt.core.RuntimeBudgets;
 import com.ssmt.core.exception.SsmtParseException;
 import com.ssmt.core.model.ExtractedString;
@@ -258,6 +259,13 @@ public final class LocalizationProjectService {
             Optional<Path> jsonSchemaCatalog,
             Optional<Path> csvSchemaCatalog,
             CancellationToken cancellation) throws ProjectException {
+        return create(sourceRoot, patchId, patchName,
+                schemaExtraction(jsonSchemaCatalog, csvSchemaCatalog), cancellation);
+    }
+
+    private static ExtractionCoordinator schemaExtraction(
+            Optional<Path> jsonSchemaCatalog,
+            Optional<Path> csvSchemaCatalog) throws ProjectException {
         List<FileExtractor> extractors = new ArrayList<>(List.of(
                 new StandardCsvFileExtractor(),
                 new StandardJsonFileExtractor(),
@@ -279,12 +287,7 @@ public final class LocalizationProjectService {
                 throw new ProjectException("Could not load opt-in CSV schema", exception);
             }
         }
-        return create(
-                sourceRoot,
-                patchId,
-                patchName,
-                new ExtractionCoordinator(extractors),
-                cancellation);
+        return new ExtractionCoordinator(extractors);
     }
 
     /**
@@ -315,6 +318,24 @@ public final class LocalizationProjectService {
             Path sourceRoot,
             LocalizationProject project,
             CancellationToken cancellation) throws ProjectException {
+        return refresh(sourceRoot, project, extraction, cancellation);
+    }
+
+    /** Refreshes schema-configured extraction through the same reconciliation as ordinary refresh. */
+    public ProjectRefreshResult refreshWithSchemas(
+            Path sourceRoot,
+            LocalizationProject project,
+            Optional<Path> jsonSchemaCatalog,
+            Optional<Path> csvSchemaCatalog,
+            CancellationToken cancellation) throws ProjectException {
+        return refresh(sourceRoot, project, schemaExtraction(jsonSchemaCatalog, csvSchemaCatalog), cancellation);
+    }
+
+    private ProjectRefreshResult refresh(
+            Path sourceRoot,
+            LocalizationProject project,
+            ExtractionCoordinator coordinator,
+            CancellationToken cancellation) throws ProjectException {
         if (cancellation == null) {
             throw new IllegalArgumentException("cancellation must not be null");
         }
@@ -324,7 +345,7 @@ public final class LocalizationProjectService {
                         sourceRoot,
                         project.patchId(),
                         project.patchName(),
-                        extraction,
+                        coordinator,
                         cancellation);
         if (!extracted.sourceModId().equals(project.sourceModId())) {
             throw new ProjectException("Project source mod id does not match selected source");
@@ -700,6 +721,19 @@ public final class LocalizationProjectService {
                 }
             }
             cancellation.throwIfCancellationRequested();
+            if (Files.exists(sourceRoot.resolve(BytecodeTextAllowlist.FILE_NAME))) {
+                Map<String, String> emitted = new LinkedHashMap<>();
+                for (List<TranslationReplacement> replacements : grouped.values()) {
+                    for (TranslationReplacement replacement : replacements) {
+                        emitted.put(replacement.sourceFile().toString().replace('\\', '/')
+                                + "\t" + replacement.key(), replacement.translatedText());
+                    }
+                }
+                artifacts.add(PatchArtifact.utf8(Path.of(BytecodeTextAllowlist.FILE_NAME),
+                        BytecodeTextAllowlist.read(sourceRoot).translatedCatalog(emitted)));
+            }
+            artifacts.add(PatchArtifact.utf8(Path.of("Project Go Changes.csv"),
+                    new TranslationReportExporter().render(project)));
             PatchBuildResult result = patchBuilder.build(new PatchRequest(
                     sourceRoot,
                     outputRoot,
@@ -709,12 +743,8 @@ public final class LocalizationProjectService {
                     mod.name(),
                     mod.gameVersion(),
                     artifacts));
-            Path report = outputRoot.resolve("Project Go Changes.csv");
-            if (result.changed() || !Files.isRegularFile(report)) {
-                new TranslationReportExporter().write(report, project);
-            }
-            return new ProjectBuildResult(result.changed(), result.artifactCount());
-        } catch (PatchBuilderException | IllegalArgumentException exception) {
+            return new ProjectBuildResult(result.changed(), result.artifactCount() - 1);
+        } catch (PatchBuilderException | IllegalArgumentException | IOException exception) {
             throw new ProjectException(
                     "Could not build localization project: " + exception.getMessage(),
                     exception);

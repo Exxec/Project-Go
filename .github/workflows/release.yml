@@ -33,7 +33,28 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Run tests and verification
-        run: ./gradlew build --no-daemon
+        run: ./gradlew clean check --no-daemon
+
+      - name: Verify tag matches source version
+        shell: bash
+        run: |
+          VERSION=$(sed -n 's/^ssmtVersion=//p' gradle.properties | tr -d '\r')
+          if [[ "$GITHUB_REF" == refs/tags/* && "$GITHUB_REF_NAME" != "v$VERSION" ]]; then
+            echo "Release tag does not match ssmtVersion" >&2
+            exit 1
+          fi
+
+      - name: Build committed distributions and check launch versions
+        shell: bash
+        run: |
+          ./gradlew assemble :ssmt-cli:installDist :ssmt-gui:installDist :ssmt-auto:installDist --no-daemon
+          VERSION=$(sed -n 's/^ssmtVersion=//p' gradle.properties | tr -d '\r')
+          ssmt-cli/build/install/ssmt-cli/bin/ssmt-cli --version 2>&1 | grep -F "$VERSION"
+          ssmt-gui/build/install/ssmt-gui/bin/ssmt-gui --version 2>&1 | grep -F "$VERSION"
+          ssmt-gui/build/install/ssmt-gui/bin/ssmt-gui --smoke-test
+          ssmt-auto/build/install/ssmt-auto/bin/ssmt-auto --version 2>&1 | grep -F "$VERSION"
+          ssmt-auto/build/install/ssmt-auto/bin/ssmt-auto --smoke-test
+          printf 'version=%s\ncommit=%s\n' "$VERSION" "$GITHUB_SHA" > build/reports/release-source.txt
 
       - name: Generate release evidence
         run: |
@@ -53,6 +74,8 @@ jobs:
             build/distributions/SHA256SUMS
             ssmt-cli/build/distributions/*.zip
             ssmt-gui/build/distributions/*.zip
+            ssmt-auto/build/distributions/*.zip
+            build/reports/release-source.txt
           if-no-files-found: error
 
   windows-portable:
@@ -80,7 +103,14 @@ jobs:
       - name: Build and smoke-test Windows application
         shell: pwsh
         run: |
+          .\gradlew.bat clean check --no-daemon
+          if ($LASTEXITCODE -ne 0) { throw 'Windows tests failed' }
           .\gradlew.bat :ssmt-gui:developmentBundleChecksum --no-daemon
+          if ($LASTEXITCODE -ne 0) { throw 'Windows packaging failed' }
+          $version = (Select-String '^ssmtVersion=' gradle.properties).Line.Split('=')[1]
+          foreach ($exe in @('ssmt-gui/build/jpackage/Project Go/Project Go.exe', 'ssmt-auto/build/jpackage/Project Go Auto/Project Go Auto.exe')) {
+            if ((Get-Item $exe).VersionInfo.ProductVersion -ne $version) { throw "Unexpected version: $exe" }
+          }
 
       - name: Upload Windows package
         uses: actions/upload-artifact@v5
@@ -153,7 +183,8 @@ jobs:
             \( -name "*.zip" \
             -o -name "*.sha256" \
             -o -name "SHA256SUMS" \
-            -o -name "*.json" \) \
+            -o -name "*.json" \
+            -o -name "release-source.txt" \) \
             -print0 \
             | xargs -0 gh release upload "$TAG" \
                 --repo "$GITHUB_REPOSITORY" \

@@ -33,6 +33,7 @@ import com.ssmt.tm.TranslationMemoryMergeResult;
 import com.ssmt.tm.TranslationMemoryMergeService;
 import com.ssmt.validation.font.BmFontGlyphSet;
 import java.nio.file.Path;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,6 +62,12 @@ public final class ProjectWorkspaceController {
     private Path outputRoot;
     private Path jsonSchemaCatalog;
     private Path csvSchemaCatalog;
+    private ProjectRefreshResult lastRefreshResult;
+
+    /** Most recent applied refresh, including changed-source entries requiring review. */
+    public Optional<ProjectRefreshResult> lastRefreshResult() {
+        return Optional.ofNullable(lastRefreshResult);
+    }
 
     public ProjectWorkspaceController(TranslationEditorController editor) {
         this(new ServiceWorkflow(new LocalizationProjectService()), editor);
@@ -75,7 +82,8 @@ public final class ProjectWorkspaceController {
     }
 
     /**
-     * Extracts and writes a new project, then loads it into the editor.
+     * Extracts a new project or refreshes an existing destination, then loads the editor.
+     * Continuing the active destination also preserves unsaved editor translations.
      *
      * @param source selected source mod
      * @param destination project JSON destination
@@ -235,12 +243,25 @@ public final class ProjectWorkspaceController {
             Optional<Path> jsonSchemaCatalog,
             Optional<Path> csvSchemaCatalog,
             CancellationToken cancellation) throws ProjectException {
-        LocalizationProject created =
-                workflow.create(
-                        source, patchId, patchName,
-                        jsonSchemaCatalog, csvSchemaCatalog, cancellation);
+        Path normalizedDestination = destination.toAbsolutePath().normalize();
+        boolean continuingOpenProject = project != null && normalizedDestination.equals(projectFile);
+        LocalizationProject created;
+        ProjectRefreshResult refreshed = null;
+        if (continuingOpenProject || Files.exists(normalizedDestination)) {
+            LocalizationProject existing = continuingOpenProject
+                    ? editor.applyEdits(project) : workflow.read(normalizedDestination);
+            refreshed = jsonSchemaCatalog.isPresent() || csvSchemaCatalog.isPresent()
+                    ? workflow.refreshWithSchemas(source, existing, jsonSchemaCatalog, csvSchemaCatalog, cancellation)
+                    : workflow.refresh(source, existing, cancellation);
+            created = refreshed.project();
+        } else {
+            created = workflow.create(source, patchId, patchName,
+                    jsonSchemaCatalog, csvSchemaCatalog, cancellation);
+        }
+        cancellation.throwIfCancellationRequested();
         workflow.write(destination, created);
         setWorkspace(source, destination, created);
+        lastRefreshResult = refreshed;
         this.jsonSchemaCatalog = jsonSchemaCatalog
                 .map(path -> path.toAbsolutePath().normalize()).orElse(null);
         this.csvSchemaCatalog = csvSchemaCatalog
@@ -256,6 +277,7 @@ public final class ProjectWorkspaceController {
      */
     public void open(Path source, Path projectPath) throws ProjectException {
         setWorkspace(source, projectPath, workflow.read(projectPath));
+        lastRefreshResult = null;
     }
 
     /**
@@ -415,6 +437,7 @@ public final class ProjectWorkspaceController {
         workflow.write(projectFile, result.project());
         project = result.project();
         editor.load(project);
+        lastRefreshResult = result;
     }
 
     /**
@@ -617,8 +640,8 @@ public final class ProjectWorkspaceController {
         project = editor.applyEdits(project);
         AiTranslationImportResult result =
                 aiExchange.importResponse(response, project, translationMemory, policy);
+        workflow.write(projectFile, result.project());
         project = result.project();
-        workflow.write(projectFile, project);
         editor.load(project);
         return result;
     }
@@ -828,6 +851,15 @@ public final class ProjectWorkspaceController {
                 LocalizationProject project,
                 CancellationToken cancellation) throws ProjectException;
 
+        default ProjectRefreshResult refreshWithSchemas(
+                Path sourceRoot,
+                LocalizationProject project,
+                Optional<Path> jsonSchemaCatalog,
+                Optional<Path> csvSchemaCatalog,
+                CancellationToken cancellation) throws ProjectException {
+            throw new ProjectException("This workflow does not support schema-configured refresh");
+        }
+
         ProjectRefreshResult refreshWithTranslationMemory(
                 Path sourceRoot,
                 LocalizationProject project,
@@ -886,6 +918,16 @@ public final class ProjectWorkspaceController {
                 LocalizationProject project,
                 CancellationToken cancellation) throws ProjectException {
             return service.refresh(sourceRoot, project, cancellation);
+        }
+
+        @Override
+        public ProjectRefreshResult refreshWithSchemas(
+                Path sourceRoot,
+                LocalizationProject project,
+                Optional<Path> jsonSchemaCatalog,
+                Optional<Path> csvSchemaCatalog,
+                CancellationToken cancellation) throws ProjectException {
+            return service.refreshWithSchemas(sourceRoot, project, jsonSchemaCatalog, csvSchemaCatalog, cancellation);
         }
 
         @Override

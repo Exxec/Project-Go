@@ -12,6 +12,9 @@ plugins {
 }
 
 val libraries = extensions.getByType<VersionCatalogsExtension>().named("libs")
+val sourceCommit = providers.exec {
+    commandLine("git", "rev-parse", "HEAD")
+}.standardOutput.asText.map { it.trim() }
 
 allprojects {
     group = "com.ssmt"
@@ -53,6 +56,7 @@ subprojects {
     tasks.withType<Jar>().configureEach {
         manifest {
             attributes["Implementation-Version"] = project.version.toString()
+            attributes["Implementation-Commit"] = sourceCommit.get()
         }
     }
 
@@ -120,7 +124,7 @@ val generateSbom by tasks.registering {
 val releaseChecksums by tasks.registering {
     group = "distribution"
     description = "Writes deterministic SHA-256 checksums for release ZIP archives."
-    dependsOn(":ssmt-cli:distZip", ":ssmt-gui:distZip")
+    dependsOn(":ssmt-cli:distZip", ":ssmt-gui:distZip", ":ssmt-auto:distZip")
     val destination = layout.buildDirectory.file("distributions/SHA256SUMS")
     outputs.file(destination)
     doLast {
@@ -128,7 +132,9 @@ val releaseChecksums by tasks.registering {
             project(":ssmt-cli").layout.buildDirectory
                 .file("distributions/ssmt-cli-${project.version}.zip").get().asFile,
             project(":ssmt-gui").layout.buildDirectory
-                .file("distributions/ssmt-gui-${project.version}.zip").get().asFile)
+                .file("distributions/ssmt-gui-${project.version}.zip").get().asFile,
+            project(":ssmt-auto").layout.buildDirectory
+                .file("distributions/ssmt-auto-${project.version}.zip").get().asFile)
                 .sortedBy { it.name }
         val digest = MessageDigest.getInstance("SHA-256")
         val lines = archives.map { archive ->
@@ -143,13 +149,15 @@ val releaseChecksums by tasks.registering {
 val scanReleaseArchives by tasks.registering {
     group = "verification"
     description = "Rejects unsafe or unexpectedly large release ZIP entry layouts."
-    dependsOn(":ssmt-cli:distZip", ":ssmt-gui:distZip")
+    dependsOn(":ssmt-cli:distZip", ":ssmt-gui:distZip", ":ssmt-auto:distZip")
     doLast {
         val archives = listOf(
             project(":ssmt-cli").layout.buildDirectory
                 .file("distributions/ssmt-cli-${project.version}.zip").get().asFile,
             project(":ssmt-gui").layout.buildDirectory
-                .file("distributions/ssmt-gui-${project.version}.zip").get().asFile)
+                .file("distributions/ssmt-gui-${project.version}.zip").get().asFile,
+            project(":ssmt-auto").layout.buildDirectory
+                .file("distributions/ssmt-auto-${project.version}.zip").get().asFile)
         archives.forEach { archive ->
             ZipFile(archive).use { zip ->
                 val entries = zip.entries().asSequence().toList()

@@ -208,7 +208,8 @@ public final class CsvGapSchemaSuggester {
             }
             boolean hasNonAscii = false;
             for (List<String> row : dataRows) {
-                if (NON_ASCII.matcher(cell(row, index)).find()) {
+                if (NON_ASCII.matcher(cell(row, index)).find()
+                        || CsvTextEvidence.matches(header, cell(row, index))) {
                     hasNonAscii = true;
                     break;
                 }

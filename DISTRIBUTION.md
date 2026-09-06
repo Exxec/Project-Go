@@ -3,11 +3,25 @@
 `Last updated: 2026-08-02 by Codex (0.6.0 clone-output distribution warning)`
 
 Project Go release versioning is controlled by `ssmtVersion` in `gradle.properties`
-(currently 0.6.0). The release build includes PNG and Windows ICO
+(currently 0.7.0). The release build includes PNG and Windows ICO
 application assets and uses the JDK 25 `jpackage` tool without an
 additional packaging plugin.
 
 ## Application image
+
+Every completed migration phase that changes user-facing behavior must ship from
+its final source commit. Run the full applicable checks first, then rebuild all
+published distributions, smoke-test their launchers, and verify their versions.
+Only after these gates pass may the source commit/tag be pushed and matching
+binaries published. A failed test or version check blocks publication.
+
+JAR manifests contain `Implementation-Version` and `Implementation-Commit`.
+Release tags must equal `v<ssmtVersion>`. CI repeats tests on Linux and Windows,
+checks launcher versions and Windows executable version metadata, and publishes
+source-commit evidence alongside GUI, CLI, Auto and Windows portable bundles.
+Generated release binaries and local mod outputs belong in release assets, not
+normal source history. Test corpus ZIPs and the Gradle wrapper remain deliberate
+source dependencies.
 
 ```powershell
 .\gradlew.bat :ssmt-gui:jpackageImage

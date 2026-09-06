@@ -17,6 +17,12 @@ public final class GuiLauncher {
      * @param args application arguments
      */
     public static void main(String[] args) {
+        if (Arrays.asList(args).contains("--version")) {
+            System.getLogger(GuiLauncher.class.getName()).log(System.Logger.Level.INFO,
+                    "Project Go " + Objects.requireNonNull(GuiLauncher.class.getPackage().getImplementationVersion(),
+                            "Packaged application version is missing"));
+            return;
+        }
         if (isSmokeTest(args)) {
             verifyPackagedResources();
             return;

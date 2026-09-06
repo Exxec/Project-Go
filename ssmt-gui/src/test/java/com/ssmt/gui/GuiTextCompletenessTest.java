@@ -25,12 +25,12 @@ class GuiTextCompletenessTest {
 
     @Test
     void everyLiteralGuiTextKeyReferencedInSourceResolves() throws IOException {
-        Path source = Path.of("src/main/java/com/ssmt/gui/SsmtApplication.java");
-        String content = Files.readString(source, StandardCharsets.UTF_8);
-        Matcher matcher = KEY_PATTERN.matcher(content);
         List<String> keys = new ArrayList<>();
-        while (matcher.find()) {
-            keys.add(matcher.group(1));
+        try (var sources = Files.walk(Path.of("src/main/java/com/ssmt/gui"))) {
+            for (Path source : sources.filter(p -> p.toString().endsWith(".java")).toList()) {
+                Matcher matcher = KEY_PATTERN.matcher(Files.readString(source, StandardCharsets.UTF_8));
+                while (matcher.find()) { keys.add(matcher.group(1)); }
+            }
         }
 
         assertThat(keys).isNotEmpty();
