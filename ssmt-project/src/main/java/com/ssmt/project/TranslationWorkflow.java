@@ -118,7 +118,7 @@ public final class TranslationWorkflow {
                 throw new ProjectException(missing
                     + " texts still need translation. Export the translation file, finish it, and import it before building.");
             }
-            return projects.build(session.source(), destination, current);
+            return projects.buildTranslatedCopy(session.source(), destination, current);
         });
     }
 

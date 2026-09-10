@@ -14,10 +14,11 @@ import com.ssmt.project.ProjectException;
 import com.ssmt.project.ProjectRefreshResult;
 import com.ssmt.project.SourceLanguageDetector;
 import com.ssmt.scanner.ModInfoReader;
-import com.ssmt.tm.SqliteTranslationMemory;
 import com.ssmt.tm.MasterTranslationLibrary;
+import com.ssmt.tm.SqliteTranslationMemory;
 import com.ssmt.tm.TranslationMemoryException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -26,8 +27,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
-import java.util.Objects;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -48,16 +50,28 @@ public final class AutoWorkflow {
     private final SourceLanguageDetector languages = new SourceLanguageDetector();
     private final ModInfoReader modInfoReader = new ModInfoReader();
     private final Path sharedCatalog;
+    private final Path workspaceRoot;
 
     /**
      * Creates a workflow using the persistent catalog shared by all auto projects.
      */
     public AutoWorkflow() {
-        this(defaultSharedCatalog());
+        this(defaultSharedCatalog(), defaultWorkspaceRoot());
     }
 
     AutoWorkflow(Path sharedCatalog) {
+        this(sharedCatalog, sharedCatalog.resolveSibling("projects"));
+    }
+
+    /**
+     * Creates a workflow with explicit internal storage locations.
+     *
+     * @param sharedCatalog persistent catalog shared by auto projects
+     * @param workspaceRoot internal root for per-source project workspaces
+     */
+    public AutoWorkflow(Path sharedCatalog, Path workspaceRoot) {
         this.sharedCatalog = sharedCatalog.toAbsolutePath().normalize();
+        this.workspaceRoot = workspaceRoot.toAbsolutePath().normalize();
     }
 
     /**
@@ -86,12 +100,13 @@ public final class AutoWorkflow {
         if (!fileName(supplied).toLowerCase(Locale.ROOT).endsWith(".zip")) {
             throw new ProjectException("Drop a ZIP mod archive, mod_info.json, or mod folder");
         }
-        Path parent = Objects.requireNonNull(supplied.getParent(), "archive parent");
-        Path workspace = parent.resolve("Project Go - " + safeName(
-                withoutExtension(fileName(supplied)), "Mod archive"));
+        Path workspace = workspaceFor(
+                supplied,
+                safeName(withoutExtension(fileName(supplied)), "Mod archive"));
+        Path visibleRoot = Objects.requireNonNull(supplied.getParent(), "archive parent");
         try {
             Files.createDirectories(workspace);
-            return run(extractArchive(supplied, workspace), workspace);
+            return run(extractArchive(supplied, workspace), workspace, visibleRoot);
         } catch (IOException exception) {
             throw new ProjectException("Could not unpack dropped mod archive", exception);
         }
@@ -106,21 +121,26 @@ public final class AutoWorkflow {
      */
     public AutoRunResult run(Path sourceRoot) throws ProjectException {
         Path source = sourceRoot.toAbsolutePath().normalize();
-        Path parent = Objects.requireNonNull(source.getParent(), "source mod parent");
         ModInfo mod = readMod(source);
-        return run(source, parent.resolve("Project Go - " + safeName(mod.name(), mod.id())));
+        Path visibleRoot = Objects.requireNonNull(source.getParent(), "source mod parent");
+        return run(
+                source,
+                workspaceFor(source, safeName(mod.name(), mod.id())),
+                visibleRoot);
     }
 
-    private AutoRunResult run(Path sourceRoot, Path workspace) throws ProjectException {
+    private AutoRunResult run(Path sourceRoot, Path workspace, Path visibleRoot)
+            throws ProjectException {
         Path source = sourceRoot.toAbsolutePath().normalize();
         ModInfo mod = readMod(source);
         workspace = workspace.toAbsolutePath().normalize();
+        visibleRoot = visibleRoot.toAbsolutePath().normalize();
         String originalName = safeName(mod.name(), mod.id());
         Path stateFile = workspace.resolve("project-go-state.json");
         Path legacyCatalog = workspace.resolve(CATALOG_FILE);
-        Path missing = workspace.resolve(originalName + " - AI translation request.json");
-        Path translated = workspace.resolve(originalName + " - AI translation library.json");
-        Path patch = workspace.resolve(safeName(mod.id(), "translation") + ".english");
+        Path missing = visibleRoot.resolve(originalName + " - AI translation request.json");
+        Path translated = visibleRoot.resolve(originalName + " - AI translation library.json");
+        Path patch = visibleRoot.resolve(safeName(mod.id(), "translation") + ".english");
         try {
             Files.createDirectories(workspace);
             prepareSharedCatalog(legacyCatalog);
@@ -209,7 +229,7 @@ public final class AutoWorkflow {
                             + sharedCatalog);
         }
 
-        ProjectBuildResult build = projects.build(source, patch, project);
+        ProjectBuildResult build = projects.buildTranslatedCopy(source, patch, project);
         writeState(
                 stateFile,
                 new State(
@@ -222,8 +242,7 @@ public final class AutoWorkflow {
                         ? AutoRunResult.Status.PATCH_PUBLISHED
                         : AutoRunResult.Status.PATCH_UNCHANGED,
                 workspace,
-                "Translated clone: " + patch + "; pristine source backup: "
-                        + patch + "-source-backup; master library: " + sharedCatalog);
+                "Translated copy: " + patch + "; master library: " + sharedCatalog);
     }
 
     private ModInfo readMod(Path source) throws ProjectException {
@@ -302,6 +321,28 @@ public final class AutoWorkflow {
 
     private static Path defaultSharedCatalog() {
         return MasterTranslationLibrary.currentUserDefault();
+    }
+
+    private static Path defaultWorkspaceRoot() {
+        Path applicationData = MasterTranslationLibrary.resolve(
+                Optional.empty(),
+                Optional.ofNullable(System.getenv("LOCALAPPDATA")),
+                Path.of(System.getProperty("user.home")));
+        return Objects.requireNonNull(applicationData.getParent(), "application data")
+                .resolve("projects");
+    }
+
+    private Path workspaceFor(Path source, String displayName) throws ProjectException {
+        String identity = source.toAbsolutePath().normalize().toString();
+        if (isWindows()) {
+            identity = identity.toLowerCase(Locale.ROOT);
+        }
+        String key = sha256(identity);
+        return workspaceRoot.resolve(displayName + "-" + key).normalize();
+    }
+
+    private static boolean isWindows() {
+        return System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("win");
     }
 
     private static LocalizationProject applyUniqueExactMatches(
@@ -418,6 +459,15 @@ public final class AutoWorkflow {
                     MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(file)));
         } catch (IOException | NoSuchAlgorithmException exception) {
             throw new ProjectException("Could not fingerprint translated response", exception);
+        }
+    }
+
+    private static String sha256(String value) throws ProjectException {
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
+                    .digest(value.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException exception) {
+            throw new ProjectException("Could not fingerprint source identity", exception);
         }
     }
 

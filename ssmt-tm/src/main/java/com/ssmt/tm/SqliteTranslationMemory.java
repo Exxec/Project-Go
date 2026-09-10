@@ -51,10 +51,14 @@ public final class SqliteTranslationMemory implements AutoCloseable {
 
         HikariDataSource source = null;
         try {
+            Path parent = normalized.getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
             source = new HikariDataSource(config);
             migrate(source);
             return new SqliteTranslationMemory(source, normalized);
-        } catch (SQLException | RuntimeException exception) {
+        } catch (java.io.IOException | SQLException | RuntimeException exception) {
             if (source != null) {
                 source.close();
             }

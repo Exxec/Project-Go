@@ -158,10 +158,12 @@ class BackendCommandTest {
                 .isZero();
         assertThat(sourceState(output)).isEqualTo(firstOutput);
         assertThat(command.execute(
-                        "project", "refresh", source.toString(), project.toString()))
+                        "project", "refresh", source.toString(), project.toString(),
+                        "--tm", temporaryDirectory.resolve("catalog/translation.db").toString()))
                 .isZero();
         assertThat(command.execute(
-                        "project", "refresh", source.toString(), project.toString(), "--apply"))
+                        "project", "refresh", source.toString(), project.toString(), "--apply",
+                        "--tm", temporaryDirectory.resolve("catalog/translation.db").toString()))
                 .isZero();
 
         assertThat(output.normalize()).isNotEqualTo(source.normalize());

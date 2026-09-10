@@ -25,7 +25,9 @@ class TranslationCommandTest {
         var session = new TranslationWorkflow(owned).loadMod(source);
         assertThat(session.project().entries().getFirst().translatedText()).isEqualTo("Bonjour");
         assertThat(run("build", source, directory.resolve("output"), owned)).isZero();
-        assertThat(directory.resolve("output/Project Go Changes.csv")).isRegularFile();
+        assertThat(directory.resolve("output/Project Go Changes.csv")).doesNotExist();
+        assertThat(com.ssmt.patcher.PatchBuilder.sourceBackupRoot(
+                directory.resolve("output"))).doesNotExist();
         assertThat(Files.readString(source.resolve("data/strings/strings.json"))).contains("Hello").doesNotContain("Bonjour");
     }
 

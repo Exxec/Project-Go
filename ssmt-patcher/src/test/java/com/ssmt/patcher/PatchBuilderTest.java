@@ -79,6 +79,38 @@ class PatchBuilderTest {
     }
 
     @Test
+    void publishesOneTranslatedCopyAndRestoresPriorOutputOnFailure() throws Exception {
+        Path source = temporaryDirectory.resolve("single-source");
+        Files.createDirectories(source);
+        Files.writeString(source.resolve("value.txt"), "source");
+        Path output = temporaryDirectory.resolve("single-output");
+        PatchRequest first = new PatchRequest(
+                source, output, "source.fr", "Source French", "source", "Source",
+                null, List.of(PatchArtifact.utf8(Path.of("value.txt"), "translated")));
+        new PatchBuilder().buildTranslatedCopy(first);
+
+        assertThat(Files.readString(output.resolve("value.txt"))).isEqualTo("translated");
+        assertThat(PatchBuilder.sourceBackupRoot(output)).doesNotExist();
+
+        PatchRequest changed = new PatchRequest(
+                source, output, "source.fr", "Source French", "source", "Source",
+                null, List.of(PatchArtifact.utf8(Path.of("value.txt"), "changed")));
+        java.util.concurrent.atomic.AtomicBoolean failed =
+                new java.util.concurrent.atomic.AtomicBoolean();
+        PatchBuilder failing = new PatchBuilder((staging, destination) -> {
+            if (destination.equals(output) && failed.compareAndSet(false, true)) {
+                throw new IOException("injected single-copy failure");
+            }
+            PatchBuilder.publishPath(staging, destination);
+        });
+
+        assertThatThrownBy(() -> failing.buildTranslatedCopy(changed))
+                .isInstanceOf(PatchBuilderException.class);
+        assertThat(Files.readString(output.resolve("value.txt"))).isEqualTo("translated");
+        assertThat(PatchBuilder.sourceBackupRoot(output)).doesNotExist();
+    }
+
+    @Test
     void rejectsTraversalOverlapAndDuplicatePaths() {
         Path source = temporaryDirectory.resolve("source").toAbsolutePath();
         PatchArtifact valid = PatchArtifact.utf8(Path.of("data/file.csv"), "x");

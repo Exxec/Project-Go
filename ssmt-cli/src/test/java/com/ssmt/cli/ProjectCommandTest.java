@@ -44,7 +44,8 @@ class ProjectCommandTest {
                 StandardCharsets.UTF_8);
 
         int exitCode = new CommandLine(new Main()).execute(
-                "project", "import-ai-response", projectFile.toString(), responseFile.toString());
+                "project", "import-ai-response", projectFile.toString(), responseFile.toString(),
+                "--tm", temporary.resolve("catalog/translation.db").toString());
 
         assertThat(exitCode).isZero();
         LocalizationProject updated = service.read(projectFile);
@@ -77,7 +78,8 @@ class ProjectCommandTest {
                 """, StandardCharsets.UTF_8);
 
         int exitCode = new CommandLine(new Main()).execute(
-                "project", "import-ai-response", projectFile.toString(), responseFile.toString());
+                "project", "import-ai-response", projectFile.toString(), responseFile.toString(),
+                "--tm", temporary.resolve("catalog/translation.db").toString());
 
         assertThat(exitCode).isEqualTo(1);
     }

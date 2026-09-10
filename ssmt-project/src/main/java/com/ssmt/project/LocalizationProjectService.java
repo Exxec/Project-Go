@@ -662,7 +662,27 @@ public final class LocalizationProjectService {
             Path sourceRoot,
             Path outputRoot,
             LocalizationProject project) throws ProjectException {
-        return build(sourceRoot, outputRoot, project, CancellationToken.NONE);
+        return buildInternal(
+                sourceRoot, outputRoot, project, CancellationToken.NONE, true);
+    }
+
+    /**
+     * Validates and publishes one translated copy for the normal workflow.
+     * Project reports stay in the owned workspace and the immutable source is
+     * not duplicated as a permanent sibling.
+     *
+     * @param sourceRoot source mod root
+     * @param outputRoot translated-copy destination
+     * @param project translated project
+     * @return build summary
+     * @throws ProjectException on validation, stale source, or publication failure
+     */
+    public ProjectBuildResult buildTranslatedCopy(
+            Path sourceRoot,
+            Path outputRoot,
+            LocalizationProject project) throws ProjectException {
+        return buildInternal(
+                sourceRoot, outputRoot, project, CancellationToken.NONE, false);
     }
 
     /**
@@ -680,6 +700,15 @@ public final class LocalizationProjectService {
             Path outputRoot,
             LocalizationProject project,
             CancellationToken cancellation) throws ProjectException {
+        return buildInternal(sourceRoot, outputRoot, project, cancellation, true);
+    }
+
+    private ProjectBuildResult buildInternal(
+            Path sourceRoot,
+            Path outputRoot,
+            LocalizationProject project,
+            CancellationToken cancellation,
+            boolean publishSupportArtifacts) throws ProjectException {
         if (cancellation == null) {
             throw new IllegalArgumentException("cancellation must not be null");
         }
@@ -732,9 +761,11 @@ public final class LocalizationProjectService {
                 artifacts.add(PatchArtifact.utf8(Path.of(BytecodeTextAllowlist.FILE_NAME),
                         BytecodeTextAllowlist.read(sourceRoot).translatedCatalog(emitted)));
             }
-            artifacts.add(PatchArtifact.utf8(Path.of("Project Go Changes.csv"),
-                    new TranslationReportExporter().render(project)));
-            PatchBuildResult result = patchBuilder.build(new PatchRequest(
+            if (publishSupportArtifacts) {
+                artifacts.add(PatchArtifact.utf8(Path.of("Project Go Changes.csv"),
+                        new TranslationReportExporter().render(project)));
+            }
+            PatchRequest request = new PatchRequest(
                     sourceRoot,
                     outputRoot,
                     project.patchId(),
@@ -742,8 +773,13 @@ public final class LocalizationProjectService {
                     project.sourceModId(),
                     mod.name(),
                     mod.gameVersion(),
-                    artifacts));
-            return new ProjectBuildResult(result.changed(), result.artifactCount() - 1);
+                    artifacts);
+            PatchBuildResult result = publishSupportArtifacts
+                    ? patchBuilder.build(request)
+                    : patchBuilder.buildTranslatedCopy(request);
+            int supportArtifacts = publishSupportArtifacts ? 1 : 0;
+            return new ProjectBuildResult(
+                    result.changed(), result.artifactCount() - supportArtifacts);
         } catch (PatchBuilderException | IllegalArgumentException | IOException exception) {
             throw new ProjectException(
                     "Could not build localization project: " + exception.getMessage(),

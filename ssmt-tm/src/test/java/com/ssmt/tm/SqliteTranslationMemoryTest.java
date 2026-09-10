@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ssmt.core.model.TranslationProvenance;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.DriverManager;
 import java.time.Instant;
@@ -69,6 +70,34 @@ class SqliteTranslationMemoryTest {
 
     @TempDir
     Path temporaryDirectory;
+
+    @Test
+    void createsMissingParentDirectoriesBeforeOpeningDatabase() throws Exception {
+        Path database = temporaryDirectory.resolve("fresh-profile/catalog/translation-memory.db");
+
+        assertThat(database.getParent()).doesNotExist();
+        try (SqliteTranslationMemory memory = SqliteTranslationMemory.open(database)) {
+            assertThat(memory.verifyIntegrity()).isTrue();
+        }
+
+        assertThat(database.getParent()).isDirectory();
+        assertThat(database).isRegularFile();
+    }
+
+    @Test
+    void reportsParentCreationFailureAsTranslationMemoryException() throws Exception {
+        Path blockedParent = temporaryDirectory.resolve("blocked-parent");
+        Files.writeString(blockedParent, "not a directory");
+        Path database = blockedParent.resolve("translation-memory.db");
+
+        assertThatThrownBy(() -> SqliteTranslationMemory.open(database))
+                .isInstanceOf(TranslationMemoryException.class)
+                .hasMessage("Could not open translation memory at "
+                        + database.toAbsolutePath().normalize())
+                .hasCauseInstanceOf(java.io.IOException.class);
+        assertThat(database).doesNotExist();
+        assertThat(blockedParent).isRegularFile();
+    }
 
     @Test
     void verifiesIntegrityAndCreatesReadableBackup() throws Exception {

@@ -1,9 +1,11 @@
 # Shared translation workflow migration
 
-The normal desktop path is **Choose Mod → Export Translation File → Import
-Translated File → Build**. It uses `TranslationWorkflow` in `ssmt-project`, also
-used by the CLI `translation` command. The previous desktop workflow remains
-available under Advanced. The pre-redesign snapshot is unchanged.
+The normal desktop path is **Choose → Translate → Install**. One primary action
+guides the user through saving an AI request, opening its response, and creating
+the translated copy; completed saved work skips directly to Install. It uses
+`TranslationWorkflow` in `ssmt-project`, also used by the CLI `translation`
+command. The previous desktop workflow remains available under Advanced. The
+pre-redesign snapshot is unchanged.
 
 ## Current implementation (phases 1–5)
 
@@ -85,9 +87,15 @@ identical source strings can remain indistinguishable under positional identity.
 
 ## Separate release gates (phases 6–7)
 
-Build currently creates the proven translated clone and pristine-backup sibling.
-It is **not a standalone translation overlay**. GUI wording says translated copy.
-Incomplete translations prevent publication, leaving previous output intact.
+The normal `TranslationWorkflow` and Auto paths create one proven translated
+clone. They keep workspace metadata and change reports internal and use temporary
+rollback staging rather than publishing a pristine-backup sibling; the selected
+source remains untouched as the pristine input. The Advanced portable-project
+build retains its explicit backup and report behavior for maintainers.
+
+The translated clone is **not a standalone translation overlay**. GUI wording
+says translated copy. Incomplete translations prevent publication, leaving
+previous output intact.
 
 Standalone patch output must demonstrate game-loading behavior for CSV, JSON,
 variants, factions, `.ship`, loose classes and JAR translations before becoming

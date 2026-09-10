@@ -14,7 +14,7 @@ import org.junit.jupiter.api.io.TempDir;
 class TranslationWorkflowControllerTest {
     @TempDir Path directory;
 
-    @Test void fourActionsUseDurableFacadeAndFailedImportDoesNotReplaceActiveSession() throws Exception {
+    @Test void normalActionsUseDurableFacadeAndFailedImportDoesNotReplaceActiveSession() throws Exception {
         Path source = directory.resolve("source");
         Files.createDirectories(source.resolve("data/strings"));
         Files.writeString(source.resolve("mod_info.json"), "{\"id\":\"gui\",\"name\":\"GUI\"}");
@@ -34,7 +34,8 @@ class TranslationWorkflowControllerTest {
         controller.importTranslation(response);
         assertThat(controller.session().orElseThrow().project().entries().getFirst().translatedText()).isEqualTo("Bonjour");
         controller.buildPatch(directory.resolve("output"));
-        assertThat(directory.resolve("output/Project Go Changes.csv")).isRegularFile();
+        assertThat(directory.resolve("output/Project Go Changes.csv")).doesNotExist();
+        assertThat(directory.resolve("output-source-backup")).doesNotExist();
         var restart = new TranslationWorkflowController(new TranslationWorkflow(directory.resolve("owned")));
         restart.loadMod(source);
         assertThat(restart.session().orElseThrow().project()).isEqualTo(controller.session().orElseThrow().project());

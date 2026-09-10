@@ -42,6 +42,25 @@ public final class PatchBuilder {
      * @throws PatchBuilderException on filesystem or publication failure
      */
     public PatchBuildResult build(PatchRequest request) throws PatchBuilderException {
+        return build(request, true);
+    }
+
+    /**
+     * Builds one translated copy without publishing a redundant pristine sibling.
+     * The source remains the pristine input; prior output is retained only while
+     * an atomic-style replacement is in progress.
+     *
+     * @param request validated build request
+     * @return publication result
+     * @throws PatchBuilderException on filesystem or publication failure
+     */
+    public PatchBuildResult buildTranslatedCopy(PatchRequest request)
+            throws PatchBuilderException {
+        return build(request, false);
+    }
+
+    private PatchBuildResult build(PatchRequest request, boolean publishSourceBackup)
+            throws PatchBuilderException {
         Path output = request.outputRoot();
         Path parent = output.getParent();
         if (parent == null) {
@@ -69,7 +88,7 @@ public final class PatchBuilder {
                 throw new PatchBuilderException("Previous build recovery data remains; preserve it before retrying publication");
             }
             if (Files.isDirectory(output)
-                    && Files.isDirectory(sourceBackup)
+                    && (!publishSourceBackup || Files.isDirectory(sourceBackup))
                     && Files.isRegularFile(fingerprintFile)
                     && Files.readString(fingerprintFile, StandardCharsets.UTF_8)
                             .equals(fingerprint)
@@ -78,8 +97,12 @@ public final class PatchBuilder {
             }
             deleteTree(translatedStaging);
             deleteTree(sourceStaging);
-            copyTree(request.sourceRoot(), sourceStaging, true);
-            copyTree(sourceStaging, translatedStaging, false);
+            if (publishSourceBackup) {
+                copyTree(request.sourceRoot(), sourceStaging, true);
+                copyTree(sourceStaging, translatedStaging, false);
+            } else {
+                copyTree(request.sourceRoot(), translatedStaging, true);
+            }
             for (PatchArtifact artifact : request.artifacts()) {
                 Path destination = translatedStaging.resolve(artifact.relativePath()).normalize();
                 if (!destination.startsWith(translatedStaging)) {
@@ -102,13 +125,17 @@ public final class PatchBuilder {
                     translatedStaging.resolve(CACHE_FILE),
                     fingerprint,
                     StandardCharsets.UTF_8);
-            replacePair(
-                    output,
-                    sourceBackup,
-                    translatedStaging,
-                    sourceStaging,
-                    previousTranslated,
-                    previousSource);
+            if (publishSourceBackup) {
+                replacePair(
+                        output,
+                        sourceBackup,
+                        translatedStaging,
+                        sourceStaging,
+                        previousTranslated,
+                        previousSource);
+            } else {
+                replaceSingle(output, translatedStaging, previousTranslated);
+            }
             // Publication has committed. Cleanup must not turn success into an apparent rollback.
             try { deleteTree(previousTranslated); }
             catch (IOException exception) { LOG.log(System.Logger.Level.WARNING, "Published output; prior translated recovery data remains", exception); }
@@ -126,6 +153,25 @@ public final class PatchBuilder {
             cleanup(translatedStaging, failure);
             cleanup(sourceStaging, failure);
             throw failure;
+        }
+    }
+
+    private void replaceSingle(
+            Path output, Path translatedStaging, Path previousTranslated) throws IOException {
+        boolean movedTranslated = false;
+        boolean attemptedTranslated = false;
+        try {
+            if (Files.exists(output)) {
+                Files.move(output, previousTranslated);
+                movedTranslated = true;
+            }
+            attemptedTranslated = true;
+            publisher.publish(translatedStaging, output);
+        } catch (IOException exception) {
+            if (movedTranslated || attemptedTranslated) {
+                restore(output, previousTranslated, movedTranslated, exception);
+            }
+            throw exception;
         }
     }
 

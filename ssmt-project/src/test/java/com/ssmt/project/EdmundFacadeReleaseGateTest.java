@@ -72,7 +72,8 @@ class EdmundFacadeReleaseGateTest {
         var completed = restart.importTranslation(resumed, export);
         Path output = directory.resolve("translated-copy");
         restart.buildPatch(completed, output);
-        assertThat(output.resolve("Project Go Changes.csv")).isRegularFile();
+        assertThat(output.resolve("Project Go Changes.csv")).doesNotExist();
+        assertThat(com.ssmt.patcher.PatchBuilder.sourceBackupRoot(output)).doesNotExist();
         assertThat(new TranslationWorkflow(directory.resolve("owned")).loadMod(directory.resolve("source"))
                 .project().entries()).hasSize(207).allMatch(e -> !e.translatedText().isBlank());
     }

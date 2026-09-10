@@ -95,11 +95,12 @@ original, and keep the generated copy private.
 .\ssmt-gui\build\install\ssmt-gui\bin\ssmt-gui.bat
 ```
 
-The desktop app opens on a **Start** screen: start a new project, continue a
-saved project, or use a practice project. The primary path is then **Start**,
-**Translation Editor**, and **Tools and Settings**, so optional configuration,
-AI exchange, and diagnostics do not crowd the translation workflow. Custom
-schemas are exact-path/pointer (JSON) or exact-path/column (CSV) catalogs; see
+The desktop app opens on a **Choose → Translate → Install** workflow with one
+primary action at a time. Project state is saved internally, completed saved work
+skips directly to installation, and a normal build creates one translated copy.
+The former project editor, practice project, custom paths, catalogs, schemas, AI
+providers, and diagnostics remain under Advanced. Custom schemas are
+exact-path/pointer (JSON) or exact-path/column (CSV) catalogs; see
 [JSON_SCHEMAS.md](JSON_SCHEMAS.md) and [CSV_SCHEMAS.md](CSV_SCHEMAS.md).
 
 ## Run Project Go Auto (drag-and-drop)
@@ -108,11 +109,12 @@ schemas are exact-path/pointer (JSON) or exact-path/column (CSV) catalogs; see
 .\gradlew.bat :ssmt-auto:run --args='"C:\path\to\ExampleMod.zip"'
 ```
 
-Runs the same source-safe project/translation-memory/refresh/validation/patch
+Runs the same source-safe project/translation-memory/refresh/validation/copy
 pipeline headlessly against a dropped mod ZIP (or unpacked mod), sharing the
-same default SQLite master translation library as the GUI. It makes a patch
-when the library is complete; otherwise it writes an AI translation request and
-imports the returned JSON into that library on the next drop. See [AUTO_GUIDE.md](AUTO_GUIDE.md).
+same default SQLite master translation library as the GUI. Project, state, and
+archive-extraction files stay in Project Go application data. Beside the selected
+input, Auto exposes only the AI handoff files when needed and one translated copy
+when complete. See [AUTO_GUIDE.md](AUTO_GUIDE.md).
 
 ## Native packaging
 
@@ -159,6 +161,10 @@ See [AUTO_GUIDE.md](AUTO_GUIDE.md) for the headless drag-and-drop workflow.
 
 See [ENVIRONMENT.md](ENVIRONMENT.md) for setup details and
 [ARCHITECTURE.md](ARCHITECTURE.md) for module boundaries.
+The evidence-gated implementation priorities and protocol for assessing future
+mod revival attempts are in [docs/ROADMAP.md](docs/ROADMAP.md).
+The proposed normal workflow and reduced user-visible file model are described in
+[docs/designs/simple-file-workflow.md](docs/designs/simple-file-workflow.md).
 
 ## License
 

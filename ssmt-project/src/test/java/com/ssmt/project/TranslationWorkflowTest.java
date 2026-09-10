@@ -125,7 +125,7 @@ class TranslationWorkflowTest {
         assertThat(session.project().entries()).allMatch(e -> e.translatedText().isBlank());
     }
 
-    @Test void oldResponseImportsAfterCoverageGrowthAndBuildIncludesReportWithoutTouchingSource() throws Exception {
+    @Test void oldResponseImportsAfterCoverageGrowthAndBuildPublishesOnlyTranslatedCopy() throws Exception {
         Path source = source();
         var workflow = new TranslationWorkflow(directory.resolve("owned"));
         var session = workflow.loadMod(source);
@@ -138,7 +138,8 @@ class TranslationWorkflowTest {
         byte[] before = Files.readAllBytes(source.resolve("data/strings/strings.json"));
         Path output = directory.resolve("output");
         workflow.buildPatch(completed, output);
-        assertThat(output.resolve("Project Go Changes.csv")).isRegularFile();
+        assertThat(output.resolve("Project Go Changes.csv")).doesNotExist();
+        assertThat(com.ssmt.patcher.PatchBuilder.sourceBackupRoot(output)).doesNotExist();
         assertThat(Files.readAllBytes(source.resolve("data/strings/strings.json"))).isEqualTo(before);
         assertThat(workflow.buildPatch(completed, output).changed()).isFalse();
     }

@@ -43,9 +43,10 @@ self-contained Windows x64 ZIP and adjacent SHA-256 file under
 the compatibility matrix. It is unsigned and intended for real-world
 development testing before installer/signing acceptance.
 
-Generated pristine and translated clone directories contain the original
-mod's assets and code. They are personal-use output only; never include them
-in Project Go release bundles or share them with others.
+Generated translated copies—and any explicit pristine backup produced by the
+Advanced portable-project flow—contain the original mod's assets and code. They
+are personal-use output only; never include them in Project Go release bundles
+or share them with others.
 
 ## Installer
 

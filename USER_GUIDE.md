@@ -1,6 +1,6 @@
 # Project Go Personal-Use Guide
 
-`Last updated: 2026-08-30 (personal-copy preview, restore point, and change report added)`
+`Last updated: 2026-09-10 (three-stage normal flow and single-copy output)`
 
 ## What this build is
 
@@ -9,8 +9,7 @@ development bundle is self-contained: it includes the application and its Java
 runtime, so testers do not need to install Java. It is a development-testing
 build, not a signed installer.
 
-Project Go reads source mods and makes a pristine backup plus a translated copy for
-your own game.
+Project Go reads source mods and makes one translated copy for your own game.
 It must never edit the source mod. Malformed source, including `Ture` where a
 boolean is required, is reported and is not silently repaired.
 
@@ -25,21 +24,21 @@ boolean is required, is reported and is not silently repaired.
 Windows SmartScreen may warn because the development build is unsigned. Verify
 the ZIP against its adjacent `.sha256` file before testing.
 
-Keep working project files and the pristine backup outside both the original
-mod and the Starsector `mods` directory. Only the translated clone belongs in
-`mods`, and it replaces the original while testing or playing.
-After selecting a source mod, the GUI uses a safe sibling workspace named
-`Project Go - <Mod Name>`. Generated files never go inside the
-source mod:
+The normal workflow has three stages: **Choose**, **Translate**, and **Install**.
+It shows one primary next action instead of asking you to manage project files.
+Project state, history, reports, recovery data, and translation memory remain in
+Project Go's application-data directory.
+
+The normal workflow creates only one visible result:
 
 ```text
-Project Go - <Mod Name>\
-  <Mod Name> project.ssmt.json
-  <Mod Name> words.json
-  <Mod Name> words translated.json
-  <Mod Name> translated\
-  <Mod Name> translated-source-backup\
+<chosen destination>\<mod-id>-translated\
 ```
+
+Your selected ZIP or mod directory remains the pristine original. Project Go
+uses temporary rollback data while replacing an existing translated copy and
+removes that data after success. It does not publish a second permanent source
+backup or `Project Go Changes.csv` in the normal output.
 
 The SQLite translation-memory pool remains separate. The GUI and Project Go Auto
 share `%LOCALAPPDATA%\Project Go\project-go-catalog.db` as their master translation
@@ -47,8 +46,7 @@ library by default. Auto checks it first, then adds validated AI results so it
 becomes a reusable index across mods. It is created automatically, reused after
 restart, and never stored inside a source mod.
 Opening another database makes that catalog the remembered GUI default.
-Existing projects keep using their project directory unless it is inside the
-source mod, in which case Project Go uses the safe sibling workspace.
+Portable projects and custom locations remain available under Advanced.
 
 ## Recommended first test
 
@@ -57,37 +55,33 @@ Choose a writable parent folder; Project Go creates or resets
 `ssmt-sample-project` there and opens a synthetic localization project. The
 copy contains no proprietary Starsector or community-mod content.
 
-1. Select **Start New Translation** and choose a mod folder containing
-   `mod_info.json`.
-2. Project Go automatically loads `mod_info.json`, proposes
-   `<mod-id>.translation`, and proposes `Translation (<original mod name>)`.
-   You may edit both before extraction.
-3. Project Go creates
-   `Project Go - <Mod Name>\<Mod Name> project.ssmt.json`.
-4. Search or filter entries, edit translations, and review validation results.
-5. Save the project.
-6. Select **Preview My Copy**. This safe dry run changes no files and tells you
-   how many entries and source files are ready.
-7. Select **Make My Personal Copy**. Project Go creates `<Mod Name> translated`
-   plus `<Mod Name> translated-source-backup` in the workspace.
-8. Copy or move only the translated clone into Starsector's `mods` directory.
-9. Disable the original mod, enable the translated clone, then launch Starsector.
-10. Rebuild without changing translations and confirm that output is unchanged.
+1. In the normal **Translate a Mod** tab, select **Choose a Mod** and choose the
+   folder containing `mod_info.json`.
+2. If saved translations are already complete, Project Go advances directly to
+   **Install**. Otherwise select **Save AI Translation Request**.
+3. Give that JSON to the translator and select **Open AI Translation Response**
+   when it returns. The response filename does not matter.
+4. Project Go validates the entire response before saving anything. If entries
+   remain unfinished, it returns to the translation step.
+5. Select **Create Translated Mod**, choose the destination parent, and use the
+   one generated `<mod-id>-translated` folder.
+6. Disable the original mod, enable only the translated copy, and launch
+   Starsector. In-game behavior remains a separate manual validation gate.
 
-## Project Info and recovery
+## Advanced project files and recovery
 
-The **Project Info** tab shows the current workflow state and every active
+The Advanced **Project Info** tab shows every active
 location Project Go can identify: source mod, project document, translated clone,
 pristine source backup,
 translation-memory database, JSON/CSV schema catalogs, and recovery snapshot
 directory. **Open Folder** is enabled only after that location exists.
 
-For an open project, autosave snapshots live in `.ssmt-recovery` next to the
-project document—not inside the source mod. The first-run message also explains
-that builds produce two clones: keep the pristine backup safe and enable the
-translated clone instead of the original mod. Never enable both copies.
+For an Advanced portable project, autosave snapshots live in `.ssmt-recovery`
+next to the project document—not inside the source mod. Advanced builds retain
+the explicit pristine-backup and change-report behavior for maintainers. Never
+enable the source and translated copies together.
 
-## Translation Editor
+## Advanced translation editor
 
 | Control | Effect |
 |---|---|
@@ -486,13 +480,15 @@ Include:
 Do not attach proprietary mod contents unless distribution permission allows it.
 # Simplified desktop workflow
 
-The default screen now offers **Choose Mod → Export Translation File → Import
-Translated File → Build**. Choose the mod folder, give the exported JSON to your
-AI, import the completed JSON, and choose where to build the translated copy.
-Existing translations are saved automatically outside the source mod. The current
-simple path translates into English. The original mod stays untouched.
+The default screen offers **Choose → Translate → Install** with one primary
+action at a time. Choose the mod folder, give the exported JSON to your AI when
+needed, import the completed JSON under any filename, and choose where to create
+the translated copy. Existing translations are saved automatically outside the
+source mod. The current simple path translates into English. The original mod
+stays untouched.
 
-Build currently creates a complete translated copy and a pristine-backup sibling,
-not a standalone overlay. The earlier editor and optional tools remain under
-**Advanced**. See [workflow migration details](docs/translation-workflow-migration.md)
-for persistence, compatibility, CLI commands, and release gates.
+Normal Build creates one complete translated copy, not a standalone overlay.
+The earlier editor and optional tools remain under **Advanced**, whose portable
+project build retains explicit backup and report artifacts. See
+[workflow migration details](docs/translation-workflow-migration.md) for
+persistence, compatibility, CLI commands, and release gates.

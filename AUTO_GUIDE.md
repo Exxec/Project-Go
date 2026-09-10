@@ -1,6 +1,6 @@
 # Project Go Auto: Drag-and-Drop Workflow
 
-`Last updated: 2026-08-02 by Codex (ADR-041 pristine/translated clone output)`
+`Last updated: 2026-09-10 (internal workspace and single-copy output)`
 
 `Project Go Auto.exe` is the simple drag-and-drop Project Go helper. Drop one
 Starsector mod ZIP on it and it either makes your personal translated copy or
@@ -12,42 +12,47 @@ or an unpacked original mod.
 1. Open the development bundle's `Project Go Auto` folder.
 2. Drag a mod ZIP onto `Project Go Auto.exe`. (An unpacked mod folder or its
    `mod_info.json` also works for development.)
-3. Project Go creates a sibling workspace beside the ZIP:
-
-```text
-Project Go - Original Mod Name
-```
-
-4. Open this generated file:
+3. Project Go keeps its project, extraction, state, and recovery files in its
+   application-data folder. Beside the ZIP it creates only this handoff file:
 
 ```text
 Original Mod Name - AI translation request.json
 ```
 
-5. Give it to an online AI and ask it to follow the embedded instructions.
-6. Save the returned complete JSON in the same workspace using exactly:
+4. Give it to an online AI and ask it to follow the embedded instructions.
+5. Save the returned complete JSON beside the ZIP using exactly:
 
 ```text
 Original Mod Name - AI translation library.json
 ```
 
-7. Drag the same ZIP onto `Project Go Auto.exe` again.
+6. Drag the same ZIP onto `Project Go Auto.exe` again.
 
 Project Go validates the response, imports it into the persistent translation
-library, updates the project, and publishes the `<mod-id>.english` translated clone plus its
-`<mod-id>.english-source-backup` pristine sibling when every nonblank source
-string has a translation.
+library, updates its internal project, and publishes one `<mod-id>.english`
+translated copy beside the ZIP when every nonblank source string has a
+translation. The original ZIP remains the pristine source.
 
-## Files it creates
+## Files you see
 
 ```text
-Project Go - Original Mod Name\
-  Translation - Original Mod Name.ssmt.json
-  Translated Name - Original Mod Name.ssmt.json
-  Original Mod Name - AI translation request.json
-  Original Mod Name - AI translation library.json
-  project-go-state.json
-  archive-source-<content-hash>\
+Original Mod.zip
+Original Mod Name - AI translation request.json
+Original Mod Name - AI translation library.json
+<mod-id>.english\
+```
+
+The request and response are temporary handoff files. Project Go does not create
+a visible project file, state file, extracted-archive folder, changes report, or
+pristine-backup tree in the normal Auto flow.
+
+Project Go-owned state lives under the operating system's application-data
+location. On Windows this is:
+
+```text
+%LOCALAPPDATA%\Project Go\
+  project-go-catalog.db
+  projects\<project-name-and-source-hash>\
 ```
 
 All automated projects look for and grow the same persistent SQLite **master
@@ -68,20 +73,10 @@ An older per-workspace `project-go-catalog.db` is copied into the master
 location if the master library does not exist yet. The old file is retained
 as a backup.
 
-The translated-name project appears after a response supplies
-`translatedModName`. Older project snapshots are retained rather than
-destructively deleted.
-
-The copies are inside the Project Go workspace:
-
-```text
-<mod-id>.english\
-<mod-id>.english-source-backup\
-```
-
-No generated file is written inside the source mod. Keep the pristine backup
-in the workspace; copy only the translated clone into Starsector's `mods`
-directory and disable the original mod while using it.
+No generated file is written inside the source mod. Move or copy only the
+translated copy into Starsector's `mods` directory and disable the original mod
+while using it. When the selected source is already a folder in `mods`, Auto
+creates the translated copy beside it.
 
 ## What happens on every drop
 
@@ -94,7 +89,7 @@ directory and disable the original mod while using it.
    the project and the master SQLite library.
 6. If the master library is missing or incomplete, export only the remaining nonblank
    strings in `AI translation request.json`; no patch is made yet.
-7. Build the pristine backup and translated clone only when nothing remains.
+7. Build one translated copy only when nothing remains.
 8. Report `PATCH_UNCHANGED` when identical clone outputs already exist.
 
 Fuzzy matches are not auto-applied. Conflicting exact catalog translations are
@@ -117,11 +112,11 @@ For a development JVM launch:
 
 ## Safety and recovery
 
-- Keep `%LOCALAPPDATA%\Project Go\project-go-catalog.db`; it is the master
-  library shared by every automated mod project.
+- Keep `%LOCALAPPDATA%\Project Go`; it contains the master library and internal
+  automated projects.
 - Back up the catalog using the normal `ssmt-cli tm backup` command.
-- Do not rename the AI request or AI translation-library file unless you also
-  restore their expected names before the next run.
+- The current Auto loop still expects the documented response name beside the
+  selected source. The normal desktop Import action accepts any JSON filename.
 - If the library is absent or incomplete, Project Go writes a new request with
   only the remaining strings.
 - Changed IDs, source strings, schema, or source-mod identity reject the whole
