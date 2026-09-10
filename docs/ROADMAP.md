@@ -41,8 +41,11 @@ release claim.
   beneath the application-data workspace while leaving only the AI handoff and
   translated result beside the selected source.
 - A clean, offline, uncached Windows `check` passed 390 tests with zero failures
-  or skips, together with Checkstyle and SpotBugs. Linux CI and exact pushed-commit
-  distribution evidence remain open until their respective gates run.
+  or skips, together with Checkstyle and SpotBugs.
+- GitHub Actions run `34542852609` passed the exact pushed implementation commit
+  `c9c0987fbd90d75868f268e0c0780669cd3588c4` on Windows and Ubuntu. Windows also
+  built and smoke-tested the application image; both jobs generated release
+  evidence. This is branch-build evidence, not a tag or published-release claim.
 
 ## Lessons retained
 
@@ -82,8 +85,8 @@ release claim.
   so test isolation cannot conceal first-run behavior.
 - [x] Run the authoritative clean, offline, uncached checks on Windows and retain
   the failing clean-home case as a permanent regression gate.
-- [ ] Run the authoritative clean, uncached checks on Linux CI for the exact
-  pushed commit.
+- [x] Run the authoritative clean, uncached checks on Linux CI for the exact
+  pushed implementation commit.
 - [x] Avoid redundant branch-and-tag build runs when the release workflow already
   performs the tag checks; keep pull-request and branch verification intact.
 - [ ] Publish a new version rather than moving the existing `v0.7.0` tag. Require
