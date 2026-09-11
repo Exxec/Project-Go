@@ -2,11 +2,15 @@
 
 Recorded at the user's request on 2026-09-05, before any redesign.
 
-This baseline is the current working tree, including staged and unstaged changes,
-based on Git commit `e8259dca483765633f79a60f722376b604fc6cfc`. That commit alone
-does **not** contain the baseline fixes. The source snapshot and SHA-256 manifest
-are stored in `releases/known-good-pre-redesign-baseline/`. Recording this baseline
-does not alter the Git index or create a commit.
+This baseline captured the working tree at the time, including staged and
+unstaged changes, based on Git commit
+`e8259dca483765633f79a60f722376b604fc6cfc`. That commit alone does **not**
+contain the baseline fixes. The source snapshot and SHA-256 manifest
+were stored in the ignored local
+`releases/known-good-pre-redesign-baseline/` directory. Those generated artifacts
+are not tracked and may be absent after cleanup; the durable regression corpus
+remains under `ssmt-gui/src/test/resources/edmund/`. Recording the baseline did
+not alter the Git index or create a commit.
 
 ## Behavior to preserve
 
@@ -43,11 +47,14 @@ The full desktop trace and corpus provenance are documented in
 - `git diff --check` passed. Native GUI mouse/file-chooser automation and in-game
   Starsector testing were not performed.
 
-## Reference artifacts
+## Historical local reference artifacts
+
+The following ignored paths record what existed during the checkpoint. They are
+not required repository files and should not be expected in a clean checkout:
 
 - `releases/Edmund-Recovered/Edmund Church recovered project.ssmt.json`
 - `releases/Edmund-Recovered/Edmund Church recovered words.json`
-- `releases/ssmt-gui-0.6.0-edmund-fix.zip` (latest desktop package)
+- `releases/ssmt-gui-0.6.0-edmund-fix.zip` (then-current desktop package)
 - `releases/Void-Tec-0.98a-revival-r13.zip`
 - `ssmt-gui/src/test/resources/edmund/workflow.zip` (exact regression corpus)
 

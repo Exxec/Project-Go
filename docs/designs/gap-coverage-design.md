@@ -12,20 +12,20 @@ Supersedes: nothing — extends the ADR-032 evidence-gated coverage policy
 A field test against Edmund's Church found `data/hulls/special_items.csv`
 containing Chinese text (`#舰船...`-style content and Chinese item names) that:
 
-- no entry in the closed [`StandardCsvSchemas.SCHEMAS`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/StandardCsvSchemas.java:14)
+- no entry in the closed [`StandardCsvSchemas.SCHEMAS`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/StandardCsvSchemas.java#L14)
   map recognizes — the standard registry *does* contain
   `data/campaign/special_items.csv` (the vanilla path), but
-  [`StandardCsvSchemas.find()`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/StandardCsvSchemas.java:81)
+  [`StandardCsvSchemas.find()`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/StandardCsvSchemas.java#L81)
   matches by exact-or-suffix path, and `data/hulls/special_items.csv` does not
   end with `/data/campaign/special_items.csv`;
 - no opt-in catalog covers (the user has authored none for this mod).
 
 The file was therefore skipped by
-[`ExtractionCoordinator.extractMod()`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/ExtractionCoordinator.java:62)
+[`ExtractionCoordinator.extractMod()`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/ExtractionCoordinator.java#L62)
 (landing in `ExtractionReport.skippedFiles`) and subsequently flagged by
-[`CoverageGapAuditor.audit()`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/CoverageGapAuditor.java:42)
-as an advisory [`CoverageGapFinding`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/CoverageGapFinding.java:13)
-— logged by [`ExtractCommand.call()`](../../ssmt-cli/src/main/java/com/ssmt/cli/ExtractCommand.java:61)
+[`CoverageGapAuditor.audit()`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/CoverageGapAuditor.java#L42)
+as an advisory [`CoverageGapFinding`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/CoverageGapFinding.java#L13)
+— logged by [`ExtractCommand.call()`](../../ssmt-cli/src/main/java/com/ssmt/cli/ExtractCommand.java#L61)
 as "Possible missed translatable content". **But nothing consumes those
 findings**: the strings were not extracted, not added to any project, and can
 never be reinjected. The auditor is read-only by design (ADR-032), so today the
@@ -45,12 +45,12 @@ evidence-gated policy.
 
 Add standard entries for more well-known paths (e.g. confirm/keep
 `data/campaign/special_items.csv`, which already exists at
-[`StandardCsvSchemas.java:43`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/StandardCsvSchemas.java:43)).
+[`StandardCsvSchemas.java:43`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/StandardCsvSchemas.java#L43)).
 
 Pros:
 
 - Zero user effort; covered forever for every mod once shipped.
-- Fully reuses [`StandardCsvFileExtractor`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/StandardCsvFileExtractor.java:14)
+- Fully reuses [`StandardCsvFileExtractor`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/StandardCsvFileExtractor.java#L14)
   and the existing reinjection path.
 
 Cons:
@@ -85,7 +85,7 @@ Cons:
 - Identity inference at extraction time risks *unstable* keys: if the inferred
   id column changes between runs, keys churn and translations orphan.
 - New extractor with new error semantics duplicates
-  [`CsvExtractor`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/CsvExtractor.java:33)
+  [`CsvExtractor`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/CsvExtractor.java#L33)
   behavior (blank ids, duplicate ids, sentinel rows) — maximal new surface.
 - A flag-gated silent behavior change is hard to review in the field: the user
   cannot easily see *which* columns were judged translatable.
@@ -95,11 +95,11 @@ materializing the heuristic as a *reviewable artifact* (Option C).
 
 ### Option C — Auditor-driven assisted opt-in (recommended)
 
-Turn each CSV [`CoverageGapFinding`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/CoverageGapFinding.java:13)
-into a **suggested** [`OptInCsvFileSchema`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/OptInCsvFileSchema.java:14)
+Turn each CSV [`CoverageGapFinding`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/CoverageGapFinding.java#L13)
+into a **suggested** [`OptInCsvFileSchema`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/OptInCsvFileSchema.java#L14)
 — infer identity column(s) and candidate text columns from the file's headers
 and non-ASCII cells — and emit the suggestions as a standard versioned catalog
-(via the existing [`OptInCsvSchemaCatalog.write()`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/OptInCsvSchemaCatalog.java:67))
+(via the existing [`OptInCsvSchemaCatalog.write()`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/OptInCsvSchemaCatalog.java#L67))
 that the user reviews, edits if needed, and accepts through the existing
 `--csv-schema` surface.
 
@@ -108,10 +108,10 @@ Pros:
 - **Evidence-gated compliant**: a human accepts each suggested file/column set
   before anything is extracted — the finding stays advisory until approved.
 - **Maximal reuse**: accepted suggestions are ordinary opt-in schemas applied
-  by [`ConfiguredCsvFileExtractor`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/ConfiguredCsvFileExtractor.java:17)
-  → [`CsvExtractor`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/CsvExtractor.java:33);
+  by [`ConfiguredCsvFileExtractor`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/ConfiguredCsvFileExtractor.java#L17)
+  → [`CsvExtractor`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/CsvExtractor.java#L33);
   stable keys are the existing `csv:...` format, so
-  [`StandardFileInjector`](../../ssmt-patcher/src/main/java/com/ssmt/patcher/StandardFileInjector.java:34)
+  [`StandardFileInjector`](../../ssmt-patcher/src/main/java/com/ssmt/patcher/StandardFileInjector.java#L34)
   reinjection works with **zero patcher changes**.
 - Durable: the accepted catalog is a small, versioned, diffable artifact the
   user keeps per mod (and can contribute upstream as standard-schema evidence).
@@ -143,8 +143,8 @@ Rationale against the stated criteria:
   `ConfiguredCsvFileExtractor`, `CsvExtractor`, and `CoverageGapFinding` are
   all reused unchanged.
 - **(c) round-trip** — keys remain `csv:<identityColumns>=<identity>:<column>`
-  (see [`CsvExtractor.stableKey()`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/CsvExtractor.java:192)),
-  which [`StandardFileInjector.CSV_KEY`](../../ssmt-patcher/src/main/java/com/ssmt/patcher/StandardFileInjector.java:35)
+  (see [`CsvExtractor.stableKey()`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/CsvExtractor.java#L192)),
+  which [`StandardFileInjector.CSV_KEY`](../../ssmt-patcher/src/main/java/com/ssmt/patcher/StandardFileInjector.java#L35)
   already parses and reinjects with stale-source verification.
 - **(d) minimal surface** — no new extractor, no report schema change, no
   patcher change, no GUI change.
@@ -220,7 +220,7 @@ public final class CsvGapSchemaSuggester {
 **Inference algorithm** (deterministic; per finding whose file ends `.csv`,
 case-insensitive):
 
-1. Decode exactly like [`CsvExtractor.utf8ReaderWithoutBom()`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/CsvExtractor.java:83):
+1. Decode exactly like [`CsvExtractor.utf8ReaderWithoutBom()`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/CsvExtractor.java#L83):
    strict UTF-8, deterministic GB18030 fallback, BOM strip. Parse with the same
    `CSVFormat` (header row, `setAllowMissingColumnNames(true)`). Any parse/IO
    failure → `UNPARSEABLE` with the message in `reason` (never throws out of
@@ -244,7 +244,7 @@ case-insensitive):
 4. **Text columns**: every non-identity header that is non-blank and has at
    least one data-row cell matching the auditor's non-ASCII pattern
    `[^\x00-\x7F]` (a single non-ASCII character suffices; same as
-   [`CoverageGapAuditor.NON_ASCII`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/CoverageGapAuditor.java:30)),
+   [`CoverageGapAuditor.NON_ASCII`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/CoverageGapAuditor.java#L30)),
    in file order. Blank/anonymous headers are never suggested. None → 
    `NO_TEXT_COLUMNS`.
 5. Construct `new OptInCsvFileSchema(relativeSourceFile, List.of(idColumn),
@@ -256,14 +256,14 @@ case-insensitive):
 `toCatalog` / `mergeInto` produce `new OptInCsvSchema(CURRENT_SCHEMA_VERSION,
 files)`; the record's constructor enforces the ≤256-file cap, duplicate-path
 rejection, and the standard-handler overlap guard
-([`OptInCsvSchema.java:36`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/OptInCsvSchema.java:36)).
+([`OptInCsvSchema.java:36`](../../ssmt-extractor/src/main/java/com/ssmt/extractor/csv/OptInCsvSchema.java#L36)).
 Violations surface as `IllegalArgumentException` → reported by the CLI as a
 failed write (cannot happen for fresh suggestions, since findings come from
 skipped files, but can for `--merge-into` inputs).
 
 ### 4.2 CLI surface (module `ssmt-cli`)
 
-Extend [`ExtractCommand`](../../ssmt-cli/src/main/java/com/ssmt/cli/ExtractCommand.java:29):
+Extend [`ExtractCommand`](../../ssmt-cli/src/main/java/com/ssmt/cli/ExtractCommand.java#L29):
 
 ```text
 ssmt extract MOD_DIRECTORY [--suggest-csv-schema DRAFT.json] [--merge-into EXISTING.json]
@@ -282,20 +282,20 @@ ssmt extract MOD_DIRECTORY [--suggest-csv-schema DRAFT.json] [--merge-into EXIST
   status and reason. Final line: `Wrote N suggested CSV schema file(s) to
   DRAFT.json; review, edit if needed, then pass via --csv-schema`.
 - The existing advisory warning text at
-  [`ExtractCommand.java:70`](../../ssmt-cli/src/main/java/com/ssmt/cli/ExtractCommand.java:70)
+  [`ExtractCommand.java:70`](../../ssmt-cli/src/main/java/com/ssmt/cli/ExtractCommand.java#L70)
   gains a mention of `--suggest-csv-schema`.
 - Exit codes unchanged: suggestion failures are per-file statuses, not command
   failures; unreadable files keep the current `SsmtParseException` → exit 1.
 
 No changes to `project create` / `--csv-schema`
-([`ProjectCommand`](../../ssmt-cli/src/main/java/com/ssmt/cli/ProjectCommand.java:152)):
+([`ProjectCommand`](../../ssmt-cli/src/main/java/com/ssmt/cli/ProjectCommand.java#L152)):
 the reviewed draft *is* a normal catalog. GUI needs no change — "Create with
 CSV Schema" already opens any catalog file.
 
 ### 4.3 Key format and reinjection compatibility
 
 Unchanged. Accepted suggestions extract through `CsvExtractor`, producing
-[`ExtractedString`](../../ssmt-core/src/main/java/com/ssmt/core/model/ExtractedString.java:15)
+[`ExtractedString`](../../ssmt-core/src/main/java/com/ssmt/core/model/ExtractedString.java#L15)
 records with:
 
 ```text
@@ -307,7 +307,7 @@ sourceFile   = data/hulls/special_items.csv   (mod-relative)
 lineNumber   = -1
 ```
 
-[`StandardFileInjector.replaceCsv()`](../../ssmt-patcher/src/main/java/com/ssmt/patcher/StandardFileInjector.java:298)
+[`StandardFileInjector.replaceCsv()`](../../ssmt-patcher/src/main/java/com/ssmt/patcher/StandardFileInjector.java#L298)
 already parses this exact shape, matches the row by identity column values,
 verifies the original text (stale-source guard), and rewrites only the target
 cell — structural `#`/blank rows are re-emitted byte-identical. **No patcher

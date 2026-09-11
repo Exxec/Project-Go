@@ -1,6 +1,6 @@
 # System Architecture
 
-`Last updated: 2026-09-05 by Zoo (standard .ship hull-file extraction and reinjection added to JSON-like coverage; reviewable CSV gap-schema suggestions added to the extract command)`
+`Last updated: 2026-09-11 (normal single-copy publication and internal Auto workspaces)`
 
 ## Overview
 
@@ -29,7 +29,7 @@ Reinjection
    ↓
 Staged Patch Builder
    ↓
-Pristine Source Clone + Translated Clone
+Translated Copy (normal) / Source Backup + Translated Copy (Advanced)
 ```
 
 The compatibility boundary is deliberately narrow. It accepts documented ecosystem conventions while preserving strictness where ambiguity could corrupt translation identity or data.
@@ -69,7 +69,7 @@ The compatibility boundary is deliberately narrow. It accepts documented ecosyst
 
 - `ssmt-patcher`
   - format reinjection;
-  - transactional pristine/translated clone publication;
+  - transactional single-copy or paired pristine/translated publication;
   - deterministic fingerprints;
   - source/output overlap protection.
 
@@ -91,7 +91,7 @@ The compatibility boundary is deliberately narrow. It accepts documented ecosyst
 
 - `ssmt-auto`
   - drag-and-drop/headless orchestration;
-  - sibling workspace and version state;
+  - application-data workspace, extraction, and version state;
   - exact translation-memory reuse and missing-string exchange;
   - no writes beneath source mods.
 
@@ -374,12 +374,13 @@ The clone publisher:
 
 - never writes inside the source mod;
 - rejects source/output overlap;
-- stages a byte-preserving source backup and a complete translated clone;
-- preserves source metadata and applies translations only in translated staging;
-- publishes only after both stages succeed;
+- stages a complete translated copy and applies translations only in staging;
+- publishes one translated output for normal GUI, simple CLI, and Auto flows;
+- optionally stages and publishes a byte-preserving source backup for the
+  explicit Advanced portable-project workflow;
 - fingerprints every source path/byte and translated artifact deterministically;
-- detects source changes during staging and restores both prior outputs when
-  either replacement fails.
+- detects source changes during staging and restores the relevant prior output
+  or output pair when replacement fails.
 
 Source bytes are treated as immutable input. Links and special files are
 rejected rather than followed outside the declared source root.

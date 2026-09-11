@@ -37,10 +37,12 @@ pre-redesign snapshot is unchanged.
 - Export uses the existing single-file AI exchange overload and unchanged schema.
   Existing translations fill both `translation` and `existingTranslation`.
   Import uses the existing validators without a translation-memory side effect.
-- Required build reports are artifacts staged before clone publication. Prior
-  output and report roll back together on a handled publication failure. Missing
-  artifacts invalidate the build cache. Leftover prior-output recovery directories
-  are preserved and block another publication rather than being deleted blindly.
+- Normal publication stages one translated copy and uses internal prior-output
+  recovery data only while replacing it. Advanced portable-project publication
+  also stages the explicit change report and pristine backup. Missing required
+  artifacts invalidate the applicable build cache. Leftover prior-output recovery
+  directories are preserved and block another publication rather than being
+  deleted blindly.
 
 The workspace is authoritative for the normal path. The Advanced editor remains
 an independent legacy workflow during migration; edits to a legacy project after
@@ -72,8 +74,9 @@ provider, GPU, or reconciliation arguments are required.
   an older response after extraction growth; source-safe builds.
 - `TranslationWorkflowControllerTest` and `TranslationCommandTest`: real entry
   point adapters using the same durable facade, including failed GUI import.
-- `PatchBuilderTest`: required-report rollback, missing-report rebuild, and
-  rejection of source/staging overlap without cleanup deleting source files.
+- `PatchBuilderTest`: paired required-report rollback, single-output rollback,
+  missing-report rebuild, and rejection of source/staging overlap without cleanup
+  deleting source files.
 
 ## Identity limitations retained intentionally
 
@@ -109,14 +112,17 @@ Power-loss recovery of multi-directory clone publication is not a demonstrated
 guarantee; current regression coverage exercises handled failures and preserves
 leftover recovery directories after interruption.
 
-## Verified implementation checkpoint — 2026-09-06
+## Historical implementation checkpoint — 2026-09-06
 
 `gradlew build :ssmt-cli:installDist :ssmt-gui:installDist --offline --no-daemon
 --max-workers=1 --console=plain` passed, including Checkstyle and SpotBugs.
 The repository test results contain 383 tests, zero failures and zero errors.
 The packaged GUI resource smoke test and CLI `translation --help` also passed.
-Evidence: `build/redesign-full-build.log` and module test-result XML files.
+The evidence was generated under `build/` and was intentionally not committed;
+it may be absent after a clean checkout or hygiene run.
 
-Preview GUI and CLI ZIPs are in `releases/*-workflow-preview.zip`, with hashes in
-`releases/workflow-preview-sha256.txt`. Native file-picker/mouse automation and
-in-game validation were not performed. The pre-redesign baseline is preserved.
+Preview GUI and CLI ZIPs and their hashes were generated under the ignored local
+`releases/` directory for that checkpoint; they are not repository inputs and
+are not retained by a clean checkout. Native file-picker/mouse automation and
+in-game validation were not performed. Current implementation and CI evidence is
+recorded in [the roadmap](ROADMAP.md).

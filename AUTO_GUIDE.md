@@ -1,6 +1,6 @@
 # Project Go Auto: Drag-and-Drop Workflow
 
-`Last updated: 2026-09-10 (internal workspace and single-copy output)`
+`Last updated: 2026-09-11 (internal workspace and single-copy output)`
 
 `Project Go Auto.exe` is the simple drag-and-drop Project Go helper. Drop one
 Starsector mod ZIP on it and it either makes your personal translated copy or
@@ -69,9 +69,10 @@ index. To use an already-established database as the master library, set
 `SSMT_TRANSLATION_MEMORY` to its full path before starting `Project Go Auto.exe`.
 The Java system property `-Dssmt.catalog=<path>` is also supported.
 
-An older per-workspace `project-go-catalog.db` is copied into the master
-location if the master library does not exist yet. The old file is retained
-as a backup.
+Auto can adopt a `project-go-catalog.db` found in its current internal workspace
+when the master library does not yet exist. It does not search former sibling
+`Project Go - ...` workspaces; legacy discovery and adoption remain roadmap
+work, and old folders are left untouched.
 
 No generated file is written inside the source mod. Move or copy only the
 translated copy into Starsector's `mods` directory and disable the original mod

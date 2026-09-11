@@ -1,5 +1,9 @@
 # Simple user flow and file model
 
+Status: target design with several P1 slices implemented on 2026-09-10. The
+authoritative implemented/pending checklist is [the roadmap](../ROADMAP.md); the
+acceptance criteria below intentionally include unfinished work.
+
 ## Intended outcome
 
 The normal Project Go experience should feel like one task, not a collection of
@@ -19,9 +23,10 @@ Project Go still keeps durable state, history, recovery data, and evidence, but
 normal users should not have to name, place, move, or understand those internal
 files.
 
-## What is confusing now
+## Pre-implementation file model
 
-The current entry points expose different storage models:
+Before the 2026-09-10 P1 slices, the entry points exposed different storage
+models:
 
 | Path | User-visible handling |
 |---|---|
@@ -116,7 +121,7 @@ All implementation state lives below one application-data root:
 
 ```text
 %LOCALAPPDATA%\Project Go\
-  catalog.db
+  project-go-catalog.db
   projects\
     <stable-project-id>\
       project.json

@@ -1,6 +1,6 @@
 # Project Go Personal-Use Guide
 
-`Last updated: 2026-09-10 (three-stage normal flow and single-copy output)`
+`Last updated: 2026-09-11 (three-stage normal flow and single-copy output)`
 
 ## What this build is
 
@@ -27,7 +27,10 @@ the ZIP against its adjacent `.sha256` file before testing.
 The normal workflow has three stages: **Choose**, **Translate**, and **Install**.
 It shows one primary next action instead of asking you to manage project files.
 Project state, history, reports, recovery data, and translation memory remain in
-Project Go's application-data directory.
+Project Go-owned storage outside the source mod. The desktop workspace currently
+defaults to `%USERPROFILE%\.project-go\workspaces`; Auto projects and the shared
+catalog use `%LOCALAPPDATA%\Project Go`. Unifying those internal roots is tracked
+as migration work and does not change the visible three-step flow.
 
 The normal workflow creates only one visible result:
 
@@ -419,8 +422,7 @@ first reports additions, higher-confidence upgrades, identical entries, and
 conflicts. It changes nothing until you approve. Conflicts are never
 overwritten automatically.
 
-For an ELI5 explanation, complete GUI walkthrough, detailed CLI arguments, and
-copyable examples, see `BEGINNERS_GUIDE.md`.
+For a short first-run walkthrough, see `BEGINNERS_GUIDE.md`.
 
 ## Command-line interface
 
@@ -478,17 +480,6 @@ Include:
 - whether a second unchanged build differs.
 
 Do not attach proprietary mod contents unless distribution permission allows it.
-# Simplified desktop workflow
 
-The default screen offers **Choose → Translate → Install** with one primary
-action at a time. Choose the mod folder, give the exported JSON to your AI when
-needed, import the completed JSON under any filename, and choose where to create
-the translated copy. Existing translations are saved automatically outside the
-source mod. The current simple path translates into English. The original mod
-stays untouched.
-
-Normal Build creates one complete translated copy, not a standalone overlay.
-The earlier editor and optional tools remain under **Advanced**, whose portable
-project build retains explicit backup and report artifacts. See
-[workflow migration details](docs/translation-workflow-migration.md) for
-persistence, compatibility, CLI commands, and release gates.
+See [workflow migration details](docs/translation-workflow-migration.md) for
+persistence, compatibility, and separate release gates.

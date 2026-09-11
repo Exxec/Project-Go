@@ -123,7 +123,7 @@ public final class TranslationWorkflow {
     }
 
     private LocalizationProject discoverLegacy(Path source, String modId) throws ProjectException {
-        // Existing GUI/Auto workspaces are siblings of the mod, never inside its source tree.
+        // Legacy GUI/Auto workspaces were siblings of the mod, never inside its source tree.
         var candidates = new ArrayList<Path>();
         try (var siblings = Files.list(source.getParent())) {
             for (Path directory : siblings.filter(Files::isDirectory)

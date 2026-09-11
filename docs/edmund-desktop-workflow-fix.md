@@ -76,8 +76,10 @@ Start now retains the applied refresh report rather than dropping it when taking
 `result.project()`. The GUI lists changed-source IDs for review and makes previous
 translations available as suggestions without applying them to the new source.
 
-Recovered artifacts are in `releases/Edmund-Recovered`. Recovery used the same
-controller import, refresh, apply, and export operations; no extraction behavior or
-reconciliation matching rules were changed. The blank original files were retained.
+Recovered artifacts were written to the ignored local
+`releases/Edmund-Recovered` directory during the investigation and may be absent
+after cleanup. Recovery used the same controller import, refresh, apply, and
+export operations; no extraction behavior or reconciliation matching rules were
+changed. The blank original files were retained at the time of recovery.
 The code proves the repeat-Start loss route; no historical click log establishes
 which actions actually produced the supplied files.

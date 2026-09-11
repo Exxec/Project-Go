@@ -1,11 +1,15 @@
 # Distribution and Native Packaging
 
-`Last updated: 2026-08-02 by Codex (0.6.0 clone-output distribution warning)`
+`Last updated: 2026-09-11 (normal single-copy and Advanced output distinction)`
 
 Project Go release versioning is controlled by `ssmtVersion` in `gradle.properties`
 (currently 0.7.0). The release build includes PNG and Windows ICO
 application assets and uses the JDK 25 `jpackage` tool without an
 additional packaging plugin.
+
+The version property alone is not release evidence. `main` currently contains
+post-tag development changes while `v0.7.0` has no published GitHub Release; do
+not describe an arbitrary build from `main` as the tagged 0.7.0 release.
 
 ## Application image
 

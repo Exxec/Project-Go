@@ -15,8 +15,10 @@ or redistribution rights.
 
 ## Current status
 
-The core workflow is implemented; the Windows release candidate is awaiting
-manual GUI/game acceptance testing.
+The simplified source-safe workflow is implemented on `main` and verified by
+Windows and Linux CI. The existing `v0.7.0` tag has no published GitHub Release;
+post-tag source on `main` is development work, not a release candidate. Manual
+GUI/file-picker and in-game acceptance remain separate gates.
 Project Go scans Starsector mods, extracts standard CSV/JSON-like and bytecode
 strings without executing mod classes, stores reusable translations in
 SQLite, validates protected syntax, and generates deterministic
@@ -69,7 +71,21 @@ The scanner treats every child directory as a possible mod. Invalid or missing
 metadata is reported as a warning; dependency cycles fail the scan. Source
 files are opened for reading only.
 
-## Create and build a localization project
+## Simple command-line workflow
+
+The simple CLI follows the same load, exchange, and single-output contract as
+the normal desktop flow:
+
+```powershell
+.\ssmt-cli\build\install\ssmt-cli\bin\ssmt-cli.bat translation load MOD_FOLDER
+.\ssmt-cli\build\install\ssmt-cli\bin\ssmt-cli.bat translation export MOD_FOLDER REQUEST.json
+.\ssmt-cli\build\install\ssmt-cli\bin\ssmt-cli.bat translation import MOD_FOLDER RESPONSE.json
+.\ssmt-cli\build\install\ssmt-cli\bin\ssmt-cli.bat translation build MOD_FOLDER OUTPUT_FOLDER
+```
+
+Project state remains internal. The final command creates one translated copy.
+
+## Advanced: create and build a portable localization project
 
 ```powershell
 .\gradlew.bat :ssmt-cli:installDist
@@ -141,8 +157,7 @@ New users can choose **Open Sample Project** to copy a resettable synthetic
 fixture into a writable workspace. The **Project Info** tab shows workflow
 progress and the active source, project, output, translation-memory, schema,
 and recovery locations.
-See [BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md) for a slower, beginner-friendly
-GUI and CLI walkthrough with examples.
+See [BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md) for a short first-run walkthrough.
 See [AUTO_GUIDE.md](AUTO_GUIDE.md) for the headless drag-and-drop workflow.
 
 ## Modules
@@ -163,7 +178,8 @@ See [ENVIRONMENT.md](ENVIRONMENT.md) for setup details and
 [ARCHITECTURE.md](ARCHITECTURE.md) for module boundaries.
 The evidence-gated implementation priorities and protocol for assessing future
 mod revival attempts are in [docs/ROADMAP.md](docs/ROADMAP.md).
-The proposed normal workflow and reduced user-visible file model are described in
+The target normal workflow, implemented slices, and remaining acceptance
+criteria for the reduced user-visible file model are described in
 [docs/designs/simple-file-workflow.md](docs/designs/simple-file-workflow.md).
 
 ## License

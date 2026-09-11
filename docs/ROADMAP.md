@@ -5,10 +5,11 @@ gates. A checked item requires reproducible evidence; a successful extraction,
 compile, or main-menu boot must not be promoted into a broader compatibility or
 release claim.
 
-## Review checkpoint — 2026-09-10
+## Pre-implementation review checkpoint — 2026-09-10
 
-- The working tree was clean after refreshing `origin`.
-- `HEAD`, `origin/main`, and the peeled `v0.7.0` tag all resolve to
+- At the start of this review, the working tree was clean after refreshing
+  `origin`.
+- At that point, `HEAD`, `origin/main`, and the peeled `v0.7.0` tag resolved to
   `c32fe437c7bedf1da16ee23d73123ad507d61567`. There are no source changes since
   the 2026-09-06 checkpoint.
 - The local 0.7.0 verification remains useful evidence: 383 tests, Checkstyle,
@@ -20,8 +21,8 @@ release claim.
   per-user translation-library parent directory does not already exist.
 - The failure was reproduced locally by pointing `LOCALAPPDATA` at an absent
   directory. The same tests pass when the ordinary Project Go user directory
-  already exists. `SqliteTranslationMemory.open()` currently opens the SQLite
-  path without first creating its parent.
+  already exists. At that checkpoint, `SqliteTranslationMemory.open()` opened
+  the SQLite path without first creating its parent.
 - The tag exists, but no GitHub Release exists for `v0.7.0`. The release workflow
   never reached its packaging or publication jobs. Version/tag/source alignment
   therefore does not establish a published release.
@@ -75,6 +76,12 @@ release claim.
    machine-readable per-gate evidence and must contain exactly one final state.
 9. Redistribution permission is independent from technical success. A private,
    source-safe personal copy is not authorization to publish a revived mod.
+10. Ignored build, cache, and local release directories are disposable, not
+    durable evidence. Historical documents must label them as local and point to
+    tracked fixtures, commits, or remote runs for reproducible claims.
+11. Normal and Advanced file contracts must be named explicitly in documentation;
+    a paired backup/report guarantee for maintainers is not the normal user's
+    one-output workflow.
 
 ## P0 — restore trustworthy build and release evidence
 
@@ -106,8 +113,9 @@ adding more normal-path controls.
 
 - [x] Replace the four always-visible normal actions with a three-stage
   choose/translate/install presentation and one context-sensitive primary action.
-- [x] Move Auto's sibling project/state/extraction layout into the same internal
-  application-data workspace used by the normal GUI.
+- [x] Move Auto's sibling project/state/extraction layout into an internal
+  application-data workspace. Unifying it with the normal GUI root remains part
+  of the shared-workflow item below.
 - [x] Let the desktop import an AI response under any filename, using its embedded
   identity and integrity fields instead of its path.
 - [ ] Extend filename-independent response import to Auto; it still watches for
