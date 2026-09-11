@@ -125,6 +125,12 @@ release claim.
   session. Settings exposes exact cleanup candidates and only enables unambiguous
   recovery. A first-ever process crash before any install destination was
   remembered still requires an explicit output-path recovery entry point.
+- Committed implementation `c3ddd2e976790e3a15ec54934d366f61e759f62f`
+  passed a forced rebuild of all 418 tests with zero failures or skips, Checkstyle,
+  SpotBugs, archive scanning, SBOM/checksum generation, and both Windows native
+  application smoke tests. The rebuilt GUI and Auto JAR manifests contain that
+  exact commit and version `0.8.0-dev`. Interactive drag/drop and live-game
+  behavior remain manual acceptance gates.
 
 ## P0 — restore trustworthy build and release evidence
 
