@@ -123,21 +123,25 @@ original, and keep the generated copy private.
 ```
 
 The desktop app opens on a **Choose → Translate → Install** workflow with one
-primary action at a time. Project state is saved internally, completed saved work
-skips directly to installation, and a normal build creates one translated copy.
+primary action at a time. Drop a mod ZIP, mod folder, or `mod_info.json` onto the
+same surface; later, drop the returned AI JSON there too. Project state is saved
+internally, completed saved work skips directly to installation, and a normal
+build creates one translated copy. Settings provides preview-first cleanup and
+conservative interrupted-install recovery.
 The former project editor, practice project, custom paths, catalogs, schemas, AI
 providers, and diagnostics remain under Advanced. Custom schemas are
 exact-path/pointer (JSON) or exact-path/column (CSV) catalogs; see
 [JSON_SCHEMAS.md](JSON_SCHEMAS.md) and [CSV_SCHEMAS.md](CSV_SCHEMAS.md).
 
-## Run Project Go Auto (drag-and-drop)
+## Run Project Go Auto (advanced compatibility path)
 
 ```powershell
 .\gradlew.bat :ssmt-auto:run --args='"C:\path\to\ExampleMod.zip"'
 ```
 
-Runs the same source-safe project/translation-memory/refresh/validation/copy
-pipeline headlessly against a dropped mod ZIP (or unpacked mod), sharing the
+Runs the source-safe workflow headlessly for scripts and existing drag-to-exe
+habits. The main desktop accepts the same ZIP/folder/metadata inputs through the
+shared bounded intake service. Auto shares the
 same default SQLite master translation library as the GUI. Project, state, and
 archive-extraction files stay in Project Go application data. Beside the selected
 input, Auto exposes only the AI handoff files when needed and one translated copy

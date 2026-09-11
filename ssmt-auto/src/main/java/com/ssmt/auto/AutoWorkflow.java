@@ -8,6 +8,7 @@ import com.ssmt.project.AiTranslationExchangeService;
 import com.ssmt.project.AiTranslationImportResult;
 import com.ssmt.project.LocalizationProject;
 import com.ssmt.project.LocalizationProjectService;
+import com.ssmt.project.ModInputPreparationService;
 import com.ssmt.project.ProjectBuildResult;
 import com.ssmt.project.ProjectEntry;
 import com.ssmt.project.ProjectException;
@@ -33,8 +34,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 /**
  * Source-safe state machine that reuses and grows one master translation library.
@@ -43,8 +42,6 @@ public final class AutoWorkflow {
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final int STATE_VERSION = 1;
     private static final String CATALOG_FILE = MasterTranslationLibrary.DEFAULT_FILENAME;
-    private static final int MAX_ARCHIVE_ENTRIES = 10_000;
-    private static final long MAX_ARCHIVE_BYTES = 1_073_741_824L;
     private static final int MAX_RESPONSE_CANDIDATES = 128;
     private static final long MAX_DISCOVERED_RESPONSE_BYTES = 16L * 1024 * 1024;
 
@@ -54,6 +51,7 @@ public final class AutoWorkflow {
             new AiTranslationExchangeService();
     private final SourceLanguageDetector languages = new SourceLanguageDetector();
     private final ModInfoReader modInfoReader = new ModInfoReader();
+    private final ModInputPreparationService inputs = new ModInputPreparationService();
     private final Path sharedCatalog;
     private final Path workspaceRoot;
 
@@ -89,32 +87,18 @@ public final class AutoWorkflow {
      */
     public AutoRunResult runDropped(Path dropped) throws ProjectException {
         Path supplied = dropped.toAbsolutePath().normalize();
-        if (Files.isDirectory(supplied)) {
-            return run(supplied);
-        }
-        if (!Files.isRegularFile(supplied)) {
-            throw new ProjectException("The dropped item is not a file or folder: " + supplied);
-        }
-        if ("mod_info.json".equalsIgnoreCase(fileName(supplied))) {
-            Path parent = supplied.getParent();
-            if (parent == null) {
-                throw new ProjectException("The dropped mod_info.json has no mod folder");
-            }
-            return run(parent);
-        }
-        if (!fileName(supplied).toLowerCase(Locale.ROOT).endsWith(".zip")) {
-            throw new ProjectException("Drop a ZIP mod archive, mod_info.json, or mod folder");
+        boolean archive = Files.isRegularFile(supplied)
+                && fileName(supplied).toLowerCase(Locale.ROOT).endsWith(".zip");
+        if (!archive) {
+            var prepared = inputs.prepare(supplied, workspaceRoot.resolve("input-cache"));
+            return run(prepared.modRoot());
         }
         Path workspace = workspaceFor(
                 supplied,
                 safeName(withoutExtension(fileName(supplied)), "Mod archive"));
         Path visibleRoot = Objects.requireNonNull(supplied.getParent(), "archive parent");
-        try {
-            Files.createDirectories(workspace);
-            return run(extractArchive(supplied, workspace), workspace, visibleRoot);
-        } catch (IOException exception) {
-            throw new ProjectException("Could not unpack dropped mod archive", exception);
-        }
+        var prepared = inputs.prepare(supplied, workspace);
+        return run(prepared.modRoot(), workspace, visibleRoot);
     }
 
     /**
@@ -257,62 +241,6 @@ public final class AutoWorkflow {
             return modInfoReader.read(source);
         } catch (com.ssmt.core.exception.SsmtParseException exception) {
             throw new ProjectException("Could not read dropped mod_info.json", exception);
-        }
-    }
-
-    private static Path extractArchive(Path archive, Path workspace)
-            throws IOException, ProjectException {
-        String archiveHash = sha256(archive);
-        Path extraction = workspace.resolve("archive-source-" + archiveHash.substring(0, 12));
-        if (Files.isDirectory(extraction)) {
-            return findArchiveModRoot(extraction);
-        }
-        Files.createDirectories(extraction);
-        int entries = 0;
-        long extractedBytes = 0;
-        try (ZipInputStream input = new ZipInputStream(Files.newInputStream(archive))) {
-            ZipEntry entry;
-            while ((entry = input.getNextEntry()) != null) {
-                entries++;
-                if (entries > MAX_ARCHIVE_ENTRIES) {
-                    throw new ProjectException("Mod archive contains too many files");
-                }
-                Path destination = extraction.resolve(entry.getName()).normalize();
-                if (!destination.startsWith(extraction)) {
-                    throw new ProjectException("Mod archive contains an unsafe file path");
-                }
-                if (entry.isDirectory()) {
-                    Files.createDirectories(destination);
-                    continue;
-                }
-                Files.createDirectories(Objects.requireNonNull(destination.getParent()));
-                try (var output = Files.newOutputStream(destination)) {
-                    byte[] buffer = new byte[8192];
-                    int read;
-                    while ((read = input.read(buffer)) >= 0) {
-                        extractedBytes += read;
-                        if (extractedBytes > MAX_ARCHIVE_BYTES) {
-                            throw new ProjectException("Mod archive expands beyond the 1 GB safety limit");
-                        }
-                        output.write(buffer, 0, read);
-                    }
-                }
-            }
-        }
-        return findArchiveModRoot(extraction);
-    }
-
-    private static Path findArchiveModRoot(Path extraction) throws IOException, ProjectException {
-        try (var paths = Files.walk(extraction)) {
-            List<Path> metadata = paths
-                    .filter(Files::isRegularFile)
-                    .filter(path -> "mod_info.json".equalsIgnoreCase(fileName(path)))
-                    .toList();
-            if (metadata.size() != 1) {
-                throw new ProjectException(
-                        "Mod archive must contain exactly one mod_info.json file");
-            }
-            return Objects.requireNonNull(metadata.getFirst().getParent(), "mod archive root");
         }
     }
 

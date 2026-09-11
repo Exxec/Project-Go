@@ -24,6 +24,7 @@ dependencies {
     implementation(project(":ssmt-validation"))
     implementation(project(":ssmt-extractor"))
     implementation(project(":ssmt-project"))
+    implementation(project(":ssmt-patcher"))
     implementation(project(":ssmt-tm"))
     implementation(variantOf(libs.javafx.base) { classifier(javafxPlatform) })
     implementation(variantOf(libs.javafx.graphics) { classifier(javafxPlatform) })

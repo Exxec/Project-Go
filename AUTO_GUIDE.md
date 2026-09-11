@@ -2,7 +2,9 @@
 
 `Last updated: 2026-09-11 (internal workspace and single-copy output)`
 
-`Project Go Auto.exe` is the simple drag-and-drop Project Go helper. Drop one
+`Project Go Auto.exe` is the advanced headless compatibility helper for scripts
+and existing drag-to-executable habits. New desktop users can drop the same input
+onto the main Project Go window. Drop one
 Starsector mod ZIP on it and it either makes your personal translated copy or
 creates one clear file for an AI translation pass. It never edits the archive
 or an unpacked original mod.

@@ -1,6 +1,6 @@
 # Project Go Personal-Use Guide
 
-`Last updated: 2026-09-11 (three-stage normal flow and single-copy output)`
+`Last updated: 2026-09-11 (unified drop flow and single-copy output)`
 
 ## What this build is
 
@@ -24,7 +24,8 @@ boolean is required, is reported and is not silently repaired.
 Windows SmartScreen may warn because the development build is unsigned. Verify
 the ZIP against its adjacent `.sha256` file before testing.
 
-The normal workflow has three stages: **Choose**, **Translate**, and **Install**.
+The normal workflow has three stages: **Choose Mod**, **Translate Text**, and
+**Install Copy**.
 It shows one primary next action instead of asking you to manage project files.
 Project state, history, reports, recovery data, and translation memory remain in
 Project Go-owned storage outside the source mod. The desktop workspace currently
@@ -58,12 +59,13 @@ Choose a writable parent folder; Project Go creates or resets
 `ssmt-sample-project` there and opens a synthetic localization project. The
 copy contains no proprietary Starsector or community-mod content.
 
-1. In the normal **Translate a Mod** tab, select **Choose a Mod** and choose the
-   folder containing `mod_info.json`.
+1. In **Translate a Mod**, drop a ZIP, mod folder, or `mod_info.json` onto the
+   large drop area. File and folder pickers remain under the primary and
+   **Other actions** controls.
 2. If saved translations are already complete, Project Go advances directly to
    **Install**. Otherwise select **Save AI Translation Request**.
-3. Give that JSON to the translator and select **Open AI Translation Response**
-   when it returns. The response filename does not matter.
+3. Give that JSON to the translator and drop the returned JSON onto the same
+   area. The response filename does not matter; a file picker remains available.
 4. Project Go validates the entire response before saving anything. If entries
    remain unfinished, it returns to the translation step.
 5. Select **Create Translated Mod**, choose the destination parent, and use the
@@ -73,9 +75,18 @@ copy contains no proprietary Starsector or community-mod content.
 6. Disable the original mod, enable only the translated copy, and launch
    Starsector. In-game behavior remains a separate manual validation gate.
 
+After a successful install, use **Open Mod Folder** or **Translate Another Mod**.
+The latter clears only the active screen; saved translation work remains internal.
+
 ## Advanced project files and recovery
 
-Application-owned cache cleanup is preview-first. The preview is sorted, saved
+Normal **Settings** shows the remembered install parent, previews old disposable
+cache/staging paths before enabling cleanup, and offers automatic restore only
+when recovery is unambiguous. Ambiguous output/staging combinations are reported
+for manual review and left unchanged. A first-ever install interrupted by a full
+process crash may require the CLI or manual path selection because no successful
+install parent has been remembered yet. The same cleanup contract is available to
+the CLI, where the preview is sorted, saved
 to `cleanup-preview.json`, and includes file counts, byte counts, and a SHA-256
 tree identity. Cleanup consumes that saved preview, does not discover new
 candidates, and stops if any approved candidate changed:

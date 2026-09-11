@@ -21,6 +21,7 @@ public final class TranslationWorkflow {
     private static final System.Logger LOG = System.getLogger(TranslationWorkflow.class.getName());
     private static final ObjectMapper JSON = new ObjectMapper();
     private final Path root;
+    private final Path inputCache;
     private final LocalizationProjectService projects = new LocalizationProjectService();
     private final AiTranslationExchangeService exchange = new AiTranslationExchangeService();
     private final WorkspacePublisher publisher;
@@ -47,7 +48,14 @@ public final class TranslationWorkflow {
 
     TranslationWorkflow(Path root, WorkspacePublisher publisher) {
         this.root = root.toAbsolutePath().normalize();
+        this.inputCache = this.root.resolveSibling("input-cache");
         this.publisher = publisher;
+    }
+
+    /** Accepts a mod folder, mod_info.json, or ZIP and opens its normalized mod root. */
+    public Session loadInput(Path input) throws ProjectException {
+        var prepared = new ModInputPreparationService().prepare(input, inputCache);
+        return loadMod(prepared.modRoot());
     }
 
     /** Finds durable work before extraction, and refreshes it on every load. */

@@ -1,6 +1,6 @@
 # Project Go Beginner Guide
 
-`Last updated: 2026-09-11 (three-step workflow)`
+`Last updated: 2026-09-11 (one-drop-surface workflow)`
 
 Project Go makes a private translated copy of a Starsector mod. It does not
 change the original mod, and generated copies should not be shared without the
@@ -8,18 +8,18 @@ mod author's permission.
 
 ## The three steps
 
-### 1. Choose
+### 1. Choose Mod
 
 1. Start `Project Go.exe` from the extracted Windows development bundle.
 2. Open **Translate a Mod**.
-3. Select **Choose a Mod** and choose the folder that directly contains
-   `mod_info.json`.
+3. Drop a mod ZIP, mod folder, or `mod_info.json` onto the large drop area.
+   **Choose a Mod** and **Other actions** provide file-picker alternatives.
 
 Project Go reads that folder and saves progress in its own internal workspace.
 You do not need to create or name a project file, database, report, or backup.
 The source folder remains unchanged.
 
-### 2. Translate
+### 2. Translate Text
 
 If Project Go already has complete saved translations, it proceeds directly to
 the final step. Otherwise:
@@ -27,7 +27,8 @@ the final step. Otherwise:
 1. Select **Save AI Translation Request**.
 2. Give the resulting JSON file to your AI translator.
 3. Ask it to follow the instructions inside and return the complete JSON only.
-4. Select **Open AI Translation Response** and choose the returned JSON file.
+4. Drop the returned JSON onto the same area. **Open AI Translation Response**
+   remains available if you prefer a file picker.
 
 The response filename does not matter. Project Go checks its embedded mod
 identity, source text, entry IDs, formatting tokens, and syntax before saving
@@ -36,7 +37,7 @@ anything. A rejected response leaves previous progress untouched.
 If entries are still blank, Project Go returns to the translation step and can
 create another request containing the remaining work.
 
-### 3. Install
+### 3. Install Copy
 
 1. Select **Create Translated Mod**.
 2. Choose the destination parent, normally Starsector's `mods` directory.
@@ -50,6 +51,9 @@ Temporary rollback data is internal and is removed after successful publication.
 After the first successful build, Project Go remembers that validated destination
 and opens the chooser there next time. If the folder is moved or removed, it asks
 again instead of using a stale path.
+
+After installation, **Open Mod Folder** opens the result and **Translate Another
+Mod** clears the active screen without deleting saved work.
 
 ## Files you need to understand
 
@@ -66,9 +70,11 @@ Project state, history, reports, extraction data, recovery data, and the shared
 translation library are application-owned details. Keep the Project Go
 application-data folder if you want saved work and translation reuse to persist.
 
-## Project Go Auto
+## Advanced compatibility: Project Go Auto
 
-`Project Go Auto.exe` accepts a dropped mod ZIP, directory, or `mod_info.json`.
+Most users can stay in the main desktop. `Project Go Auto.exe` remains for scripts
+and existing drag-to-executable habits; it accepts a dropped mod ZIP, directory,
+or `mod_info.json` through the same bounded input preparation service.
 For a ZIP it creates a clearly named AI request beside the ZIP. Save the completed
 response beside the same input; its JSON filename does not matter. Dropping the
 input again identifies the response by its embedded project identity and creates

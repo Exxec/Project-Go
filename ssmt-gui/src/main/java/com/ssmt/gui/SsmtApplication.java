@@ -126,8 +126,12 @@ public final class SsmtApplication extends Application {
         advanced.setOnSelectionChanged(event -> {
             if (advanced.isSelected() && initialized.compareAndSet(false, true)) { initializeTranslationMemory(); }
         });
-        BorderPane root = new BorderPane(new TabPane(
-                fixedTab(GuiText.get("normal.title"), new TranslationWorkflowPane(stage)), advanced));
+        TabPane modes = new TabPane();
+        Tab normal = fixedTab(GuiText.get("normal.title"),
+                new TranslationWorkflowPane(stage,
+                        () -> modes.getSelectionModel().select(advanced)));
+        modes.getTabs().addAll(normal, advanced);
+        BorderPane root = new BorderPane(modes);
         root.setPadding(new Insets(8));
         stage.setTitle(WINDOW_TITLE);
         stage.getIcons().add(new Image(java.util.Objects.requireNonNull(

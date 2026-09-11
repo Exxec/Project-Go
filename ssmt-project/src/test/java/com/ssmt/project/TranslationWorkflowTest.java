@@ -8,6 +8,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -37,6 +40,26 @@ class TranslationWorkflowTest {
         }
         json.writeValue(file.toFile(), root);
         return file;
+    }
+
+    @Test void loadInputAcceptsAnArchiveWithoutChangingIt() throws Exception {
+        Path archive = directory.resolve("mod.zip");
+        try (ZipOutputStream output = new ZipOutputStream(Files.newOutputStream(archive))) {
+            for (var entry : Map.of(
+                    "wrapper/mod_info.json", "{\"id\":\"archive\",\"name\":\"Archive\",\"version\":\"1\"}",
+                    "wrapper/data/strings/strings.json", "{\"a\":\"Hello\"}").entrySet()) {
+                output.putNextEntry(new ZipEntry(entry.getKey()));
+                output.write(entry.getValue().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                output.closeEntry();
+            }
+        }
+        byte[] before = Files.readAllBytes(archive);
+
+        var session = new TranslationWorkflow(directory.resolve("workspaces")).loadInput(archive);
+
+        assertThat(session.modName()).isEqualTo("Archive");
+        assertThat(session.source()).startsWith(directory.resolve("input-cache").toRealPath());
+        assertThat(Files.readAllBytes(archive)).isEqualTo(before);
     }
 
     @Test void restartRefreshesWithoutVersionChangeAndRetainsRemovedHistory() throws Exception {

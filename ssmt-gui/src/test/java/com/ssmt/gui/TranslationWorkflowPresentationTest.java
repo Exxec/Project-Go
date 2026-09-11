@@ -36,6 +36,8 @@ class TranslationWorkflowPresentationTest {
         assertThat(presentation.action().buttonText()).isEqualTo("Open AI Translation Response");
         presentation.completed(TranslationWorkflowPresentation.Action.IMPORT_TRANSLATION, true);
         assertThat(presentation.action().buttonText()).isEqualTo("Create Translated Mod");
+        presentation.completed(TranslationWorkflowPresentation.Action.BUILD_COPY, true);
+        assertThat(presentation.action().buttonText()).isEqualTo("Translate Another Mod");
     }
 
     @Test
@@ -52,5 +54,16 @@ class TranslationWorkflowPresentationTest {
         presentation.completed(TranslationWorkflowPresentation.Action.IMPORT_TRANSLATION, false);
         assertThat(presentation.action())
                 .isEqualTo(TranslationWorkflowPresentation.Action.EXPORT_TRANSLATION);
+    }
+
+    @Test
+    void completedInstallHasAResultStateAndResetReturnsToChoose() {
+        var presentation = new TranslationWorkflowPresentation();
+        presentation.completed(TranslationWorkflowPresentation.Action.CHOOSE_MOD, true);
+        presentation.completed(TranslationWorkflowPresentation.Action.BUILD_COPY, true);
+
+        assertThat(presentation.action()).isEqualTo(TranslationWorkflowPresentation.Action.COMPLETE);
+        presentation.reset();
+        assertThat(presentation.action()).isEqualTo(TranslationWorkflowPresentation.Action.CHOOSE_MOD);
     }
 }

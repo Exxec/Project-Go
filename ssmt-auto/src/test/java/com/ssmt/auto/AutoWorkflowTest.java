@@ -140,6 +140,25 @@ class AutoWorkflowTest {
     }
 
     @Test
+    void droppedFolderAndMetadataUseTheSameWorkspaceAndVisibleFiles() throws Exception {
+        Path source = createMod("user-files/Example", "example.mod", "Example Mod");
+        Path workspaceRoot = temporaryDirectory.resolve("internal/projects");
+        AutoWorkflow workflow = new AutoWorkflow(
+                temporaryDirectory.resolve("internal/shared/catalog.db"), workspaceRoot);
+
+        AutoRunResult folder = workflow.runDropped(source);
+        AutoRunResult metadata = workflow.runDropped(source.resolve("mod_info.json"));
+
+        assertThat(folder.status()).isEqualTo(AutoRunResult.Status.MASTER_LIBRARY_NEEDED);
+        assertThat(metadata.status()).isEqualTo(AutoRunResult.Status.MASTER_LIBRARY_NEEDED);
+        assertThat(metadata.workspace()).isEqualTo(folder.workspace());
+        assertThat(folder.workspace().getParent()).isEqualTo(workspaceRoot);
+        assertThat(source.getParent().resolve("Example Mod - AI translation request.json"))
+                .isRegularFile();
+        assertThat(workspaceRoot.resolve("input-cache")).doesNotExist();
+    }
+
+    @Test
     void acceptsMatchingResponseUnderAnyJsonFilenameAndIgnoresRequest() throws Exception {
         Path userFiles = temporaryDirectory.resolve("user-files");
         Path source = createMod("user-files/Example", "example.mod", "Example Mod");

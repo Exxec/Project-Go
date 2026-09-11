@@ -6,7 +6,8 @@ final class TranslationWorkflowPresentation {
         CHOOSE_MOD(1, "normal.primary.choose", "normal.prompt.choose"),
         EXPORT_TRANSLATION(2, "normal.primary.export", "normal.prompt.export"),
         IMPORT_TRANSLATION(2, "normal.primary.import", "normal.prompt.import"),
-        BUILD_COPY(3, "normal.primary.build", "normal.prompt.build");
+        BUILD_COPY(3, "normal.primary.build", "normal.prompt.build"),
+        COMPLETE(3, "normal.primary.another", "normal.prompt.complete");
 
         private final int stage;
         private final String buttonKey;
@@ -35,7 +36,12 @@ final class TranslationWorkflowPresentation {
                     ? Action.BUILD_COPY
                     : Action.EXPORT_TRANSLATION;
             case EXPORT_TRANSLATION -> Action.IMPORT_TRANSLATION;
-            case BUILD_COPY -> Action.BUILD_COPY;
+            case BUILD_COPY -> Action.COMPLETE;
+            case COMPLETE -> Action.CHOOSE_MOD;
         };
+    }
+
+    void reset() {
+        action = Action.CHOOSE_MOD;
     }
 }

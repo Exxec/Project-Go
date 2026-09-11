@@ -385,6 +385,11 @@ The clone publisher:
 Source bytes are treated as immutable input. Links and special files are
 rejected rather than followed outside the declared source root.
 
+The normal desktop and Auto entry points share `ModInputPreparationService` for
+directories, `mod_info.json`, and ZIP inputs. ZIP preparation is hash-keyed,
+bounded to 10,000 entries and 1 GiB expanded data, rejects traversal and duplicate
+paths, and requires exactly one metadata file before a prepared root is returned.
+
 ---
 
 # Unicode Path Boundary

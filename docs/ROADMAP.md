@@ -91,6 +91,9 @@ release claim.
 14. Filename-independent discovery must bind workflow identity, source and target
     languages, protected source text, entry-set integrity, size/count limits, and
     ambiguity. A familiar filename is a priority hint, not authority.
+15. A drop target should represent the user's current task, not one file type.
+    Route inputs by validated type and workflow state, retain pickers as a
+    fallback, and keep rejected drops from replacing active work.
 
 ## P1 implementation evidence â€” 2026-09-11
 
@@ -116,6 +119,12 @@ release claim.
   inventories, containment, hashes, and explicit actions. BridgeForge's inspected
   checkout was dirty/diverged, so untracked or modified high-level files were not
   treated as authoritative inputs.
+- The normal desktop now accepts ZIPs, mod folders, `mod_info.json`, and returned
+  AI JSON on one drop surface. GUI and Auto use the same bounded, hash-keyed
+  archive preparation service; failed preparation cannot replace the active GUI
+  session. Settings exposes exact cleanup candidates and only enables unambiguous
+  recovery. A first-ever process crash before any install destination was
+  remembered still requires an explicit output-path recovery entry point.
 
 ## P0 — restore trustworthy build and release evidence
 
@@ -165,8 +174,9 @@ adding more normal-path controls.
   Offer explicit exports and paths under Advanced.
 - [ ] Add bounded cache cleanup, interrupted-output recovery, and legacy-project
   adoption without deleting existing workspaces or copies. Hash-bound preview and
-  cleanup plus unambiguous prior-output recovery are implemented; explicit legacy
-  adoption and ambiguous-output UI remain open.
+  cleanup plus unambiguous prior-output recovery are implemented in CLI and GUI;
+  the GUI reports ambiguous states without changing them. Explicit legacy
+  adoption remains open.
 - [ ] Make GUI, Auto, and simple CLI exercise the same workflow service and
   state-transition contract.
 - [x] Rewrite the normal user guide around the visible task; keep database,
@@ -179,7 +189,8 @@ cancelled and failed operations preserve source, project state, and prior output
 Evidence: the isolated Auto ZIP round trip now accepts an arbitrarily named
 response, publishes one translated folder, preserves the archive hash, and exposes
 no project, backup, or report sibling. Destination persistence and hash-bound
-cleanup/recovery have isolated regression coverage. GUI/Auto/simple-CLI service
+cleanup/recovery have isolated regression coverage. GUI and Auto now share one
+bounded input-preparation service, while full GUI/Auto/simple-CLI state-machine
 unification and explicit legacy adoption remain required before P1 closes.
 
 ## P2 — evidence-first revival assessment

@@ -19,6 +19,9 @@ class StorageHygieneServiceTest {
         Path cache = Files.createDirectories(directory.resolve("projects/one/archive-source-abcdef"));
         Files.writeString(cache.resolve("mod_info.json"), "source");
         Path staging = directory.resolve("projects/two/project.json.ssmt-stage");
+        Path archiveStaging = Files.createDirectories(
+                directory.resolve("input-cache/archive-source-staging-crash"));
+        Files.writeString(archiveStaging.resolve("partial.txt"), "partial");
         Files.createDirectories(Objects.requireNonNull(staging.getParent()));
         Files.writeString(staging, "staged");
         Path project = directory.resolve("projects/two/project.ssmt.json");
@@ -27,17 +30,21 @@ class StorageHygieneServiceTest {
         Files.setLastModifiedTime(cache.resolve("mod_info.json"), old);
         Files.setLastModifiedTime(cache, old);
         Files.setLastModifiedTime(staging, old);
+        Files.setLastModifiedTime(archiveStaging.resolve("partial.txt"), old);
+        Files.setLastModifiedTime(archiveStaging, old);
 
         var service = new StorageHygieneService(directory);
         var preview = service.preview(Duration.ofDays(30));
 
         assertThat(preview.items()).extracting(StorageHygieneService.Item::relativePath)
-                .containsExactly("projects/one/archive-source-abcdef",
+                .containsExactly("input-cache/archive-source-staging-crash",
+                        "projects/one/archive-source-abcdef",
                         "projects/two/project.json.ssmt-stage");
-        assertThat(preview.files()).isEqualTo(2);
+        assertThat(preview.files()).isEqualTo(3);
         service.cleanup(preview);
         assertThat(cache).doesNotExist();
         assertThat(staging).doesNotExist();
+        assertThat(archiveStaging).doesNotExist();
         assertThat(project).isRegularFile();
     }
 
