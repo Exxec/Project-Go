@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.ssmt.project.TranslationWorkflow;
 import com.ssmt.project.ProjectException;
+import com.ssmt.project.WorkflowPreferences;
 import java.nio.file.Path;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
@@ -19,7 +20,8 @@ class TranslationWorkflowControllerTest {
         Files.createDirectories(source.resolve("data/strings"));
         Files.writeString(source.resolve("mod_info.json"), "{\"id\":\"gui\",\"name\":\"GUI\"}");
         Files.writeString(source.resolve("data/strings/strings.json"), "{\"hello\":\"Hello\"}");
-        var controller = new TranslationWorkflowController(new TranslationWorkflow(directory.resolve("owned")));
+        var controller = new TranslationWorkflowController(new TranslationWorkflow(directory.resolve("owned")),
+                new WorkflowPreferences(directory.resolve("settings.json")));
         controller.loadMod(source);
         var previous = controller.session().orElseThrow();
         Path response = directory.resolve("response.json");
@@ -34,9 +36,12 @@ class TranslationWorkflowControllerTest {
         controller.importTranslation(response);
         assertThat(controller.session().orElseThrow().project().entries().getFirst().translatedText()).isEqualTo("Bonjour");
         controller.buildPatch(directory.resolve("output"));
+        assertThat(controller.modsDestination()).contains(directory.toRealPath());
         assertThat(directory.resolve("output/Project Go Changes.csv")).doesNotExist();
         assertThat(directory.resolve("output-source-backup")).doesNotExist();
-        var restart = new TranslationWorkflowController(new TranslationWorkflow(directory.resolve("owned")));
+        var restart = new TranslationWorkflowController(new TranslationWorkflow(directory.resolve("owned")),
+                new WorkflowPreferences(directory.resolve("settings.json")));
+        assertThat(restart.modsDestination()).contains(directory.toRealPath());
         restart.loadMod(source);
         assertThat(restart.session().orElseThrow().project()).isEqualTo(controller.session().orElseThrow().project());
     }

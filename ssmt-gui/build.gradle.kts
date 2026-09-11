@@ -37,6 +37,8 @@ application {
 val packageRoot = layout.buildDirectory.dir("jpackage")
 val appImage = packageRoot.map { it.dir("Project Go") }
 val hostOs = System.getProperty("os.name").lowercase()
+// jpackage accepts numeric dotted components only; JARs and archives retain the full version.
+val nativeAppVersion = project.version.toString().substringBefore('-')
 val jpackageExecutable = javaToolchains.launcherFor {
     languageVersion.set(JavaLanguageVersion.of(25))
 }.map { launcher ->
@@ -71,7 +73,7 @@ tasks.register<Exec>("jpackageImage") {
             "--name", "Project Go",
             "--main-jar", "ssmt-gui-${project.version}.jar",
             "--main-class", "com.ssmt.gui.GuiLauncher",
-            "--app-version", project.version.toString(),
+            "--app-version", nativeAppVersion,
             "--vendor", "Project Go Contributors",
             "--description", "Personal-use Starsector translation tool",
             "--copyright", "Copyright 2026 Project Go Contributors",
@@ -153,7 +155,7 @@ tasks.register<Exec>("jpackageInstaller") {
             "--app-image", appImage.get().asFile.absolutePath,
             "--dest", destination.absolutePath,
             "--name", "Project Go",
-            "--app-version", project.version.toString(),
+            "--app-version", nativeAppVersion,
             "--vendor", "Project Go Contributors"
         )
         if (hostOs.contains("win")) {

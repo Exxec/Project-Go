@@ -3,9 +3,13 @@
 `Last updated: 2026-09-11 (normal single-copy and Advanced output distinction)`
 
 Project Go release versioning is controlled by `ssmtVersion` in `gradle.properties`
-(currently 0.7.0). The release build includes PNG and Windows ICO
+(currently `0.8.0-dev`). The release build includes PNG and Windows ICO
 application assets and uses the JDK 25 `jpackage` tool without an
 additional packaging plugin.
+
+Development JAR metadata and archive names retain the prerelease suffix. Native
+`jpackage` metadata uses its required numeric projection (`0.8.0`); this is a
+container-format constraint, not evidence of a release or tag.
 
 The version property alone is not release evidence. `main` currently contains
 post-tag development changes while `v0.7.0` has no published GitHub Release; do

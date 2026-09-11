@@ -17,7 +17,8 @@ or redistribution rights.
 
 The simplified source-safe workflow is implemented on `main` and verified by
 Windows and Linux CI. The existing `v0.7.0` tag has no published GitHub Release;
-post-tag source on `main` is development work, not a release candidate. Manual
+post-tag source on `main` now identifies itself as `0.8.0-dev`, not as the old
+tagged version. It remains development work, not a release candidate. Manual
 GUI/file-picker and in-game acceptance remain separate gates.
 Project Go scans Starsector mods, extracts standard CSV/JSON-like and bytecode
 strings without executing mod classes, stores reusable translations in
@@ -85,6 +86,15 @@ the normal desktop flow:
 
 Project state remains internal. The final command creates one translated copy.
 
+Application-owned storage has a read-only, hash-backed hygiene preview. The
+preview command saves the exact approval manifest; cleanup does not discover new
+candidates and stops if a listed candidate changes before deletion:
+
+```powershell
+ssmt-cli storage preview --older-than-days 30
+ssmt-cli storage clean --older-than-days 30
+```
+
 ## Advanced: create and build a portable localization project
 
 ```powershell
@@ -130,7 +140,8 @@ pipeline headlessly against a dropped mod ZIP (or unpacked mod), sharing the
 same default SQLite master translation library as the GUI. Project, state, and
 archive-extraction files stay in Project Go application data. Beside the selected
 input, Auto exposes only the AI handoff files when needed and one translated copy
-when complete. See [AUTO_GUIDE.md](AUTO_GUIDE.md).
+when complete. Returned response filenames are identified from embedded identity
+and integrity fields rather than their path. See [AUTO_GUIDE.md](AUTO_GUIDE.md).
 
 ## Native packaging
 

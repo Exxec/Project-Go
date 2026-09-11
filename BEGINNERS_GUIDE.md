@@ -47,6 +47,9 @@ create another request containing the remaining work.
 A successful normal build creates one translated folder. It does not create a
 permanent source-backup sibling or put `Project Go Changes.csv` in that folder.
 Temporary rollback data is internal and is removed after successful publication.
+After the first successful build, Project Go remembers that validated destination
+and opens the chooser there next time. If the folder is moved or removed, it asks
+again instead of using a stale path.
 
 ## Files you need to understand
 
@@ -66,10 +69,10 @@ application-data folder if you want saved work and translation reuse to persist.
 ## Project Go Auto
 
 `Project Go Auto.exe` accepts a dropped mod ZIP, directory, or `mod_info.json`.
-For a ZIP it creates a clearly named AI request beside the ZIP. Auto currently
-expects the response beside the same input under the exact name it displays.
-Dropping the input again imports that response and creates one `<mod-id>.english`
-folder when the translation is complete.
+For a ZIP it creates a clearly named AI request beside the ZIP. Save the completed
+response beside the same input; its JSON filename does not matter. Dropping the
+input again identifies the response by its embedded project identity and creates
+one `<mod-id>.english` folder when the translation is complete.
 
 Auto keeps its project and extracted ZIP internally. See [AUTO_GUIDE.md](AUTO_GUIDE.md)
 for the exact handoff filename and safety limits.
@@ -118,8 +121,7 @@ The CLI distribution requires JDK 25. Build it and inspect its commands with:
 
 See [USER_GUIDE.md](USER_GUIDE.md) for the full Advanced interface and CLI
 command reference. See [docs/ROADMAP.md](docs/ROADMAP.md) for known limitations,
-including remembered install destinations, filename-independent Auto responses,
-cache cleanup, legacy adoption, and live-game validation.
+including legacy adoption, shared internal roots, and live-game validation.
 
 ## Safe routine
 

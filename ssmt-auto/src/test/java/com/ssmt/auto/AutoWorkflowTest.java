@@ -110,9 +110,9 @@ class AutoWorkflowTest {
         String archiveHash = sha256(archive);
 
         Path workspaceRoot = temporaryDirectory.resolve("internal/app-data/projects");
-        AutoRunResult result = new AutoWorkflow(
-                        temporaryDirectory.resolve("internal/shared/catalog.db"), workspaceRoot)
-                .runDropped(archive);
+        AutoWorkflow workflow = new AutoWorkflow(
+                temporaryDirectory.resolve("internal/shared/catalog.db"), workspaceRoot);
+        AutoRunResult result = workflow.runDropped(archive);
 
         assertThat(result.status()).isEqualTo(AutoRunResult.Status.MASTER_LIBRARY_NEEDED);
         assertThat(result.workspace().getParent()).isEqualTo(workspaceRoot);
@@ -122,6 +122,143 @@ class AutoWorkflowTest {
         assertThat(result.workspace().resolve("Archive Mod - AI translation request.json"))
                 .doesNotExist();
         assertThat(sha256(archive)).isEqualTo(archiveHash);
+
+        ObjectNode translated = (ObjectNode) JSON.readTree(
+                userFiles.resolve("Archive Mod - AI translation request.json").toFile());
+        ((ObjectNode) translated.withArray("entries").get(0))
+                .put("translation", "A translated archive line");
+        JSON.writerWithDefaultPrettyPrinter().writeValue(
+                userFiles.resolve("returned-with-a-different-name.json").toFile(), translated);
+
+        AutoRunResult completed = workflow.runDropped(archive);
+
+        assertThat(completed.status()).isEqualTo(AutoRunResult.Status.PATCH_PUBLISHED);
+        assertThat(userFiles.resolve("archive.mod.english")).isDirectory();
+        assertThat(userFiles.resolve("archive.mod.english-source-backup")).doesNotExist();
+        assertThat(userFiles.resolve("Project Go - Archive Mod")).doesNotExist();
+        assertThat(sha256(archive)).isEqualTo(archiveHash);
+    }
+
+    @Test
+    void acceptsMatchingResponseUnderAnyJsonFilenameAndIgnoresRequest() throws Exception {
+        Path userFiles = temporaryDirectory.resolve("user-files");
+        Path source = createMod("user-files/Example", "example.mod", "Example Mod");
+        Path sharedCatalog = temporaryDirectory.resolve("internal/shared/catalog.db");
+        AutoWorkflow workflow = new AutoWorkflow(
+                sharedCatalog, temporaryDirectory.resolve("internal/projects"));
+
+        AutoRunResult waiting = workflow.run(source);
+        Path request = userFiles.resolve("Example Mod - AI translation request.json");
+        ObjectNode translated = (ObjectNode) JSON.readTree(request.toFile());
+        translated.put("translatedModName", "Example");
+        ((ObjectNode) translated.withArray("entries").get(0))
+                .put("translation", "A translated line");
+        Path renamedResponse = userFiles.resolve("answer-from-ai.json");
+        JSON.writerWithDefaultPrettyPrinter().writeValue(renamedResponse.toFile(), translated);
+
+        AutoRunResult built = workflow.run(source);
+
+        assertThat(waiting.status()).isEqualTo(AutoRunResult.Status.MASTER_LIBRARY_NEEDED);
+        assertThat(built.status()).isEqualTo(AutoRunResult.Status.PATCH_PUBLISHED);
+        assertThat(userFiles.resolve("example.mod.english")).isDirectory();
+        assertThat(request).isRegularFile();
+    }
+
+    @Test
+    void ignoresUnrelatedJsonAndRejectsAmbiguousMatchingResponses() throws Exception {
+        Path userFiles = temporaryDirectory.resolve("user-files");
+        Path source = createMod("user-files/Example", "example.mod", "Example Mod");
+        AutoWorkflow workflow = new AutoWorkflow(
+                temporaryDirectory.resolve("internal/shared/catalog.db"),
+                temporaryDirectory.resolve("internal/projects"));
+        workflow.run(source);
+        Path request = userFiles.resolve("Example Mod - AI translation request.json");
+        ObjectNode translated = (ObjectNode) JSON.readTree(request.toFile());
+        ((ObjectNode) translated.withArray("entries").get(0))
+                .put("translation", "A translated line");
+        Files.writeString(userFiles.resolve("unrelated.json"),
+                "{\"sourceModId\":\"another.mod\"}", StandardCharsets.UTF_8);
+        JSON.writerWithDefaultPrettyPrinter().writeValue(
+                userFiles.resolve("first-answer.json").toFile(), translated);
+        ((ObjectNode) translated.withArray("entries").get(0))
+                .put("translation", "A different translated line");
+        JSON.writerWithDefaultPrettyPrinter().writeValue(
+                userFiles.resolve("second-answer.json").toFile(), translated);
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> workflow.run(source))
+                .isInstanceOf(com.ssmt.project.ProjectException.class)
+                .hasMessageContaining("More than one new AI response matches this mod");
+    }
+
+    @Test
+    void ignoresResponseWhoseEmbeddedEntryIntegrityDoesNotMatch() throws Exception {
+        Path userFiles = temporaryDirectory.resolve("user-files");
+        Path source = createMod("user-files/Example", "example.mod", "Example Mod");
+        AutoWorkflow workflow = new AutoWorkflow(
+                temporaryDirectory.resolve("internal/shared/catalog.db"),
+                temporaryDirectory.resolve("internal/projects"));
+        workflow.run(source);
+        Path request = userFiles.resolve("Example Mod - AI translation request.json");
+        ObjectNode translated = (ObjectNode) JSON.readTree(request.toFile());
+        ((ObjectNode) translated.withArray("entries").get(0))
+                .put("translation", "A translated line");
+        translated.put("entryIdsSha256", "not-the-exported-entry-set");
+        JSON.writerWithDefaultPrettyPrinter().writeValue(
+                userFiles.resolve("plausible-but-corrupt.json").toFile(), translated);
+
+        AutoRunResult stillWaiting = workflow.run(source);
+
+        assertThat(stillWaiting.status())
+                .isEqualTo(AutoRunResult.Status.MASTER_LIBRARY_NEEDED);
+        assertThat(userFiles.resolve("example.mod.english")).doesNotExist();
+    }
+
+    @Test
+    void staleDocumentedResponseDoesNotMaskNewRenamedResponse() throws Exception {
+        Path userFiles = temporaryDirectory.resolve("user-files");
+        Path source = createMod("user-files/Example", "example.mod", "Example Mod");
+        AutoWorkflow workflow = new AutoWorkflow(
+                temporaryDirectory.resolve("internal/shared/catalog.db"),
+                temporaryDirectory.resolve("internal/projects"));
+        workflow.run(source);
+        Path request = userFiles.resolve("Example Mod - AI translation request.json");
+        ObjectNode first = (ObjectNode) JSON.readTree(request.toFile());
+        ((ObjectNode) first.withArray("entries").get(0)).put("translation", "First response");
+        Path documented = userFiles.resolve("Example Mod - AI translation library.json");
+        JSON.writerWithDefaultPrettyPrinter().writeValue(documented.toFile(), first);
+        workflow.run(source);
+
+        Files.writeString(source.resolve("data/strings/strings.json"),
+                "{\"welcome\":\"An untranslated line\",\"second\":\"Another line\"}");
+        Files.writeString(source.resolve("mod_info.json"),
+                "{\"id\":\"example.mod\",\"name\":\"Example Mod\",\"version\":\"2\"}");
+        workflow.run(source);
+        ObjectNode second = (ObjectNode) JSON.readTree(request.toFile());
+        ((ObjectNode) second.withArray("entries").get(0)).put("translation", "Second response");
+        JSON.writerWithDefaultPrettyPrinter().writeValue(
+                userFiles.resolve("new-answer.json").toFile(), second);
+
+        assertThat(workflow.run(source).status()).isEqualTo(AutoRunResult.Status.PATCH_PUBLISHED);
+    }
+
+    @Test
+    void ignoresMatchingResponseForAnotherTargetLanguage() throws Exception {
+        Path userFiles = temporaryDirectory.resolve("user-files");
+        Path source = createMod("user-files/Example", "example.mod", "Example Mod");
+        AutoWorkflow workflow = new AutoWorkflow(
+                temporaryDirectory.resolve("internal/shared/catalog.db"),
+                temporaryDirectory.resolve("internal/projects"));
+        workflow.run(source);
+        ObjectNode response = (ObjectNode) JSON.readTree(
+                userFiles.resolve("Example Mod - AI translation request.json").toFile());
+        response.put("targetLanguage", "fr");
+        ((ObjectNode) response.withArray("entries").get(0)).put("translation", "Une ligne");
+        JSON.writerWithDefaultPrettyPrinter().writeValue(
+                userFiles.resolve("french-answer.json").toFile(), response);
+
+        assertThat(workflow.run(source).status())
+                .isEqualTo(AutoRunResult.Status.MASTER_LIBRARY_NEEDED);
+        assertThat(userFiles.resolve("example.mod.english")).doesNotExist();
     }
 
     @Test

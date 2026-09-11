@@ -20,7 +20,8 @@ Original Mod Name - AI translation request.json
 ```
 
 4. Give it to an online AI and ask it to follow the embedded instructions.
-5. Save the returned complete JSON beside the ZIP using exactly:
+5. Save the returned complete JSON beside the ZIP. Any JSON filename works; this
+   documented name remains the clearest choice:
 
 ```text
 Original Mod Name - AI translation library.json
@@ -86,7 +87,8 @@ creates the translated copy beside it.
 3. If the declared mod version changed, reconcile against the updated mod.
 4. Check the master translation library, applying an exact entry only when the same source/language pair
    has one unambiguous translated value.
-5. If `AI translation library.json` changed, validate it and add it to both
+5. Find a new sibling JSON response by its embedded project identity and entry-set
+   integrity (the documented name is checked first), then validate it and add it to both
    the project and the master SQLite library.
 6. If the master library is missing or incomplete, export only the remaining nonblank
    strings in `AI translation request.json`; no patch is made yet.
@@ -116,8 +118,11 @@ For a development JVM launch:
 - Keep `%LOCALAPPDATA%\Project Go`; it contains the master library and internal
   automated projects.
 - Back up the catalog using the normal `ssmt-cli tm backup` command.
-- The current Auto loop still expects the documented response name beside the
-  selected source. The normal desktop Import action accepts any JSON filename.
+- Auto and the normal desktop Import action both accept a response under any JSON
+  filename. Auto ignores request files and unrelated JSON by checking embedded
+  project identity, entry-set integrity, protected source text, and completed
+  translations. If multiple new matching responses are present, keep only the one
+  you intend to import or give it the documented response filename.
 - If the library is absent or incomplete, Project Go writes a new request with
   only the remaining strings.
 - Changed IDs, source strings, schema, or source-mod identity reject the whole

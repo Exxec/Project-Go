@@ -211,3 +211,27 @@ val checkReleaseMetadata by tasks.registering {
         }
     }
 }
+
+tasks.register("hygieneDryRun") {
+    group = "help"
+    description = "Lists explicit repository-owned generated directories without deleting them."
+    doLast {
+        val candidates = (listOf(
+            layout.buildDirectory.get().asFile,
+            rootProject.file(".gradle"),
+            rootProject.file(".gradle-user"),
+            rootProject.file(".gradle-user-home"))
+            + subprojects.map { it.layout.buildDirectory.get().asFile })
+            .distinctBy { it.absoluteFile.normalize().path }
+            .filter { it.exists() }
+            .sortedBy { it.relativeTo(rootProject.projectDir).invariantSeparatorsPath }
+        candidates.forEach { candidate ->
+            val bytes = java.nio.file.Files.walk(candidate.toPath()).use { paths ->
+                paths.filter { java.nio.file.Files.isRegularFile(it) }
+                    .mapToLong { java.nio.file.Files.size(it) }.sum()
+            }
+            println("${candidate.relativeTo(rootProject.projectDir).invariantSeparatorsPath}\t$bytes bytes")
+        }
+        println("Preview only; nothing was removed.")
+    }
+}

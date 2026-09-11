@@ -68,10 +68,28 @@ copy contains no proprietary Starsector or community-mod content.
    remain unfinished, it returns to the translation step.
 5. Select **Create Translated Mod**, choose the destination parent, and use the
    one generated `<mod-id>-translated` folder.
+   A successful build remembers that validated parent for the next install. A
+   missing, linked, or unwritable remembered folder is ignored safely.
 6. Disable the original mod, enable only the translated copy, and launch
    Starsector. In-game behavior remains a separate manual validation gate.
 
 ## Advanced project files and recovery
+
+Application-owned cache cleanup is preview-first. The preview is sorted, saved
+to `cleanup-preview.json`, and includes file counts, byte counts, and a SHA-256
+tree identity. Cleanup consumes that saved preview, does not discover new
+candidates, and stops if any approved candidate changed:
+
+```powershell
+ssmt-cli storage preview --older-than-days 30
+ssmt-cli storage clean --older-than-days 30
+```
+
+Only old archive extraction caches and interrupted `.ssmt-stage` files under the
+default application-owned root qualify. Saved projects, translation memory,
+responses, source mods, and translated copies are never cleanup candidates.
+Interrupted translated-copy publication has a
+separate hash-bound recovery API; ambiguous old/new outputs require review.
 
 The Advanced **Project Info** tab shows every active
 location Project Go can identify: source mod, project document, translated clone,

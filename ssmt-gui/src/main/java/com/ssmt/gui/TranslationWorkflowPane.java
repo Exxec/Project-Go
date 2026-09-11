@@ -79,6 +79,7 @@ final class TranslationWorkflowPane extends VBox {
     private void buildCopy() {
         DirectoryChooser picker = new DirectoryChooser();
         picker.setTitle(GuiText.get("normal.output"));
+        controller.modsDestination().map(Path::toFile).ifPresent(picker::setInitialDirectory);
         File folder = picker.showDialog(stage);
         if (folder != null) {
             String id = controller.session().orElseThrow().project().sourceModId()
@@ -161,7 +162,8 @@ final class TranslationWorkflowPane extends VBox {
             long translated = session.project().entries().stream().filter(e -> !e.translatedText().isBlank()).count();
             return session.modName() + " — " + translated + " / " + session.project().entries().size()
                     + " " + GuiText.get("normal.translated") + "; " + session.needsReview()
-                    + " " + GuiText.get("normal.review");
+                    + " " + GuiText.get("normal.review")
+                    + controller.notice().map(value -> "\n" + value).orElse("");
         }).orElse(GuiText.get("normal.chooseHelp"));
     }
 

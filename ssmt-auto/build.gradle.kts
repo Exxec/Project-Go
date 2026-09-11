@@ -19,6 +19,8 @@ application {
 val packageRoot = layout.buildDirectory.dir("jpackage")
 val appImage = packageRoot.map { it.dir("Project Go Auto") }
 val hostOs = System.getProperty("os.name").lowercase()
+// jpackage accepts numeric dotted components only; the JAR keeps the full version.
+val nativeAppVersion = project.version.toString().substringBefore('-')
 val jpackageExecutable = javaToolchains.launcherFor {
     languageVersion.set(JavaLanguageVersion.of(25))
 }.map { launcher ->
@@ -45,7 +47,7 @@ tasks.register<Exec>("jpackageImage") {
             "--name", "Project Go Auto",
             "--main-jar", "ssmt-auto-${project.version}.jar",
             "--main-class", "com.ssmt.auto.AutoMain",
-            "--app-version", project.version.toString(),
+            "--app-version", nativeAppVersion,
             "--vendor", "Project Go Contributors",
             "--description", "Headless drag-and-drop Starsector localization workflow",
             "--icon", packageIcon.asFile,

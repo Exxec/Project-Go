@@ -82,6 +82,37 @@ release claim.
 11. Normal and Advanced file contracts must be named explicitly in documentation;
     a paired backup/report guarantee for maintainers is not the normal user's
     one-output workflow.
+12. Cleanup is a two-step evidence operation: render and persist a sorted,
+    hash-backed preview, then execute only those exact unchanged candidates.
+    Re-scanning at execution time silently expands user approval and is unsafe.
+13. Interrupted publication can be recovered automatically only when exactly one
+    last-known-good tree exists and the destination is absent. Competing previous,
+    staging, or published trees remain an explicit review decision.
+14. Filename-independent discovery must bind workflow identity, source and target
+    languages, protected source text, entry-set integrity, size/count limits, and
+    ambiguity. A familiar filename is a priority hint, not authority.
+
+## P1 implementation evidence â€” 2026-09-11
+
+- Auto accepts completed responses under arbitrary sibling JSON names using a
+  bounded 128-file/16 MiB discovery window and embedded identity/integrity. It
+  rejects ambiguity and wrong-language responses, and a stale documented-name
+  response no longer masks a newer renamed response.
+- The desktop remembers a validated install parent only after a successful build;
+  stale, linked, missing, or unwritable paths are ignored.
+- Application storage cleanup persists a sorted file-count/byte-count/SHA-256
+  preview. `storage clean` consumes only that manifest, reclassifies every target,
+  and stops when an approved candidate changed. Newly aged paths are not included.
+- Interrupted translated-copy recovery restores automatically only when output is
+  absent and one unchanged previous tree survives. Every ambiguous state reports
+  review required and preserves all trees.
+- A clean, uncached Windows `check` passed 405 tests with zero failures or skips,
+  together with Checkstyle and SpotBugs. Exact pushed-commit CI, native picker,
+  and live-game evidence are still pending.
+- These cleanup/recovery contracts adapt tracked BridgeForge patterns for sorted
+  inventories, containment, hashes, and explicit actions. BridgeForge's inspected
+  checkout was dirty/diverged, so untracked or modified high-level files were not
+  treated as authoritative inputs.
 
 ## P0 — restore trustworthy build and release evidence
 
@@ -118,9 +149,10 @@ adding more normal-path controls.
   of the shared-workflow item below.
 - [x] Let the desktop import an AI response under any filename, using its embedded
   identity and integrity fields instead of its path.
-- [ ] Extend filename-independent response import to Auto; it still watches for
-  one documented response name beside the selected input.
-- [ ] Remember one validated Starsector `mods` destination instead of asking on
+- [x] Extend filename-independent response import to Auto using bounded sibling
+  discovery, embedded identity/integrity, ambiguity rejection, and continued
+  priority for the documented response name.
+- [x] Remember one validated Starsector `mods` destination instead of asking on
   every desktop build.
 - [x] Publish one translated folder, keep output rollback staging internal, and
   stop publishing a permanent pristine-backup sibling in normal GUI, simple CLI,
@@ -129,7 +161,9 @@ adding more normal-path controls.
   translation memory, extraction cache, and recovery data internal by default.
   Offer explicit exports and paths under Advanced.
 - [ ] Add bounded cache cleanup, interrupted-output recovery, and legacy-project
-  adoption without deleting existing workspaces or copies.
+  adoption without deleting existing workspaces or copies. Hash-bound preview and
+  cleanup plus unambiguous prior-output recovery are implemented; explicit legacy
+  adoption and ambiguous-output UI remain open.
 - [ ] Make GUI, Auto, and simple CLI exercise the same workflow service and
   state-transition contract.
 - [x] Rewrite the normal user guide around the visible task; keep database,
@@ -138,6 +172,12 @@ adding more normal-path controls.
 Exit criteria: a clean-profile acceptance test goes from a ZIP to one translated
 output without requiring the user to name or manage an internal file, while
 cancelled and failed operations preserve source, project state, and prior output.
+
+Evidence: the isolated Auto ZIP round trip now accepts an arbitrarily named
+response, publishes one translated folder, preserves the archive hash, and exposes
+no project, backup, or report sibling. Destination persistence and hash-bound
+cleanup/recovery have isolated regression coverage. GUI/Auto/simple-CLI service
+unification and explicit legacy adoption remain required before P1 closes.
 
 ## P2 — evidence-first revival assessment
 

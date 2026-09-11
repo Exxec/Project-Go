@@ -31,7 +31,13 @@ public final class TranslationWorkflow {
 
     public TranslationWorkflow() {
         this(Path.of(System.getProperty("projectgo.workspace",
-                Path.of(System.getProperty("user.home"), ".project-go", "workspaces").toString())));
+                defaultApplicationRoot().resolve("workspaces").toString())));
+    }
+
+    /** Returns the application-owned storage root used by normal workflows. */
+    public static Path defaultApplicationRoot() {
+        return Path.of(System.getProperty("projectgo.data",
+                Path.of(System.getProperty("user.home"), ".project-go").toString()));
     }
 
     public TranslationWorkflow(Path root) {

@@ -25,9 +25,12 @@ import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
@@ -42,6 +45,8 @@ public final class AutoWorkflow {
     private static final String CATALOG_FILE = MasterTranslationLibrary.DEFAULT_FILENAME;
     private static final int MAX_ARCHIVE_ENTRIES = 10_000;
     private static final long MAX_ARCHIVE_BYTES = 1_073_741_824L;
+    private static final int MAX_RESPONSE_CANDIDATES = 128;
+    private static final long MAX_DISCOVERED_RESPONSE_BYTES = 16L * 1024 * 1024;
 
     private final LocalizationProjectService projects =
             new LocalizationProjectService();
@@ -180,11 +185,13 @@ public final class AutoWorkflow {
         projects.write(projectFile, project);
 
         String responseHash = state == null ? "" : state.responseHash();
-        if (Files.isRegularFile(translated)) {
-            String currentHash = sha256(translated);
+        Path response = findResponse(
+                visibleRoot, translated, missing, project, sourceLanguage, responseHash);
+        if (response != null) {
+            String currentHash = sha256(response);
             if (!currentHash.equals(responseHash)) {
                 AiTranslationImportResult imported =
-                        exchange.importResponse(translated, project, sharedCatalog);
+                        exchange.importResponse(response, project, sharedCatalog);
                 project = imported.project();
                 responseHash = currentHash;
                 Path suggested = workspace.resolve(projectFileName(
@@ -223,7 +230,7 @@ public final class AutoWorkflow {
                     workspace,
                     "Send " + fileName(missing)
                             + " to an AI. Save its validated JSON response as "
-                            + fileName(translated)
+                            + fileName(translated) + " (or any JSON filename beside the mod)"
                             + ", then drop the same mod again. The response is imported into "
                             + "your master translation library. Master library: "
                             + sharedCatalog);
@@ -431,6 +438,110 @@ public final class AutoWorkflow {
                 : patchName;
         return safeName(translatedName, "Translation")
                 + " - " + safeName(originalName, "Mod") + ".ssmt.json";
+    }
+
+    private static Path findResponse(
+            Path visibleRoot,
+            Path documentedResponse,
+            Path request,
+            LocalizationProject project,
+            String sourceLanguage,
+            String importedHash) throws ProjectException {
+        if (Files.isRegularFile(documentedResponse)
+                && !sha256(documentedResponse).equals(importedHash)) {
+            if (isMatchingResponse(documentedResponse, project.sourceModId(), sourceLanguage,
+                    expectedSources(project))) {
+                return documentedResponse;
+            }
+            throw new ProjectException(
+                    "The documented AI response does not match the current English translation request");
+        }
+        Map<String, String> expectedSources = expectedSources(project);
+        List<Path> candidates = new ArrayList<>();
+        try (var files = Files.newDirectoryStream(
+                visibleRoot,
+                path -> Files.isRegularFile(path)
+                        && fileName(path).toLowerCase(Locale.ROOT).endsWith(".json"))) {
+            int inspected = 0;
+            for (Path candidate : files) {
+                inspected++;
+                if (inspected > MAX_RESPONSE_CANDIDATES) {
+                    throw new ProjectException(
+                            "Too many sibling JSON files to safely find an AI response; "
+                                    + "use the documented response filename");
+                }
+                Path normalized = candidate.toAbsolutePath().normalize();
+                if (normalized.equals(request) || normalized.equals(documentedResponse)) {
+                    continue;
+                }
+                if (Files.size(normalized) > MAX_DISCOVERED_RESPONSE_BYTES) {
+                    continue;
+                }
+                if (isMatchingResponse(normalized, project.sourceModId(), sourceLanguage, expectedSources)
+                        && !sha256(normalized).equals(importedHash)) {
+                    candidates.add(normalized);
+                }
+            }
+        } catch (IOException exception) {
+            throw new ProjectException("Could not search for an AI translation response", exception);
+        }
+        candidates.sort(Comparator.comparing(AutoWorkflow::fileName));
+        if (candidates.size() > 1) {
+            throw new ProjectException(
+                    "More than one new AI response matches this mod; keep one beside the mod "
+                            + "or use the documented response filename");
+        }
+        return candidates.isEmpty() ? null : candidates.getFirst();
+    }
+
+    private static boolean isMatchingResponse(
+            Path candidate,
+            String sourceModId,
+            String sourceLanguage,
+            Map<String, String> expectedSources) {
+        try {
+            JsonNode root = JSON.readTree(candidate.toFile());
+            if (root == null
+                    || root.path("schemaVersion").asInt(-1) != 1
+                    || !sourceModId.equals(root.path("sourceModId").asText())
+                    || !sourceLanguage.equals(root.path("sourceLanguage").asText())
+                    || !"en".equals(root.path("targetLanguage").asText())
+                    || !root.path("entries").isArray()
+                    || root.path("entries").isEmpty()) {
+                return false;
+            }
+            List<String> ids = new ArrayList<>();
+            for (JsonNode item : root.path("entries")) {
+                String id = item.path("id").asText("");
+                String expectedSource = expectedSources.get(id);
+                if (id.isBlank()
+                        || expectedSource == null
+                        || !expectedSource.equals(item.path("source").asText())
+                        || item.path("translation").asText("").isBlank()) {
+                    return false;
+                }
+                ids.add(id);
+            }
+            return root.path("entryCount").asInt(-1) == ids.size()
+                    && root.path("entryIdsSha256").asText().equals(identityDigest(ids));
+        } catch (IOException | ProjectException exception) {
+            return false;
+        }
+    }
+
+    private static Map<String, String> expectedSources(LocalizationProject project) {
+        Map<String, String> expected = new HashMap<>();
+        for (ProjectEntry entry : project.entries()) {
+            expected.put(entry.sourceFile().toString().replace('\\', '/') + "#" + entry.key(),
+                    entry.originalText());
+        }
+        return expected;
+    }
+
+    private static String identityDigest(List<String> identities) throws ProjectException {
+        String value = identities.stream().sorted()
+                .collect(java.util.stream.Collectors.joining("\n"));
+        return sha256(value);
     }
 
     private static String fileName(Path path) {
