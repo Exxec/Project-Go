@@ -15,8 +15,9 @@ or redistribution rights.
 
 ## Current status
 
-The simplified source-safe workflow is implemented on `main` and verified by
-Windows and Linux CI. The existing `v0.7.0` tag has no published GitHub Release;
+The simplified source-safe workflow is implemented on `main`; exact implementation
+commit `10f274b` passed Windows and Linux CI run `34605294776`. The existing
+`v0.7.0` tag has no published GitHub Release;
 post-tag source on `main` now identifies itself as `0.8.0-dev`, not as the old
 tagged version. It remains development work, not a release candidate. Manual
 GUI/file-picker and in-game acceptance remain separate gates.

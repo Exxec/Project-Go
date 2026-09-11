@@ -107,8 +107,11 @@ release claim.
   absent and one unchanged previous tree survives. Every ambiguous state reports
   review required and preserves all trees.
 - A clean, uncached Windows `check` passed 405 tests with zero failures or skips,
-  together with Checkstyle and SpotBugs. Exact pushed-commit CI, native picker,
-  and live-game evidence are still pending.
+  together with Checkstyle and SpotBugs. The same exact implementation commit,
+  `10f274bb982a28f01fc4bbf5297026da25a005bc`, passed GitHub Actions run
+  `34605294776` on Ubuntu and Windows; Windows built the native application image
+  and both jobs generated release evidence. Native interactive picker and
+  live-game evidence are still pending.
 - These cleanup/recovery contracts adapt tracked BridgeForge patterns for sorted
   inventories, containment, hashes, and explicit actions. BridgeForge's inspected
   checkout was dirty/diverged, so untracked or modified high-level files were not
