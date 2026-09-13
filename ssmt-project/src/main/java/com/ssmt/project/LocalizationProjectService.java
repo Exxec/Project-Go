@@ -823,7 +823,8 @@ public final class LocalizationProjectService {
         }
         try {
             if (!Files.isDirectory(output, java.nio.file.LinkOption.NOFOLLOW_LINKS)
-                    || Files.isSymbolicLink(output) || !output.toRealPath().equals(output)) {
+                    || Files.isSymbolicLink(output)
+                    || !output.toRealPath(java.nio.file.LinkOption.NOFOLLOW_LINKS).equals(output.toRealPath())) {
                 throw new ProjectException("The existing output must be a real translated-copy directory");
             }
             ModInfo existing = modInfoReader.read(output);
