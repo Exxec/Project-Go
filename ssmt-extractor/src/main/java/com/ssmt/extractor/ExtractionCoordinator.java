@@ -75,6 +75,7 @@ public final class ExtractionCoordinator {
         List<Path> files = discoverFiles(normalizedRoot, cancellation, budgets);
         List<ExtractedString> strings = new ArrayList<>();
         List<Path> skipped = new ArrayList<>();
+        List<FileCoverage> coverage = new ArrayList<>();
         for (Path sourceFile : files) {
             cancellation.throwIfCancellationRequested();
             try {
@@ -91,18 +92,27 @@ public final class ExtractionCoordinator {
                     .toList();
             if (matches.isEmpty()) {
                 skipped.add(normalizedRoot.relativize(sourceFile));
+                coverage.add(new FileCoverage(normalizedRoot.relativize(sourceFile), "",
+                        "UNSUPPORTED", 0, "NO_EXTRACTOR_MATCH"));
             } else if (matches.size() > 1) {
                 throw new SsmtParseException(
                         "Multiple extractors support source file", sourceFile);
             } else {
-                strings.addAll(matches.getFirst().extract(
-                        new ExtractionRequest(modId, normalizedRoot, sourceFile)));
+                FileExtractor handler = matches.getFirst();
+                List<ExtractedString> selected = handler.extract(
+                        new ExtractionRequest(modId, normalizedRoot, sourceFile));
+                strings.addAll(selected);
+                coverage.add(new FileCoverage(normalizedRoot.relativize(sourceFile),
+                        handler.getClass().getName(),
+                        selected.isEmpty() ? "SUPPORTED_NO_STRINGS" : "EXTRACTED",
+                        selected.size(), selected.isEmpty()
+                                ? "NO_STRINGS_SELECTED_BY_HANDLER" : "SELECTED_STRINGS_ONLY"));
             }
         }
 
         strings.sort(STRING_ORDER);
         skipped.sort(Comparator.comparing(ExtractionCoordinator::normalizedPath));
-        return new ExtractionReport(strings, skipped);
+        return new ExtractionReport(strings, skipped, coverage);
     }
 
     private static List<Path> discoverFiles(

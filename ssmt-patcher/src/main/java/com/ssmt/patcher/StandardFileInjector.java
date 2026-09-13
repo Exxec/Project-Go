@@ -110,15 +110,15 @@ public final class StandardFileInjector {
             Path relative,
             List<TranslationReplacement> replacements) throws PatchBuilderException {
         try {
-            JsonNode root = JSON.readTree(source.toFile());
+            String sourceText = JsonTokenPatch.read(source);
+            JsonNode root = JSON.readTree(sourceText);
             for (TranslationReplacement replacement : replacements) {
                 if (!replacement.key().startsWith("json:/")) {
                     throw new PatchBuilderException("Invalid JSON key " + replacement.key());
                 }
                 replaceJson(root, replacement);
             }
-            return new PatchArtifact(relative, JSON.writerWithDefaultPrettyPrinter()
-                    .writeValueAsBytes(root));
+            return JsonTokenPatch.apply(source, relative, sourceText, replacements, JSON);
         } catch (IOException | IllegalArgumentException exception) {
             throw new PatchBuilderException(
                     "Could not inject JSON file " + relative + ": " + exception.getMessage(),

@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.json.JsonReadFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -301,7 +303,7 @@ class PatchBuilderTest {
                 source, output, "source.zh", "Source Chinese", "source", "Source",
                 null, List.of(artifact)));
 
-        JsonNode translated = new ObjectMapper().readTree(
+        JsonNode translated = lenientJson().readTree(
                 output.resolve("data/hulls/example.ship").toFile());
         assertThat(translated.path("hullName").asText()).isEqualTo("示例船体");
         assertThat(translated.path("description").asText()).isEqualTo("坚固的示例船体。");
@@ -352,13 +354,21 @@ class PatchBuilderTest {
                 source, output, "source.zh", "Source Chinese", "source", "Source",
                 null, List.of(variant, faction, json)));
 
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = lenientJson();
         assertThat(mapper.readTree(output.resolve("data/variants/example.variant").toFile())
                 .path("displayName").asText()).isEqualTo("Translated Variant");
         assertThat(mapper.readTree(output.resolve("data/world/factions/example.faction").toFile())
                 .path("displayName").asText()).isEqualTo("Translated Faction");
         assertThat(mapper.readTree(output.resolve("data/strings/strings.json").toFile())
                 .path("title").asText()).isEqualTo("Translated Title");
+    }
+
+    private static ObjectMapper lenientJson() {
+        return JsonMapper.builder().enable(JsonReadFeature.ALLOW_JAVA_COMMENTS)
+                .enable(JsonReadFeature.ALLOW_YAML_COMMENTS)
+                .enable(JsonReadFeature.ALLOW_UNQUOTED_FIELD_NAMES)
+                .enable(JsonReadFeature.ALLOW_SINGLE_QUOTES)
+                .enable(JsonReadFeature.ALLOW_TRAILING_COMMA).build();
     }
 
     private static byte[] hash(Path file) throws IOException, NoSuchAlgorithmException {

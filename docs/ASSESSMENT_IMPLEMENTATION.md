@@ -27,6 +27,75 @@ contains this foundation yet. Re-run full checks after integration.
 
 ## Next implementation
 
+### JAR payload inventory tranche
+
+`ssmt assess DIRECTORY --jar-inventory --json` inventories every JAR beneath the
+uniquely selected mod root, without extracting files or defining/loading classes.
+JarContents reports portable JAR path, expected-bound exact container SHA-256,
+sorted entry path/size/hash/category and sourceJarCorrespondence NOT_ESTABLISHED.
+Class entries are CLASS_ENTRY_UNVERIFIED, source entries BUNDLED_SOURCE and other
+payloads RESOURCE. Same filenames do not prove source corresponds to bytecode;
+bundled .java is not automatically authoritative. Payload streams are subject to
+ArchiveInventory's per-container path/collision/10,000-entry/1-GiB safeguards.
+After inspection the complete directory inventory must equal the initial one.
+ZIP-embedded JAR inventory currently requires future stream support; the option
+rejects outer ZIP input rather than extracting it silently. No global multi-JAR
+budget/cancellation or bytecode semantic assurance is claimed yet.
+
+Two scanner regressions cover class/source/resource classification, repeatable
+read-only payloads with deliberately invalid executable bytes, expected-hash
+binding and escaping path refusal. CLI regression confirms inventory succeeds
+without loading invalid class payloads and remains NOT_ESTABLISHED. Scanner/CLI
+tests, Checkstyle main/test and SpotBugs main PASS: BUILD SUCCESSFUL in 11s,
+30 tasks (13 executed). Current changes
+remain uncommitted after local source checkpoint 3795002; push approval is pending.
+
+Deferred validation addition: use final rebuilt --jar-inventory on a separate
+Nightcross directory, inspect every JAR's payload inventory and compare hashes
+with independent ZIP tools. Confirm resources are listed, classes remain unverified,
+and original JAR/candidate hashes are unchanged. This does not verify source/JAR
+equivalence, loader ownership or runtime compatibility. Archive-embedded support,
+authority/conflict findings and global bounded-work integration remain open.
+
+### Portable fingerprint tranche — after source checkpoint 3795002
+
+Assessment now records inventorySha256 for every observed file tuple,
+candidateSha256 for files beneath the uniquely selected mod root with the wrapper
+removed, and archiveSha256 for exact ZIP container bytes (empty for directories).
+Root selection failures leave candidateSha256 empty; they do not choose arbitrary
+metadata. Files outside the selected root remain in the complete inventory and
+inventorySha256, not silently erased. Directory/ZIP candidate fingerprints match
+when their selected relative file paths, sizes and payload hashes match.
+
+InventoryFingerprint v1 hashes ASCII/UTF-8 `ProjectGo-inventory-v1` plus a NUL,
+then tuples sorted by Java String path ordering. Each tuple contributes a 4-byte
+big-endian UTF-8 path byte length, path bytes, 8-byte big-endian file size, and
+32 raw SHA-256 bytes. No absolute path, timestamp, category or ZIP wrapper enters
+the selected candidate digest. Duplicate paths and malformed tuples are rejected.
+Length prefixes avoid delimiter ambiguity. This digest is not the ZIP-container
+SHA-256, vendor authentication or semantic source/JAR equivalence.
+
+Exact archive hashing refuses symbolic/non-canonical/non-regular paths and checks
+size/mtime/file key before/after. Existing inventory checks and trust limits apply;
+this is not an adversarial filesystem snapshot or cross-read race guarantee.
+
+Two fingerprint regressions cover order independence and path/size/hash changes,
+plus duplicate refusal. Extended direct ZIP CLI regression proves the selected
+directory/ZIP fingerprints match and archive hash equals independent SHA-256 of
+original bytes. Scanner/CLI tests, both Checkstyle main/test and both SpotBugs
+main checks PASS after hash guards: BUILD SUCCESSFUL in 11s, 30 tasks
+(10 executed). Local evidence remains module build/
+XML/static reports; these changes are not yet committed or published.
+
+Push of source checkpoint 3795002 was rejected by the approval check; explicit
+approval to push it to Exxec/Project-Go main was requested. No push retry or new
+release/promotion was attempted. Continue implementation independently; do not
+mistake the local source checkpoint for remote CI/publication proof.
+
+Deferred validation addition: compare selected candidate fingerprints for a known
+directory/archive pair, independently hash the ZIP, and confirm an outside-wrapper
+file affects inventory/package audit but not the selected-root fingerprint.
+
 ### Metadata/dependency tranche
 
 Assessment now parses the selected metadata via ModInfoReader's bounded-byte

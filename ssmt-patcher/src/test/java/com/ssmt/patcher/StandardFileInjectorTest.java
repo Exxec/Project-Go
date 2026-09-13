@@ -106,7 +106,7 @@ class StandardFileInjectorTest {
 
         PatchArtifact artifact =
                 new StandardFileInjector().inject(temporaryDirectory, List.of(replacement));
-        JsonNode output = new ObjectMapper().readTree(artifact.content());
+        JsonNode output = LENIENT_JSON.readTree(artifact.content());
 
         assertThat(output.at("/menu/title").asText()).isEqualTo("Bonjour");
         assertThat(output.at("/menu/id").asText()).isEqualTo("structural");
@@ -129,7 +129,7 @@ class StandardFileInjectorTest {
 
         PatchArtifact artifact =
                 new StandardFileInjector().inject(temporaryDirectory, List.of(replacement));
-        JsonNode output = new ObjectMapper().readTree(artifact.content());
+        JsonNode output = LENIENT_JSON.readTree(artifact.content());
 
         assertThat(output.path("displayName").asText()).isEqualTo("Translated Name");
     }

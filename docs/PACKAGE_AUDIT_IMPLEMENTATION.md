@@ -36,6 +36,42 @@ Current changes uncommitted on e32f1f6; no release publication claim.
 
 ## Remaining P4 implementation
 
+### Observed source-state manifest tranche
+
+`ssmt assess DIRECTORY --source-manifest --json` records SourceTreeManifest
+nodes before assessment and requires an identical capture afterwards. It includes
+root and empty directories, regular file sizes/hashes, creation/modification time,
+file keys, supported DOS read-only/hidden/system/archive flags and POSIX permission
+sets. Nodes sort by relative path. Node count is bounded at 100,000; linked or
+noncanonical nodes and observed size/content/tree changes are rejected. Portable
+candidate fingerprints remain independent of these machine-local metadata fields.
+
+Access time is excluded because source reads may update it. ACLs, ownership,
+extended attributes, alternate streams and an adversarial atomic snapshot are not
+claimed. This observes specific metadata, not every conceivable metadata field.
+The option currently requires a directory, not an archive-container metadata
+manifest. Default assessment leaves sourceManifestStatus NOT_ASSESSED. Successful
+requested attestation reports UNCHANGED_OBSERVED_BYTES_AND_METADATA; observed
+change fails rather than issuing a success report. SourceTreeManifest's inventory
+is rechecked after metadata reads, but races restoring all observed values are
+not detectable by this protocol.
+
+Two scanner regressions cover deterministic empty/root directories and source
+preservation, plus metadata-only change while portable byte inventory stays the
+same. Scanner tests/Checkstyle main/test/SpotBugs main PASS: BUILD SUCCESSFUL in
+6s, 9 tasks (6 executed). CLI regression verifies manifest/status and unchanged
+source with independent captures. CLI tests and equivalent static checks PASS:
+BUILD SUCCESSFUL in 8s, 24 tasks (7 executed). Local XML/static evidence is under
+module build/; current additions remain uncommitted after 3795002.
+
+Deferred scenario: final rebuilt directory assessment with --source-manifest
+should show all nodes and unchanged observed metadata; compare before/after
+independently. On a separate disposable copy, change only last-modified time;
+source manifests should differ while byte identity remains unchanged. Never alter
+original timestamps to test this. An access-time change alone does not constitute
+an attested write violation. Archive-container metadata support and other metadata
+dispositions remain implementation work.
+
 Source pre/post manifests including metadata disposition; independently verify
 expected translated targets and all non-target clone files; build input/JDK/
 classpath authority records; integrate final package identity into evidence-driven

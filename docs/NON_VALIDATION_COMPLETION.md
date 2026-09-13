@@ -124,6 +124,30 @@ After each phase record changed paths, tests and actual results, commit/build
 identity, evidence locations, unresolved implementation and additional manual
 scenarios. This file is a resume checkpoint, not proof those phases are complete.
 
+## Latest implementation checkpoint — JSON preservation
+
+The local main checkpoint remains 3795002175e123841af19ed339381f7e54e15314.
+Subsequent assessment fingerprints, source metadata manifests, file/CSV/JAR coverage,
+hash-bound assurance ledger reader/CLI and JSON token-preserving reinjection remain
+part of the next local checkpoint. See ASSESSMENT_IMPLEMENTATION.md,
+COVERAGE_IMPLEMENTATION.md, PACKAGE_AUDIT_IMPLEMENTATION.md,
+ASSURANCE_LEDGER_IMPLEMENTATION.md and REINJECTION_IMPLEMENTATION.md.
+
+The goal remains active: Auto/shared workflow convergence, CSV format preservation,
+assessment authority/global limits, independent clone audit/build binding and runtime
+capture/final assurance integration are not complete. Push to Exxec/Project-Go main
+is awaiting explicit user approval after the previous push was rejected; no retry or
+alternate publication path has been attempted. No new release has been published.
+
+Combined automated validation after the JSON compatibility and CSV test-helper fixes:
+`check :ssmt-cli:installDist :ssmt-gui:installDist :ssmt-auto:installDist` with
+`--rerun-tasks --no-build-cache --offline --console=plain` passed in 1m13s,
+102/102 tasks executed, 514 tests and zero failures/errors/skips. LOCALAPPDATA began
+absent at `.local/checks/json-preservation-final-20260913`. Checkstyle and SpotBugs
+main/test gates passed. Native-access/Gradle-deprecation and the existing validation
+analysis missing-class warning remain visible; no warning-free claim is made.
+These are local working-source results, not exact-SHA CI or immutable release proof.
+
 ## Deferred validation checklist for later today
 
 - Native desktop on a fresh profile: drop the original Nightcross ZIP, pick the
@@ -147,6 +171,9 @@ scenarios. This file is a resume checkpoint, not proof those phases are complete
   explicitly approved separate save-copy scenario. Preserve baseline saves.
 - Repeat relevant native/game checks after relocation using the final exact
   commit/versioned prerelease, not the earlier dirty development build.
+- JSON preservation: representative permissive/GB18030 JSON retains comments and
+  technical values, loads correctly, and rejects stale/duplicate fields with useful
+  native feedback and no source or active-work loss.
 
 Record scenario, input/output hash, build/commit/version, game/JVM/mod versions,
 observed result and evidence path. Add new scenarios when implementation changes
