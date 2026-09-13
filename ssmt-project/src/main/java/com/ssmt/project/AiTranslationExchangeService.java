@@ -90,6 +90,11 @@ public final class AiTranslationExchangeService {
         root.put("targetLanguage", targetLanguage);
         root.put("allowBlankTranslations", false);
         root.put("preserveLineBreaks", true);
+        ObjectNode coverage = root.putObject("coverageSummary");
+        coverage.put("scope", "SELECTED_PROJECT_ENTRIES_ONLY");
+        coverage.put("projectEntryCount", project.entries().size());
+        coverage.put("exportedEntryCount", selectedEntries.size());
+        coverage.put("fullModCoverage", "NOT_ESTABLISHED");
         root.put("instructions", instructions(targetLanguage));
         ArrayNode entries = root.putArray("entries");
         List<String> exportedIds = new ArrayList<>();
@@ -280,6 +285,23 @@ public final class AiTranslationExchangeService {
                 throw invalid("ENTRY_SET", "",
                         "AI response entry identity set changed");
             }
+            if (root.has("coverageSummary")) {
+                JsonNode coverage = root.path("coverageSummary");
+                // Counts describe the export snapshot, not a newly refreshed project.
+                // Existing exact-ID/source subset responses remain importable after growth.
+                if (!coverage.isObject() || coverage.size() != 4
+                        || !"SELECTED_PROJECT_ENTRIES_ONLY".equals(coverage.path("scope").asText())
+                        || !"NOT_ESTABLISHED".equals(coverage.path("fullModCoverage").asText())
+                        || !coverage.path("projectEntryCount").isIntegralNumber()
+                        || !coverage.path("projectEntryCount").canConvertToLong()
+                        || coverage.path("projectEntryCount").asLong() < root.path("entries").size()
+                        || !coverage.path("exportedEntryCount").isIntegralNumber()
+                        || !coverage.path("exportedEntryCount").canConvertToLong()
+                        || coverage.path("exportedEntryCount").asLong() != root.path("entries").size()) {
+                    throw invalid("COVERAGE_METADATA", "",
+                            "AI response changed or has inconsistent selected-entry coverage metadata");
+                }
+            }
             List<ProjectEntry> updated = new ArrayList<>();
             List<TranslationDraft> drafts = new ArrayList<>();
             String sourceLanguage = root.path("sourceLanguage").asText();
@@ -418,7 +440,9 @@ public final class AiTranslationExchangeService {
                 + "Translate translatedModName and fill only blank entries[].translation values. "
                 + "Return the complete JSON object only, "
                 + "without commentary or code fences. Do not change schemaVersion, "
-                + "sourceModId, any id, or any source.");
+                + "sourceModId, any id, any source, or coverageSummary. This export "
+                + "contains selected project entries only; translating every exported "
+                + "entry does not establish complete mod coverage or runtime compatibility.");
     }
 
     private static void writeAtomically(Path destination, JsonNode root)

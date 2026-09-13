@@ -225,6 +225,12 @@ revived or runtime-compatible.
 
 ## P3 — close localization coverage gaps safely
 
+Implementation checkpoint 2026-09-13: seven public weapon tooltip override fields
+have synthetic extraction/shared-workflow round trips, including GB18030 and
+placeholder preservation. AI exports explicitly state selected-entry coverage,
+not complete mod coverage. See WEAPON_TOOLTIP_COVERAGE.md. Broad file/JAR gap
+inventory and uncertain custom-format support remain open; P3 is not closed.
+
 - [ ] Produce a complete supported/extracted/skipped inventory for CSV, JSON-like,
   `.ship`, plain text, loose classes, and JAR entries.
 - [ ] Extend advisory gap detection to malformed CSV rows, duplicate or blank

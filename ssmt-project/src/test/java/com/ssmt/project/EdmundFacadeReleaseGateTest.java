@@ -14,7 +14,7 @@ import org.junit.jupiter.api.io.TempDir;
 class EdmundFacadeReleaseGateTest {
     @TempDir Path directory;
 
-    @Test void discovers187TranslationsRefreshes207AndPreservesThemAcrossRestartAndExport() throws Exception {
+    @Test void discovers187TranslationsRefreshes213AndPreservesThemAcrossRestartAndExport() throws Exception {
         try (var zip = new ZipInputStream(getClass().getResourceAsStream("/edmund/workflow.zip"))) {
             for (var entry = zip.getNextEntry(); entry != null; entry = zip.getNextEntry()) {
                 String name = entry.getName().replace('\\', '/');
@@ -44,17 +44,26 @@ class EdmundFacadeReleaseGateTest {
         assertThat(workflow.legacyProjects(directory.resolve("source"))).hasSize(1);
         var loaded = workflow.adoptLegacy(directory.resolve("source"),
                 workflow.legacyProjects(directory.resolve("source")).getFirst());
-        assertThat(loaded.project().entries()).hasSize(207);
+        assertThat(loaded.project().entries()).hasSize(213);
         assertThat(loaded.project().entries().stream().filter(e -> !e.translatedText().isBlank())).hasSize(187);
         var restart = new TranslationWorkflow(directory.resolve("owned"));
         var resumed = restart.loadMod(directory.resolve("source"));
         Path export = directory.resolve("new-export.json");
         restart.exportTranslation(resumed, export);
         var actual = json.readTree(export.toFile()).path("entries");
-        assertThat(actual.size()).isEqualTo(207);
+        assertThat(actual.size()).isEqualTo(213);
         var originalExport = json.readTree(directory.resolve("export-207.json").toFile()).path("entries");
         var originalSources = new HashMap<String, String>();
         originalExport.forEach(item -> originalSources.put(item.path("id").asText(), item.path("source").asText()));
+        assertThat(originalSources).hasSize(207);
+        // Six newly covered tooltip overrides in the unchanged historical source corpus.
+        originalSources.put("data/weapons/weapon_data.csv#csv:id=aDM_sele:speedStr", "普通");
+        originalSources.put("data/weapons/weapon_data.csv#csv:id=aDM_sele:trackingStr", "普通");
+        originalSources.put("data/weapons/weapon_data.csv#csv:id=aDM_bsnyl:speedStr", "较快");
+        originalSources.put("data/weapons/weapon_data.csv#csv:id=aDM_bsnyl:trackingStr", "无");
+        originalSources.put("data/weapons/weapon_data.csv#csv:id=aDM_zeluB:accuracyStr", "完美");
+        originalSources.put("data/weapons/weapon_data.csv#csv:id=aDM_zeluB:customPrimary",
+                "开火时向武器指向处最近的目标施放一道必定会命中的 EMP 电弧。");
         for (var item : actual) {
             String translation = expected.getOrDefault(item.path("id").asText(), "");
             assertThat(item.path("existingTranslation").asText()).isEqualTo(translation);
@@ -77,6 +86,6 @@ class EdmundFacadeReleaseGateTest {
         assertThat(output.resolve("Project Go Changes.csv")).doesNotExist();
         assertThat(com.ssmt.patcher.PatchBuilder.sourceBackupRoot(output)).doesNotExist();
         assertThat(new TranslationWorkflow(directory.resolve("owned")).loadMod(directory.resolve("source"))
-                .project().entries()).hasSize(207).allMatch(e -> !e.translatedText().isBlank());
+                .project().entries()).hasSize(213).allMatch(e -> !e.translatedText().isBlank());
     }
 }

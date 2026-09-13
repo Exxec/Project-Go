@@ -19,7 +19,7 @@ class EdmundCorpusWorkflowTest {
     @TempDir Path directory;
 
     @Test
-    void actual187EntryResponseSurvivesRestartAnd207EntryExport() throws Exception {
+    void actual187EntryResponseSurvivesRestartAnd213EntryExport() throws Exception {
         verify(false);
     }
 
@@ -71,7 +71,7 @@ class EdmundCorpusWorkflowTest {
             Files.writeString(file, text.replace("Splinter Mercenaries", "Changed mercenaries"));
             var preview = workspace.previewRefresh();
             assertThat(preview.report().count(ReconciliationStatus.CHANGED)).isEqualTo(1);
-            assertThat(preview.report().count(ReconciliationStatus.ADDED)).isEqualTo(20);
+            assertThat(preview.report().count(ReconciliationStatus.ADDED)).isEqualTo(26);
             assertThat(preview.report().entries().stream()
                     .filter(e -> e.status() == ReconciliationStatus.CHANGED).findFirst().orElseThrow()
                     .previousTranslation()).isEqualTo("Splinter Mercenaries");
@@ -83,10 +83,18 @@ class EdmundCorpusWorkflowTest {
             workspace = new ProjectWorkspaceController(new TranslationEditorController());
             workspace.create(source, projectFile, "unused", "unused");
         }
-        Path exported = folder.resolve("recovered-207.json");
+        Path exported = folder.resolve("recovered-213.json");
         workspace.exportAiPackage(exported, name, "zh", "en", 250);
         var result = json.readTree(exported.toFile()).path("entries");
-        assertThat(result.size()).isEqualTo(207);
+        assertThat(result.size()).isEqualTo(213);
+        var tooltipSources = java.util.Map.of(
+                "data/weapons/weapon_data.csv#csv:id=aDM_sele:speedStr", "普通",
+                "data/weapons/weapon_data.csv#csv:id=aDM_sele:trackingStr", "普通",
+                "data/weapons/weapon_data.csv#csv:id=aDM_bsnyl:speedStr", "较快",
+                "data/weapons/weapon_data.csv#csv:id=aDM_bsnyl:trackingStr", "无",
+                "data/weapons/weapon_data.csv#csv:id=aDM_zeluB:accuracyStr", "完美",
+                "data/weapons/weapon_data.csv#csv:id=aDM_zeluB:customPrimary",
+                "开火时向武器指向处最近的目标施放一道必定会命中的 EMP 电弧。");
         int preserved = 0;
         for (var entry : result) {
             String id = entry.path("id").asText();
@@ -97,7 +105,12 @@ class EdmundCorpusWorkflowTest {
             String expected = unchanged ? previous.get().path("translation").asText() : "";
             assertThat(entry.path("existingTranslation").asText()).as(id).isEqualTo(expected);
             assertThat(entry.path("translation").asText()).as(id).isEqualTo(expected);
-            assertThat(originalExport.path("entries").findValuesAsText("id")).contains(id);
+            if (tooltipSources.containsKey(id)) {
+                assertThat(entry.path("source").asText()).isEqualTo(tooltipSources.get(id));
+                assertThat(expected).isEmpty();
+            } else {
+                assertThat(originalExport.path("entries").findValuesAsText("id")).contains(id);
+            }
             if (!expected.isEmpty()) { preserved++; }
         }
         assertThat(preserved).isEqualTo(changedSource ? 186 : 187);

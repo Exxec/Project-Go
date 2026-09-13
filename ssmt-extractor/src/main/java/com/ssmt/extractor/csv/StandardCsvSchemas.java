@@ -29,7 +29,11 @@ public final class StandardCsvSchemas {
                             true)),
             Map.entry("data/weapons/weapon_data.csv",
                     new CsvExtractionSpec(List.of("id"), List.of("name"),
-                            List.of("tech/manufacturer", "primaryRoleStr", "customAncillaryHL"), true)),
+                            // WeaponSpecAPI exposes these tooltip overrides. Grouping tags,
+                            // IDs, damage/stat cells and tooltip-control flags are not text.
+                            List.of("tech/manufacturer", "primaryRoleStr", "speedStr", "trackingStr",
+                                    "turnRateStr", "accuracyStr", "customPrimary", "customPrimaryHL",
+                                    "customAncillary", "customAncillaryHL"), true)),
             Map.entry("data/hulls/ship_data.csv",
                     new CsvExtractionSpec("id", List.of("name", "designation"),
                             List.of("tech/manufacturer"))),

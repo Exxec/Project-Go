@@ -161,6 +161,29 @@ main/test gates. The previous 514-test run remains historical.
 Whole-file text encoding, broad schema/JAR coverage and other roadmap work remain
 implementation tasks; the goal is not complete. Push approval is still pending.
 
+## Weapon coverage / export-scope implementation checkpoint
+
+Seven missing public weapon tooltip columns are now optional standard extraction
+fields. Synthetic extraction and GB18030 shared-workflow tests cover source,
+placeholder/highlight and technical-cell preservation. Edmund fixture source stayed
+unchanged; six exact new tooltip IDs grew current coverage from 207 to 213.
+The added Nightcross workspace retains 12,745 translations and now has 12,912
+entries, with 167 new entries blank. Earlier output is not overwritten. Existing
+review flags remain explicit. See WEAPON_TOOLTIP_COVERAGE.md.
+
+AI exports report selected-project scope, snapshot counts and full-mod coverage
+NOT_ESTABLISHED, with legacy/growth-compatible import checks. Final combined full
+uncached check plus GUI/CLI/Auto installDist passed in 38s with all 102 tasks
+executed and initially absent `.local/checks/coverage-summary-final-fresh-20260913`.
+All 522 tests passed with zero failures/errors/skips, plus Checkstyle/SpotBugs
+main/test. New handoff artifact:
+`.local/live-tests/nightcross-added-20260913/Nightcross-Tooltip-Gaps-with-Coverage-to-English.json`,
+SHA-256 `6cf5b7b144551742cb9933ebd0a88384a8c16acc46243adfd9ac83e5b20da277`.
+It contains 12,912 entries, 12,745 preserved translations and 167 blanks; no updated
+English clone is built until missing translations are supplied and validated.
+The full roadmap remains active: residual/unknown-format diagnostics, Auto
+convergence, build/package assurance, runtime capture and final-gate integration.
+
 ## Deferred validation checklist for later today
 
 The added Nightcross source was subsequently run through normal export/import/build
@@ -197,6 +220,10 @@ remain implementation findings; no runtime validation/full coverage claim is mad
   original separators and GB18030 survive build; game accepts the output. Duplicate
   identity/header and absent-target errors preserve active work. Record hashes,
   exact final build/commit and evidence in `.local/checks/reinjection-validation/`.
+- Weapon tooltip overrides/highlights: rendered placeholders, English highlights,
+  GB18030 loading and unchanged tags/IDs/stats; inspect the selected-only export
+  warning and invalid-response feedback on the final exact build. Evidence:
+  `.local/checks/weapon-tooltip-validation/` with source/response/output hashes.
 
 Record scenario, input/output hash, build/commit/version, game/JVM/mod versions,
 observed result and evidence path. Add new scenarios when implementation changes

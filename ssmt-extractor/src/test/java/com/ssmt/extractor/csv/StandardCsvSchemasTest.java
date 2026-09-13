@@ -26,7 +26,9 @@ class StandardCsvSchemasTest {
                 .hasValue(new CsvExtractionSpec(
                         java.util.List.of("id"),
                         java.util.List.of("name"),
-                        java.util.List.of("tech/manufacturer", "primaryRoleStr", "customAncillaryHL"),
+                        java.util.List.of("tech/manufacturer", "primaryRoleStr", "speedStr", "trackingStr",
+                                "turnRateStr", "accuracyStr", "customPrimary", "customPrimaryHL",
+                                "customAncillary", "customAncillaryHL"),
                         true));
         assertThat(StandardCsvSchemas.find(Path.of("data/hulls/ship_data.csv")))
                 .hasValue(new CsvExtractionSpec(
