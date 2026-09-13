@@ -30,22 +30,6 @@ final class JsonTokenPatch {
     static PatchArtifact apply(Path source, Path relative, String text,
             List<TranslationReplacement> replacements, ObjectMapper mapper)
             throws IOException, PatchBuilderException {
-        byte[] original = Files.readAllBytes(source);
-        String decoded = decode(original);
-        boolean bom = decoded.startsWith("\uFEFF");
-        if (!(bom ? decoded.substring(1) : decoded).equals(text)) {
-            throw new PatchBuilderException("JSON source changed during injection: " + relative);
-        }
-        Charset encoding;
-        try {
-            strictDecode(original, StandardCharsets.UTF_8);
-            encoding = StandardCharsets.UTF_8;
-        } catch (CharacterCodingException exception) {
-            encoding = Charset.forName("GB18030");
-        }
-        if (!Arrays.equals(original, encode(decoded, encoding))) {
-            throw new PatchBuilderException("JSON encoding cannot round-trip source: " + relative);
-        }
         Map<String, TranslationReplacement> pending = new HashMap<>();
         for (TranslationReplacement item : replacements) {
             if (pending.put(item.key(), item) != null) {
@@ -89,7 +73,28 @@ final class JsonTokenPatch {
             throw new PatchBuilderException("Missing JSON token: " + pending.keySet());
         }
         output.append(text, copied, text.length());
-        return new PatchArtifact(relative, encode((bom ? "\uFEFF" : "") + output, encoding));
+        return new PatchArtifact(relative, encodeLikeSource(source, text, output.toString()));
+    }
+
+    static byte[] encodeLikeSource(Path source, String text, String translated)
+            throws IOException, PatchBuilderException {
+        byte[] original = Files.readAllBytes(source);
+        String decoded = decode(original);
+        boolean bom = decoded.startsWith("\uFEFF");
+        if (!(bom ? decoded.substring(1) : decoded).equals(text)) {
+            throw new PatchBuilderException("Text source changed during injection: " + source.getFileName());
+        }
+        Charset encoding;
+        try {
+            strictDecode(original, StandardCharsets.UTF_8);
+            encoding = StandardCharsets.UTF_8;
+        } catch (CharacterCodingException exception) {
+            encoding = Charset.forName("GB18030");
+        }
+        if (!Arrays.equals(original, encode(decoded, encoding))) {
+            throw new PatchBuilderException("Text encoding cannot round-trip source: " + source.getFileName());
+        }
+        return encode((bom ? "\uFEFF" : "") + translated, encoding);
     }
 
     private static String decode(byte[] bytes) throws CharacterCodingException {

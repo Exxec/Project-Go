@@ -182,7 +182,9 @@ adding more normal-path controls.
   adoption without deleting existing workspaces or copies. Hash-bound preview and
   cleanup plus unambiguous prior-output recovery are implemented in CLI and GUI;
   the GUI reports ambiguous states without changing them. Explicit legacy
-  adoption remains open.
+  adoption is implemented through hash-bound GUI/CLI choices and covered by
+  TranslationWorkflowTest; shared Auto state convergence remains open, so this
+  combined item is not closed.
 - [ ] Make GUI, Auto, and simple CLI exercise the same workflow service and
   state-transition contract.
 - [x] Rewrite the normal user guide around the visible task; keep database,
@@ -197,7 +199,8 @@ response, publishes one translated folder, preserves the archive hash, and expos
 no project, backup, or report sibling. Destination persistence and hash-bound
 cleanup/recovery have isolated regression coverage. GUI and Auto now share one
 bounded input-preparation service, while full GUI/Auto/simple-CLI state-machine
-unification and explicit legacy adoption remain required before P1 closes.
+unification remains required before P1 closes. Explicit GUI/CLI legacy adoption is
+implemented; native acceptance validation remains deferred.
 
 ## P2 — evidence-first revival assessment
 
@@ -234,6 +237,10 @@ revived or runtime-compatible.
   source-immutability checks.
 - [ ] Preserve technical cells, row shape, comments, encoding, non-target JAR
   entries, and original text checks during reinjection.
+  JSON and CSV now use token-only edits with strict source encoding/BOM and original
+  text guards; extra/short CSV rows and ambiguous identities have regressions.
+  Whole-file text encoding and complete non-target JAR assurance remain open. See
+  `REINJECTION_IMPLEMENTATION.md`; the broader item is not yet complete.
 
 Exit criteria: every skipped candidate file has a deterministic reason, accepted
 coverage round-trips through a repository-owned fixture, and uncertain content is

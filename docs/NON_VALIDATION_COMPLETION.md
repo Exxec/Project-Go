@@ -148,7 +148,26 @@ main/test gates passed. Native-access/Gradle-deprecation and the existing valida
 analysis missing-class warning remain visible; no warning-free claim is made.
 These are local working-source results, not exact-SHA CI or immutable release proof.
 
+## Subsequent CSV implementation checkpoint
+
+Token-only CSV reinjection preserves header/technical-cell spelling, extra cells,
+record shape, comments, blank lines, multiline fields, BOM and UTF-8/GB18030 encoding.
+Missing target cells and ambiguous identities/headers reject safely. See
+REINJECTION_IMPLEMENTATION.md for the blank-prefix failing fixture and correction.
+Full uncached `check` plus GUI/CLI/Auto installDist passed in 1m8s, all 102 tasks
+executed, using initially absent `.local/checks/csv-preservation-fresh-20260913`.
+This run passed 517 tests with zero failures/errors/skips and all Checkstyle/SpotBugs
+main/test gates. The previous 514-test run remains historical.
+Whole-file text encoding, broad schema/JAR coverage and other roadmap work remain
+implementation tasks; the goal is not complete. Push approval is still pending.
+
 ## Deferred validation checklist for later today
+
+The added Nightcross source was subsequently run through normal export/import/build
+into a new independent output, with selected-string and source/output inventory
+attestation. See NIGHTCROSS_ADDED_RUN.md and RESIDUAL_CHINESE_DIAGNOSIS.md.
+Weapon tooltip/custom-CSV coverage omissions and native Unicode argument handling
+remain implementation findings; no runtime validation/full coverage claim is made.
 
 - Native desktop on a fresh profile: drop the original Nightcross ZIP, pick the
   ZIP, pick its mod folder and mod_info.json; confirm loading/progress and the
@@ -174,6 +193,10 @@ These are local working-source results, not exact-SHA CI or immutable release pr
 - JSON preservation: representative permissive/GB18030 JSON retains comments and
   technical values, loads correctly, and rejects stale/duplicate fields with useful
   native feedback and no source or active-work loss.
+- CSV preservation: extra/short rows, multiline text, technical cells, comments,
+  original separators and GB18030 survive build; game accepts the output. Duplicate
+  identity/header and absent-target errors preserve active work. Record hashes,
+  exact final build/commit and evidence in `.local/checks/reinjection-validation/`.
 
 Record scenario, input/output hash, build/commit/version, game/JVM/mod versions,
 observed result and evidence path. Add new scenarios when implementation changes

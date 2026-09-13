@@ -206,6 +206,10 @@ public final class StandardFileInjector {
                 records = parser.getRecords();
             }
             List<Row> rows = new ArrayList<>();
+            if (headers.stream().filter(header -> !header.isEmpty()).distinct().count()
+                    != headers.stream().filter(header -> !header.isEmpty()).count()) {
+                throw new PatchBuilderException("Ambiguous duplicate CSV header in " + relative);
+            }
             for (int index = 0; index < records.size(); index++) {
                 CSVRecord record = records.get(index);
                 Map<String, String> original = new LinkedHashMap<>();
@@ -220,24 +224,20 @@ public final class StandardFileInjector {
                 long end = index + 1 < records.size()
                         ? records.get(index + 1).getCharacterPosition()
                         : sourceText.length();
-                String rawText = stripTrailingLineSeparator(
-                        sourceText.substring((int) start, (int) end));
+                String rawText = sourceText.substring((int) start, (int) end);
                 rows.add(new Row(original, new LinkedHashMap<>(original), rawText, isStructuralRow(record)));
             }
             for (TranslationReplacement replacement : replacements) {
                 replaceCsv(rows, replacement);
             }
             StringWriter writer = new StringWriter();
-            writeCsvRecord(writer, headers.toArray());
+            writer.write(records.isEmpty() ? sourceText : sourceText.substring(
+                    0, Math.toIntExact(records.getFirst().getCharacterPosition())));
             for (Row row : rows) {
-                if (row.structural() && row.current().equals(row.original())) {
-                    writer.write(row.rawText());
-                    writer.write(CSVFormat.DEFAULT.getRecordSeparator());
-                } else {
-                    writeCsvRecord(writer, headers.stream().map(row.current()::get).toArray());
-                }
+                writer.write(CsvTokenPatch.patchRow(row.rawText(), headers, row.original(), row.current()));
             }
-            return PatchArtifact.utf8(relative, writer.toString());
+            return new PatchArtifact(relative,
+                    JsonTokenPatch.encodeLikeSource(source, sourceText, writer.toString()));
         } catch (IOException | IllegalArgumentException exception) {
             throw new PatchBuilderException(
                     "Could not inject CSV file " + relative + ": " + exception.getMessage(),
@@ -312,20 +312,26 @@ public final class StandardFileInjector {
             throw new PatchBuilderException("Invalid composite CSV identity " + replacement.key());
         }
         String textColumn = decodeCsv(matcher.group(3));
+        Row selected = null;
         for (Row row : rows) {
             boolean identityMatches = true;
             for (int index = 0; index < identityColumns.length; index++) {
                 identityMatches &= identityValues[index].equals(row.current().get(identityColumns[index]));
             }
             if (identityMatches) {
-                if (!replacement.originalText().equals(row.current().get(textColumn))) {
-                    throw new PatchBuilderException("Stale CSV source text at " + replacement.key());
+                if (selected != null) {
+                    throw new PatchBuilderException("Ambiguous CSV identity at " + replacement.key());
                 }
-                row.current().put(textColumn, replacement.translatedText());
-                return;
+                selected = row;
             }
         }
-        throw new PatchBuilderException("Missing CSV identity at " + replacement.key());
+        if (selected == null) {
+            throw new PatchBuilderException("Missing CSV identity at " + replacement.key());
+        }
+        if (!replacement.originalText().equals(selected.current().get(textColumn))) {
+            throw new PatchBuilderException("Stale CSV source text at " + replacement.key());
+        }
+        selected.current().put(textColumn, replacement.translatedText());
     }
 
     private static String decodeCsv(String value) {

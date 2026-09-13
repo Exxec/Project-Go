@@ -90,7 +90,7 @@ class StandardFileInjectorTest {
 
         PatchArtifact artifact =
                 new StandardFileInjector().inject(temporaryDirectory, List.of(replacement));
-        String output = new String(artifact.content(), StandardCharsets.UTF_8);
+        String output = new String(artifact.content(), java.nio.charset.Charset.forName("GB18030"));
 
         assertThat(output).contains("laser,Laser Cannon,keep");
     }
@@ -199,7 +199,7 @@ class StandardFileInjectorTest {
         String output = new String(artifact.content(), StandardCharsets.UTF_8);
 
         assertThat(output).contains("Translated ship text");
-        assertThat(output).contains("\r\n,,,,,\r\n");
+        assertThat(output).contains("\n,,,,,\n");
         assertThat(output).doesNotContain("\"\",,,,,");
     }
 
@@ -223,7 +223,7 @@ class StandardFileInjectorTest {
         String output = new String(artifact.content(), StandardCharsets.UTF_8);
 
         assertThat(output).contains("Translated ship text");
-        assertThat(output).contains("\r\n#ships,,,,,\r\n");
+        assertThat(output).contains("\n#ships,,,,,\n");
         assertThat(output).doesNotContain("\"#ships\"");
     }
 
