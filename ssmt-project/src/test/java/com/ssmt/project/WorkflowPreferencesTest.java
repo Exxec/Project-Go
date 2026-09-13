@@ -46,7 +46,7 @@ class WorkflowPreferencesTest {
         preferences.rememberModsDestination(mods);
         var restarted = new WorkflowPreferences(settings);
 
-        assertThat(restarted.attemptedOutput()).contains(output.toAbsolutePath().normalize());
+        assertThat(restarted.attemptedOutput()).contains(mods.toRealPath().resolve("example.english"));
         assertThat(restarted.modsDestination()).contains(mods.toRealPath());
         Files.createDirectories(output);
         restarted.rememberSuccessfulPublication(mods, output);
