@@ -14,6 +14,20 @@ import org.junit.jupiter.api.io.TempDir;
 class ModInputPreparationServiceTest {
     @TempDir Path directory;
 
+    @Test void invalidAncestorFolderExplainsModRootBeforeCacheOverlap() throws Exception {
+        Path desktop = Files.createDirectory(directory.resolve("Desktop"));
+        Path mod = Files.createDirectory(desktop.resolve("actual-mod"));
+        Path metadata = Files.writeString(mod.resolve("mod_info.json"), "{}");
+        Path cache = desktop.resolve("application/input-cache");
+        assertThatThrownBy(() -> new ModInputPreparationService().prepare(desktop, cache))
+                .isInstanceOf(ProjectException.class)
+                .hasMessageContaining("mod's own folder")
+                .hasMessageContaining("ZIP archive")
+                .hasMessageNotContaining("cache must be outside");
+        assertThat(cache).doesNotExist();
+        assertThat(metadata).hasContent("{}");
+    }
+
     @Test void acceptsDirectoryAndMetadataFileWithoutCopyingEither() throws Exception {
         Path source = directory.resolve("source");
         Files.createDirectories(source);

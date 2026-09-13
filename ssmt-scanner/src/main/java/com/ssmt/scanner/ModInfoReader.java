@@ -66,7 +66,24 @@ public final class ModInfoReader {
                     exception);
         }
 
-        if (isBlank(raw.id())) {
+        return normalize(raw, normalizedDirectory);
+    }
+
+    /** Parses already bounded metadata bytes, without extracting an archive. */
+    public ModInfo read(byte[] bytes, Path logicalDirectory) throws SsmtParseException {
+        Path directory = logicalDirectory.toAbsolutePath().normalize();
+        try {
+            return normalize(mapper.readValue(bytes, ModInfoJson.class), directory);
+        } catch (IOException exception) {
+            throw new SsmtParseException("Malformed " + MOD_INFO_FILENAME,
+                    directory.resolve(MOD_INFO_FILENAME), exception);
+        }
+    }
+
+    private static ModInfo normalize(ModInfoJson raw, Path normalizedDirectory)
+            throws SsmtParseException {
+        Path modInfoPath = normalizedDirectory.resolve(MOD_INFO_FILENAME);
+        if (raw == null || isBlank(raw.id())) {
             throw new SsmtParseException(
                     MOD_INFO_FILENAME + " is missing required field \"id\"", modInfoPath);
         }

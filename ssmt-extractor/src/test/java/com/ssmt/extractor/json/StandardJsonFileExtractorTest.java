@@ -16,6 +16,36 @@ class StandardJsonFileExtractorTest {
     private final StandardJsonFileExtractor extractor = new StandardJsonFileExtractor();
 
     @Test
+    void planetTypesExtractOnlyTopLevelTypeDisplayNames(@TempDir Path modRoot)
+            throws Exception {
+        Path source = modRoot.resolve("data/config/planets.json");
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        Files.writeString(source, """
+                {
+                  # Planet type definitions, with Starsector syntax
+                  na_watergiant: {
+                    name: "\u6c34\u5de8\u884c\u661f",
+                    texture: "graphics/planets/water_giant.jpg",
+                    customDescriptionId: "water_giant",
+                    aOrAn: "an", isGasGiant: true, rotation: -3,
+                    nested: {name: "Not a type label"},
+                  },
+                  star_example: {name: "White dwarf", isStar: true},
+                }
+                """);
+
+        assertThat(extractor.supports(source)).isTrue();
+        assertThat(extractor.supports(Path.of("data/config/PLANETS.JSON"))).isTrue();
+        assertThat(extractor.supports(Path.of("data/other/planets.json"))).isFalse();
+        List<ExtractedString> strings =
+                extractor.extract(new ExtractionRequest("test", modRoot, source));
+        assertThat(strings).extracting(ExtractedString::key)
+                .containsExactly("json:/na_watergiant/name", "json:/star_example/name");
+        assertThat(strings).extracting(ExtractedString::originalText)
+                .containsExactly("\u6c34\u5de8\u884c\u661f", "White dwarf");
+    }
+
+    @Test
     void recognizesOnlyStandardStringJsonFactionAndVariantPaths() {
         assertThat(extractor.supports(Path.of("data/strings/strings.json"))).isTrue();
         assertThat(extractor.supports(Path.of("data/strings/tips.json"))).isTrue();

@@ -30,6 +30,34 @@ class StandardFileInjectorTest {
     Path temporaryDirectory;
 
     @Test
+    void planetTypeInjectionPreservesEveryNonNameFieldAndSource() throws Exception {
+        Path relative = Path.of("data/config/planets.json");
+        Path source = temporaryDirectory.resolve(relative);
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        String fixture = """
+                {
+                  # Starsector planet config
+                  na_watergiant: {
+                    name: "\u6c34\u5de8\u884c\u661f",
+                    texture: "graphics/planets/water_giant.jpg",
+                    customDescriptionId: "water_giant", aOrAn: "an",
+                    rotation: -3, isGasGiant: true, planetColor: [255, 255, 255],
+                  },
+                  untouched: {name: "Other", isStar: true},
+                }
+                """;
+        Files.writeString(source, fixture, StandardCharsets.UTF_8);
+        PatchArtifact artifact = new StandardFileInjector().inject(
+                temporaryDirectory, List.of(new TranslationReplacement(
+                        relative, "json:/na_watergiant/name", "\u6c34\u5de8\u884c\u661f", "Water giant")));
+        JsonNode expected = LENIENT_JSON.readTree(fixture);
+        ((com.fasterxml.jackson.databind.node.ObjectNode) expected.path("na_watergiant"))
+                .put("name", "Water giant");
+        assertThat(LENIENT_JSON.readTree(artifact.content())).isEqualTo(expected);
+        assertThat(Files.readString(source, StandardCharsets.UTF_8)).isEqualTo(fixture);
+    }
+
+    @Test
     void injectsCsvCellWithoutShiftingColumns() throws Exception {
         Path source = temporaryDirectory.resolve("weapon_data.csv");
         Files.writeString(source, """

@@ -2,6 +2,7 @@ package com.ssmt.patcher;
 
 import java.io.IOException;
 import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -218,11 +219,44 @@ public final class PatchBuilder {
     }
 
     static void publishPath(Path staging, Path output) throws IOException {
-        try {
-            Files.move(staging, output, StandardCopyOption.ATOMIC_MOVE);
-        } catch (AtomicMoveNotSupportedException exception) {
-            Files.move(staging, output);
+        publishPath(staging, output,
+                (from, to) -> Files.move(from, to, StandardCopyOption.ATOMIC_MOVE),
+                (from, to) -> Files.move(from, to), Thread::sleep);
+    }
+
+    static void publishPath(Path staging, Path output, Publisher atomicMove,
+            Publisher ordinaryMove, RetryPause pause) throws IOException {
+        Publisher move = atomicMove;
+        for (int attempt = 0; ; attempt++) {
+            try {
+                move.publish(staging, output);
+                return;
+            } catch (AtomicMoveNotSupportedException exception) {
+                if (move == ordinaryMove) {
+                    throw exception;
+                }
+                move = ordinaryMove;
+                attempt--;
+            } catch (AccessDeniedException exception) {
+                // A busy handle can temporarily prevent a Windows directory
+                // rename. Retry the same operation, never copy/delete in place.
+                if (attempt >= 50) {
+                    throw exception;
+                }
+                try {
+                    pause.sleep(100);
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    exception.addSuppressed(interrupted);
+                    throw exception;
+                }
+            }
         }
+    }
+
+    @FunctionalInterface
+    interface RetryPause {
+        void sleep(long milliseconds) throws InterruptedException;
     }
 
     private static String fingerprint(PatchRequest request) throws PatchBuilderException {

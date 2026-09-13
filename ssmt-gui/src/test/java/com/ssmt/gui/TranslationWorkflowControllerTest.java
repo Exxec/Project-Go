@@ -71,6 +71,23 @@ class TranslationWorkflowControllerTest {
                 .doesNotContain("a16709513_wkt");
     }
 
+    @Test void failedFolderIntakePreservesActiveSessionAndSavedProject() throws Exception {
+        Path source = directory.resolve("retained-source");
+        Files.createDirectories(source.resolve("data/strings"));
+        Files.writeString(source.resolve("mod_info.json"), "{\"id\":\"retained\",\"name\":\"Retained\"}");
+        Files.writeString(source.resolve("data/strings/strings.json"), "{\"hello\":\"Hello\"}");
+        var controller = new TranslationWorkflowController(new TranslationWorkflow(directory.resolve("owned")),
+                new WorkflowPreferences(directory.resolve("settings.json")));
+        controller.loadInput(source);
+        var active = controller.session().orElseThrow();
+        Path saved = active.workspace().resolve("project.ssmt.json");
+        byte[] before = Files.readAllBytes(saved);
+        Path invalid = Files.createDirectory(directory.resolve("invalid-parent"));
+        assertThatThrownBy(() -> controller.loadInput(invalid)).isInstanceOf(ProjectException.class);
+        assertThat(controller.session()).containsSame(active);
+        assertThat(Files.readAllBytes(saved)).isEqualTo(before);
+    }
+
     @Test void unifiedDropRoutesArchivesAndResponsesAndRejectsUnknownFiles() throws Exception {
         Path archive = directory.resolve("example.zip");
         try (var output = new ZipOutputStream(Files.newOutputStream(archive))) {

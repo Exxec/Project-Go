@@ -28,6 +28,10 @@ public final class StandardJsonFileExtractor implements FileExtractor {
                             "/fleetTypeNames/*"));
     private static final JsonExtractionSpec VARIANT_SPEC =
             JsonExtractionSpec.selectedPointers(Set.of("/displayName"));
+    // Planet type labels, not generated planet names. Type IDs, texture paths
+    // and customDescriptionId are engine references and must remain untouched.
+    private static final JsonExtractionSpec PLANET_SPEC =
+            JsonExtractionSpec.selected(Set.of(), Set.of("/*/name"));
     // Hull files under data/hulls/: "hullName" is the player-visible display
     // name and "description" the hull flavor text. Every other field
     // ("hullId", "spriteName", "bounds", "weaponSlots", "engineSlots", ...)
@@ -86,6 +90,8 @@ public final class StandardJsonFileExtractor implements FileExtractor {
                 || normalized.endsWith("/data/strings/tips.json")
                 || normalized.equals("data/strings/ship_names.json")
                 || normalized.endsWith("/data/strings/ship_names.json")
+                || normalized.equals("data/config/planets.json")
+                || normalized.endsWith("/data/config/planets.json")
                 || normalized.equals("data/config/modfiles/magicbounty_data.json")
                 || normalized.endsWith("/data/config/modfiles/magicbounty_data.json")
                 || isChatterCharacterFile(normalized)
@@ -151,6 +157,8 @@ public final class StandardJsonFileExtractor implements FileExtractor {
             spec = FACTION_SPEC;
         } else if (relative.endsWith(".variant")) {
             spec = VARIANT_SPEC;
+        } else if (relative.equals("data/config/planets.json")) {
+            spec = PLANET_SPEC;
         } else if (isHullFile(relative)) {
             spec = HULL_SPEC;
         } else if (relative.equals("data/config/modfiles/magicbounty_data.json")) {

@@ -3,6 +3,7 @@ package com.ssmt.project;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
@@ -68,8 +69,9 @@ public final class ModInputPreparationService {
         Objects.requireNonNull(cacheRoot, "cacheRoot");
         Path input = realPath(supplied, "Could not open selected mod input");
         if (Files.isDirectory(input)) {
-            requireCacheOutsideSource(input, cacheRoot);
-            return new PreparedMod(input, requireDirectModRoot(input), InputKind.DIRECTORY,
+            Path modRoot = requireDirectModRoot(input);
+            requireCacheOutsideSource(modRoot, cacheRoot);
+            return new PreparedMod(input, modRoot, InputKind.DIRECTORY,
                     Optional.empty());
         }
         if (!Files.isRegularFile(input)) {
@@ -191,24 +193,56 @@ public final class ModInputPreparationService {
     }
 
     private static boolean publish(Path staging, Path extraction) throws IOException {
-        try {
-            Files.move(staging, extraction, StandardCopyOption.ATOMIC_MOVE);
-        } catch (AtomicMoveNotSupportedException exception) {
+        return publish(staging, extraction, (from, to, atomic) -> {
+            if (atomic) {
+                Files.move(from, to, StandardCopyOption.ATOMIC_MOVE);
+            } else {
+                Files.move(from, to);
+            }
+        }, Thread::sleep);
+    }
+
+    static boolean publish(Path staging, Path extraction, ArchiveMover mover,
+            RetryPause pause) throws IOException {
+        boolean atomic = true;
+        for (int attempt = 0; ; attempt++) {
             try {
-                Files.move(staging, extraction);
+                mover.move(staging, extraction, atomic);
+                return true;
+            } catch (AtomicMoveNotSupportedException exception) {
+                if (!atomic) {
+                    throw exception;
+                }
+                atomic = false;
+                attempt--;
             } catch (FileAlreadyExistsException race) {
                 if (!Files.isDirectory(extraction)) {
                     throw race;
                 }
                 return false;
+            } catch (AccessDeniedException exception) {
+                if (attempt >= 50) {
+                    throw exception;
+                }
+                try {
+                    pause.sleep(100);
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    exception.addSuppressed(interrupted);
+                    throw exception;
+                }
             }
-        } catch (FileAlreadyExistsException exception) {
-            if (!Files.isDirectory(extraction)) {
-                throw exception;
-            }
-            return false;
         }
-        return true;
+    }
+
+    @FunctionalInterface
+    interface ArchiveMover {
+        void move(Path staging, Path extraction, boolean atomic) throws IOException;
+    }
+
+    @FunctionalInterface
+    interface RetryPause {
+        void sleep(long milliseconds) throws InterruptedException;
     }
 
     private static PreparedMod archiveResult(Path archive, Path extraction, String digest)
@@ -226,7 +260,9 @@ public final class ModInputPreparationService {
             List<Path> metadata = files.filter(Files::isRegularFile)
                     .filter(path -> MOD_INFO.equalsIgnoreCase(fileName(path))).toList();
             if (metadata.size() != 1) {
-                throw new ProjectException("Mod folder must contain exactly one mod_info.json file");
+                throw new ProjectException("Mod folder must contain exactly one mod_info.json file. "
+                        + "Choose the mod's own folder containing that file, not Desktop or a parent folder, "
+                        + "or choose the mod ZIP archive.");
             }
             return directory.toRealPath();
         } catch (IOException exception) {

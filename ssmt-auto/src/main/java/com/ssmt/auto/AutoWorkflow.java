@@ -160,11 +160,10 @@ public final class AutoWorkflow {
         String currentVersion = Objects.requireNonNullElse(mod.version(), "");
         if (Files.isRegularFile(projectFile)) {
             project = projects.read(projectFile);
-            if (state == null || !currentVersion.equals(state.modVersion())) {
-                ProjectRefreshResult refresh = projects.refresh(source, project);
-                project = refresh.project();
-                projects.write(projectFile, project);
-            }
+            // Source bytes, not an author's version bump, determine entry freshness.
+            ProjectRefreshResult refresh = projects.refresh(source, project);
+            project = refresh.project();
+            projects.write(projectFile, project);
         } else {
             project = projects.create(source, mod.id(), mod.name());
             projects.write(projectFile, project);

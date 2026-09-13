@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import javafx.scene.control.Alert;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -48,6 +50,7 @@ final class TranslationWorkflowPane extends VBox {
     private final TranslationWorkflowPresentation presentation = new TranslationWorkflowPresentation();
     private final Stage stage;
     private final Runnable openAdvanced;
+    private Path attemptedInput;
 
     TranslationWorkflowPane(Stage stage) {
         this(stage, () -> { });
@@ -128,11 +131,13 @@ final class TranslationWorkflowPane extends VBox {
     }
 
     private void loadInput(Path input) {
+        attemptedInput = input;
         run(TranslationWorkflowPresentation.Action.CHOOSE_MOD,
                 () -> controller.loadInput(input), GuiText.get("normal.loaded"), "Open mod");
     }
 
     private void acceptDropped(Path input) {
+        attemptedInput = input;
         setDisable(true);
         status.setText(GuiText.get("normal.working"));
         Task<TranslationWorkflowController.DropResult> task = new Task<>() {
@@ -234,7 +239,39 @@ final class TranslationWorkflowPane extends VBox {
         setDisable(false);
         update();
         UserDiagnostic diagnostic = UserDiagnostic.failed(operation, failure);
-        status.setText(diagnostic.summary() + "\n" + diagnostic.detail() + "\n" + summary());
+        String detail = diagnostic.detail();
+        var protectedSources = new ArrayList<Path>();
+        controller.session().ifPresent(session -> protectedSources.add(session.source()));
+        if (attemptedInput != null) {
+            Path input = attemptedInput;
+            Path filename = input.getFileName();
+            if (filename != null && "mod_info.json".equalsIgnoreCase(filename.toString())) {
+                input = java.util.Objects.requireNonNull(input.toAbsolutePath().getParent());
+            }
+            protectedSources.add(input);
+        }
+        try {
+            Path report = WorkflowFailureReport.save(
+                    TranslationWorkflow.defaultApplicationRoot().resolve("diagnostics"),
+                    protectedSources, operation, failure);
+            detail += "\n\nLocal diagnostic report: " + report;
+        } catch (IOException | RuntimeException reportFailure) {
+            // Optional evidence must never replace the original failure.
+            detail += "\n\nCould not save the local diagnostic report: " + reportFailure.getMessage();
+        }
+        status.setText(diagnostic.summary() + "\n" + detail + "\n" + summary());
+        Alert alert = new Alert(Alert.AlertType.ERROR, "", ButtonType.OK);
+        alert.initOwner(stage);
+        alert.setTitle("Project Go");
+        alert.setHeaderText(diagnostic.summary());
+        alert.setContentText("The operation failed. Your source mod was not changed. "
+                + "See the details below before trying again.");
+        TextArea details = new TextArea(detail);
+        details.setEditable(false);
+        details.setWrapText(true);
+        alert.getDialogPane().setExpandableContent(details);
+        alert.getDialogPane().setExpanded(true);
+        alert.show();
     }
 
     private void handleFailure(String operation, Throwable failure) {

@@ -97,6 +97,39 @@ class AutoWorkflowTest {
     }
 
     @Test
+    void refreshesChangedSourceEvenWhenDeclaredVersionIsUnchanged() throws Exception {
+        Path source = temporaryDirectory.resolve("Same version");
+        Files.createDirectories(source.resolve("data/strings"));
+        Files.writeString(source.resolve("mod_info.json"),
+                "{\"id\":\"same.version\",\"name\":\"Same version\",\"version\":\"1\"}");
+        Path strings = source.resolve("data/strings/strings.json");
+        Files.writeString(strings, "{\"welcome\":\"Original message\"}");
+        Path catalog = temporaryDirectory.resolve("internal/catalog.db");
+        AutoWorkflow workflow = new AutoWorkflow(catalog,
+                temporaryDirectory.resolve("internal/projects"));
+        workflow.run(source);
+        Path request = temporaryDirectory.resolve("Same version - Translate to English.json");
+        ObjectNode response = (ObjectNode) JSON.readTree(request.toFile());
+        ((ObjectNode) response.withArray("entries").get(0))
+                .put("translation", "Translated original message");
+        Path responseFile = temporaryDirectory.resolve("returned.json");
+        JSON.writeValue(responseFile.toFile(), response);
+        assertThat(workflow.run(source).status())
+                .isEqualTo(AutoRunResult.Status.PATCH_PUBLISHED);
+        Files.delete(responseFile);
+        Files.writeString(strings, "{\"welcome\":\"Changed message\",\"added\":\"New message\"}");
+        String changedHash = sha256(strings);
+
+        assertThat(workflow.run(source).status())
+                .isEqualTo(AutoRunResult.Status.MASTER_LIBRARY_INCOMPLETE);
+        var entries = JSON.readTree(request.toFile()).withArray("entries");
+        assertThat(entries.size()).isEqualTo(2);
+        assertThat(entries.toString()).contains("Changed message", "New message")
+                .doesNotContain("Original message", "Translated original message");
+        assertThat(sha256(strings)).isEqualTo(changedHash);
+    }
+
+    @Test
     void acceptsZipArchiveWithSingleNestedModFolder() throws Exception {
         Path userFiles = temporaryDirectory.resolve("user-files");
         Files.createDirectories(userFiles);

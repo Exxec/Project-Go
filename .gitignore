@@ -32,3 +32,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Machine-local worktrees, live-test fixtures and retained evidence
+/.local/

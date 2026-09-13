@@ -12,6 +12,7 @@ dependencies {
     implementation(project(":ssmt-patcher"))
     implementation(project(":ssmt-project"))
     implementation(libs.picocli)
+    implementation(libs.jackson.databind)
     implementation(libs.slf4j.api)
     runtimeOnly(libs.logback.classic)
 }
