@@ -41,7 +41,9 @@ class EdmundFacadeReleaseGateTest {
         new LocalizationProjectService().write(legacy, new LocalizationProject(1, "a16709513_wkt", "church.translation", "Church English", entries));
         byte[] legacyBefore = Files.readAllBytes(legacy);
         var workflow = new TranslationWorkflow(directory.resolve("owned"));
-        var loaded = workflow.loadMod(directory.resolve("source"));
+        assertThat(workflow.legacyProjects(directory.resolve("source"))).hasSize(1);
+        var loaded = workflow.adoptLegacy(directory.resolve("source"),
+                workflow.legacyProjects(directory.resolve("source")).getFirst());
         assertThat(loaded.project().entries()).hasSize(207);
         assertThat(loaded.project().entries().stream().filter(e -> !e.translatedText().isBlank())).hasSize(187);
         var restart = new TranslationWorkflow(directory.resolve("owned"));

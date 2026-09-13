@@ -1,12 +1,14 @@
 package com.ssmt.gui;
 
 import com.ssmt.project.ProjectException;
+import com.ssmt.project.LegacyProjectCandidate;
 import com.ssmt.project.TranslationWorkflow;
 import com.ssmt.project.WorkflowPreferences;
 import java.nio.file.Path;
 import java.nio.file.Files;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.List;
 
 /** Thin normal-workflow adapter; only successfully committed sessions become active. */
 public final class TranslationWorkflowController {
@@ -34,6 +36,10 @@ public final class TranslationWorkflowController {
 
     public Optional<Path> lastOutput() { return Optional.ofNullable(lastOutput); }
 
+    public Optional<Path> recoveryOutput() {
+        return Optional.ofNullable(lastOutput).or(preferences::attemptedOutput);
+    }
+
     public Optional<String> notice() {
         return notice.isBlank() ? Optional.empty() : Optional.of(notice);
     }
@@ -42,12 +48,42 @@ public final class TranslationWorkflowController {
         TranslationWorkflow.Session candidate = workflow.loadMod(source);
         session = candidate;
         lastOutput = null;
+        notice = "";
     }
 
     public void loadInput(Path input) throws ProjectException {
+        List<LegacyProjectCandidate> candidates = workflow.legacyProjects(input);
+        if (!candidates.isEmpty()) {
+            throw new LegacyProjectsFoundException(input, candidates);
+        }
+        startFresh(input);
+    }
+
+    public void startFresh(Path input) throws ProjectException {
         TranslationWorkflow.Session candidate = workflow.loadInput(input);
         session = candidate;
         lastOutput = null;
+        notice = "";
+    }
+
+    /**
+     * Applies the user's explicit decision when one mod id maps to two genuinely
+     * different sources. Project Go never makes that decision by itself.
+     */
+    public void resolveLineage(Path input, TranslationWorkflow.LineageChoice choice)
+            throws ProjectException {
+        TranslationWorkflow.Session candidate = workflow.loadInput(input, choice);
+        session = candidate;
+        lastOutput = null;
+        notice = "";
+    }
+
+    public void adoptLegacy(Path input, LegacyProjectCandidate selected)
+            throws ProjectException {
+        TranslationWorkflow.Session candidate = workflow.adoptLegacy(input, selected);
+        session = candidate;
+        lastOutput = null;
+        notice = "Old translation work was copied into Project Go; the original was unchanged.";
     }
 
     /** Routes a folder, ZIP, mod_info.json, or returned translation JSON. */
@@ -91,21 +127,36 @@ public final class TranslationWorkflowController {
     public void buildPatch(Path destination) throws ProjectException {
         notice = "";
         lastOutput = destination.toAbsolutePath().normalize();
+        preferences.rememberAttemptedOutput(lastOutput);
         workflow.buildPatch(requireSession(), lastOutput);
         Path parent = lastOutput.getParent();
         if (parent != null) {
             try {
-                preferences.rememberModsDestination(parent);
+                preferences.rememberSuccessfulPublication(parent, lastOutput);
             } catch (ProjectException exception) {
                 notice = exception.getMessage();
             }
         }
     }
 
+    public void recoveryCompleted(Path recoveredOutput) throws ProjectException {
+        preferences.clearAttemptedOutput(recoveredOutput);
+    }
+
+    /** Returns the readable installed-copy folder below a chosen mods directory. */
     public Path outputBelow(Path destination) throws ProjectException {
-        TranslationWorkflow.Session active = requireSession();
-        String id = active.project().sourceModId().replaceAll("[^A-Za-z0-9._-]", "_");
-        return destination.toAbsolutePath().normalize().resolve(id + "-translated");
+        return destination.toAbsolutePath().normalize()
+                .resolve(installedFolderName());
+    }
+
+    /** Returns the readable folder name the installed copy will use. */
+    public String installedFolderName() throws ProjectException {
+        return requireSession().presentation().translatedFolderName();
+    }
+
+    /** Returns the readable filename suggested for the AI request file. */
+    public String aiRequestFilename() throws ProjectException {
+        return requireSession().presentation().aiRequestFilename();
     }
 
     public void reset() {

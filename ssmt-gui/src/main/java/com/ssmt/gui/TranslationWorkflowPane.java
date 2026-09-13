@@ -2,6 +2,9 @@ package com.ssmt.gui;
 
 import com.ssmt.patcher.PatchRecoveryService;
 import com.ssmt.project.StorageHygieneService;
+import com.ssmt.project.LegacyProjectCandidate;
+import com.ssmt.project.ProjectException;
+import com.ssmt.project.SourceIdentityConflictException;
 import com.ssmt.project.TranslationWorkflow;
 import java.awt.Desktop;
 import java.io.File;
@@ -12,6 +15,7 @@ import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
@@ -23,6 +27,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 
 /** One drop-driven normal flow; optional pickers and maintenance stay secondary. */
 final class TranslationWorkflowPane extends VBox {
@@ -147,25 +152,34 @@ final class TranslationWorkflowPane extends VBox {
                     ? GuiText.get("normal.loaded") : GuiText.get("normal.imported");
             status.setText(success + "\n" + summary());
         });
-        task.setOnFailed(event -> failed("Open dropped item", task.getException()));
+        task.setOnFailed(event -> handleFailure("Open dropped item", task.getException()));
         Thread.ofVirtual().name("project-go-drop").start(task);
     }
 
     private void exportTranslation() {
-        File file = jsonChooser("translation.json").showSaveDialog(stage);
+        File file = jsonChooser(requestFilename()).showSaveDialog(stage);
         if (file != null) {
             run(TranslationWorkflowPresentation.Action.EXPORT_TRANSLATION,
                     () -> controller.exportTranslation(file.toPath()), GuiText.get("normal.exported"),
-                    "Save AI translation request");
+                    "Create translation file");
         }
     }
 
     private void importTranslation() {
-        File file = jsonChooser("translation.json").showOpenDialog(stage);
+        File file = jsonChooser(requestFilename()).showOpenDialog(stage);
         if (file != null) {
             run(TranslationWorkflowPresentation.Action.IMPORT_TRANSLATION,
                     () -> controller.importTranslation(file.toPath()), GuiText.get("normal.imported"),
-                    "Open AI translation response");
+                    "Open returned translation file");
+        }
+    }
+
+    /** Readable suggested filename; the returned file may keep any name at all. */
+    private String requestFilename() {
+        try {
+            return controller.aiRequestFilename();
+        } catch (ProjectException exception) {
+            return "translation.json";
         }
     }
 
@@ -178,8 +192,10 @@ final class TranslationWorkflowPane extends VBox {
         if (folder != null) {
             try {
                 Path output = controller.outputBelow(folder.toPath());
+                String installed = GuiText.get("normal.built")
+                        .replace("{0}", controller.installedFolderName());
                 run(TranslationWorkflowPresentation.Action.BUILD_COPY,
-                        () -> controller.buildPatch(output), GuiText.get("normal.built") + " " + output,
+                        () -> controller.buildPatch(output), installed + "\n" + output,
                         "Install translated copy");
             } catch (Exception exception) {
                 failed("Install translated copy", exception);
@@ -210,7 +226,7 @@ final class TranslationWorkflowPane extends VBox {
             update();
             status.setText(success + "\n" + summary());
         });
-        task.setOnFailed(event -> failed(operation, task.getException()));
+        task.setOnFailed(event -> handleFailure(operation, task.getException()));
         Thread.ofVirtual().name("project-go-workflow").start(task);
     }
 
@@ -219,6 +235,93 @@ final class TranslationWorkflowPane extends VBox {
         update();
         UserDiagnostic diagnostic = UserDiagnostic.failed(operation, failure);
         status.setText(diagnostic.summary() + "\n" + diagnostic.detail() + "\n" + summary());
+    }
+
+    private void handleFailure(String operation, Throwable failure) {
+        setDisable(false);
+        if (failure instanceof LegacyProjectsFoundException legacy) {
+            showLegacyChoice(legacy);
+        } else if (failure instanceof SourceIdentityConflictException conflict) {
+            showLineageChoice(conflict);
+        } else {
+            failed(operation, failure);
+        }
+    }
+
+    /**
+     * Asks the user to decide between two genuinely different mods that declare one
+     * id. Fingerprints, digests, and workspace names are deliberately not shown.
+     */
+    private void showLineageChoice(SourceIdentityConflictException conflict) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.initOwner(stage);
+        dialog.setTitle(GuiText.get("normal.lineage.title"));
+        ButtonType usePrevious = new ButtonType(GuiText.get("normal.lineage.usePrevious"),
+                javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
+        ButtonType startSeparately = new ButtonType(GuiText.get("normal.lineage.startSeparately"),
+                javafx.scene.control.ButtonBar.ButtonData.OTHER);
+        dialog.getDialogPane().getButtonTypes().addAll(usePrevious, startSeparately, ButtonType.CANCEL);
+        Label explanation = new Label(GuiText.get("normal.lineage.explanation")
+                .replace("{0}", conflict.previousModName())
+                .replace("{1}", Integer.toString(conflict.previousEntries()))
+                .replace("{2}", conflict.currentModName())
+                .replace("{3}", Integer.toString(conflict.currentEntries())));
+        explanation.setWrapText(true);
+        dialog.getDialogPane().setContent(new VBox(10, explanation));
+        dialog.showAndWait().ifPresent(result -> {
+            if (result == usePrevious) {
+                run(TranslationWorkflowPresentation.Action.CHOOSE_MOD,
+                        () -> controller.resolveLineage(conflict.source(),
+                                TranslationWorkflow.LineageChoice.USE_PREVIOUS),
+                        GuiText.get("normal.loaded"), "Use previous translation");
+            } else if (result == startSeparately) {
+                run(TranslationWorkflowPresentation.Action.CHOOSE_MOD,
+                        () -> controller.resolveLineage(conflict.source(),
+                                TranslationWorkflow.LineageChoice.START_SEPARATELY),
+                        GuiText.get("normal.lineage.separated"), "Start separate translation");
+            }
+        });
+        update();
+    }
+
+    private void showLegacyChoice(LegacyProjectsFoundException legacy) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.initOwner(stage);
+        dialog.setTitle(GuiText.get("normal.legacy.title"));
+        ButtonType importOld = new ButtonType(GuiText.get("normal.legacy.import"),
+                javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
+        ButtonType startFresh = new ButtonType(GuiText.get("normal.legacy.fresh"),
+                javafx.scene.control.ButtonBar.ButtonData.OTHER);
+        dialog.getDialogPane().getButtonTypes().addAll(importOld, startFresh, ButtonType.CANCEL);
+        ComboBox<LegacyProjectCandidate> choices = new ComboBox<>(
+                javafx.collections.FXCollections.observableArrayList(legacy.candidates()));
+        choices.setMaxWidth(Double.MAX_VALUE);
+        choices.setConverter(new StringConverter<>() {
+            @Override public String toString(LegacyProjectCandidate candidate) {
+                if (candidate == null) { return ""; }
+                return candidate.projectName() + " — " + candidate.translatedEntries() + "/"
+                        + candidate.entries() + " translated — " + candidate.modifiedAt()
+                        + " — " + candidate.file();
+            }
+            @Override public LegacyProjectCandidate fromString(String value) { return null; }
+        });
+        if (legacy.candidates().size() == 1) { choices.getSelectionModel().selectFirst(); }
+        Button importButton = (Button) dialog.getDialogPane().lookupButton(importOld);
+        importButton.disableProperty().bind(choices.valueProperty().isNull());
+        Label explanation = new Label(GuiText.get("normal.legacy.explanation"));
+        explanation.setWrapText(true);
+        dialog.getDialogPane().setContent(new VBox(10, explanation, choices));
+        dialog.showAndWait().ifPresent(result -> {
+            if (result == importOld) {
+                run(TranslationWorkflowPresentation.Action.CHOOSE_MOD,
+                        () -> controller.adoptLegacy(legacy.input(), choices.getValue()),
+                        GuiText.get("normal.legacy.imported"), "Import old project");
+            } else if (result == startFresh) {
+                run(TranslationWorkflowPresentation.Action.CHOOSE_MOD,
+                        () -> controller.startFresh(legacy.input()),
+                        GuiText.get("normal.loaded"), "Start fresh translation");
+            }
+        });
     }
 
     private boolean readyToBuild() {
@@ -345,7 +448,7 @@ final class TranslationWorkflowPane extends VBox {
         Button restore = new Button(GuiText.get("normal.settings.restore"));
         restore.setDisable(true);
         final PatchRecoveryService.Preview[] recoverable = new PatchRecoveryService.Preview[1];
-        java.util.Optional<Path> recoveryOutput = controller.lastOutput().or(() ->
+        java.util.Optional<Path> recoveryOutput = controller.recoveryOutput().or(() ->
                 controller.modsDestination().flatMap(destinationRoot -> {
             try {
                 return java.util.Optional.of(controller.outputBelow(destinationRoot));
@@ -371,6 +474,7 @@ final class TranslationWorkflowPane extends VBox {
                 advanced.setDisable(true);
                 background(restore, recoveryStatus::setText, () -> {
                     maintenance.recover(preview);
+                    controller.recoveryCompleted(preview.output());
                     return null;
                 }, ignored -> {
                     recoverable[0] = null;
@@ -428,13 +532,32 @@ final class TranslationWorkflowPane extends VBox {
 
     private String summary() {
         return controller.session().map(session -> {
+            long total = session.project().entries().stream()
+                    .filter(entry -> !entry.originalText().isBlank()).count();
             long translated = session.project().entries().stream()
-                    .filter(e -> !e.translatedText().isBlank()).count();
-            return session.modName() + " - " + translated + " / " + session.project().entries().size()
-                    + " " + GuiText.get("normal.translated") + "; " + session.needsReview()
-                    + " " + GuiText.get("normal.review")
+                    .filter(entry -> !entry.originalText().isBlank() && !entry.translatedText().isBlank())
+                    .count();
+            long missing = total - translated;
+            String progress = missing == 0
+                    ? GuiText.get("normal.summary.complete").replace("{0}", Long.toString(total))
+                    : GuiText.get("normal.summary.translated")
+                            .replace("{0}", Long.toString(translated))
+                            .replace("{1}", Long.toString(total)) + "\n"
+                            + GuiText.get("normal.summary.missing")
+                                    .replace("{0}", Long.toString(missing));
+            return session.modName() + "\n" + languages(session) + "\n" + progress
                     + controller.notice().map(value -> "\n" + value).orElse("");
         }).orElse(GuiText.get("normal.chooseHelp"));
+    }
+
+    /** Readable language pair; a hidden or undetected source code is simply omitted. */
+    private static String languages(TranslationWorkflow.Session session) {
+        String target = session.presentation().targetLanguageName();
+        String source = session.sourceLanguage();
+        if (source == null || source.isBlank()) {
+            return target;
+        }
+        return com.ssmt.project.PresentationNames.languageName(source) + " \u2192 " + target;
     }
 
     @FunctionalInterface private interface Action { void run() throws Exception; }

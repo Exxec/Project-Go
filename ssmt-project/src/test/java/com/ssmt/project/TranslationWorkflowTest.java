@@ -62,6 +62,46 @@ class TranslationWorkflowTest {
         assertThat(Files.readAllBytes(archive)).isEqualTo(before);
     }
 
+    @Test void legacyProjectsRequireExplicitBytePreservingAdoption() throws Exception {
+        Path source = source();
+        var projects = new LocalizationProjectService();
+        LocalizationProject extracted = projects.create(
+                source, "example.translation", "Older Example");
+        LocalizationProject translated = extracted.withEntries(extracted.entries().stream()
+                .map(entry -> entry.withTranslatedText("Old " + entry.originalText())).toList());
+        Path legacyDirectory = Files.createDirectories(directory.resolve("Project Go - Example"));
+        Path first = legacyDirectory.resolve("first.ssmt.json");
+        Path second = legacyDirectory.resolve("second.ssmt.json");
+        projects.write(first, translated);
+        projects.write(second, translated.withEntries(translated.entries().subList(0, 1)));
+        byte[] firstBefore = Files.readAllBytes(first);
+        byte[] secondBefore = Files.readAllBytes(second);
+
+        var finder = new TranslationWorkflow(directory.resolve("finder-workspaces"));
+        assertThat(finder.legacyProjects(source)).extracting(LegacyProjectCandidate::file)
+                .containsExactly(first.toRealPath(), second.toRealPath());
+        LegacyProjectCandidate firstCandidate = finder.legacyProjects(source).getFirst();
+        var fresh = finder.loadMod(source);
+        assertThat(fresh.project().entries()).allMatch(entry -> entry.translatedText().isBlank());
+        // Internal work wins: legacy discovery stops and adoption is refused.
+        assertThat(finder.legacyProjects(source)).isEmpty();
+        assertThatThrownBy(() -> finder.adoptLegacy(source, firstCandidate))
+                .hasMessageContaining("already exists");
+
+        var adopter = new TranslationWorkflow(directory.resolve("adopted-workspaces"));
+        var adopted = adopter.adoptLegacy(source.resolve("mod_info.json"),
+                adopter.legacyProjects(source).getFirst());
+        assertThat(adopted.project().entries()).allMatch(entry -> !entry.translatedText().isBlank());
+        assertThat(Files.readAllBytes(first)).isEqualTo(firstBefore);
+        assertThat(Files.readAllBytes(second)).isEqualTo(secondBefore);
+        var changedWorkflow = new TranslationWorkflow(directory.resolve("other-workspaces"));
+        LegacyProjectCandidate stale = changedWorkflow.legacyProjects(source).getFirst();
+        Files.writeString(first, Files.readString(first) + "\n");
+        assertThatThrownBy(() -> changedWorkflow.adoptLegacy(source, stale))
+                .hasMessageContaining("changed after preview");
+        assertThat(changedWorkflow.legacyProjects(source)).isNotEmpty();
+    }
+
     @Test void restartRefreshesWithoutVersionChangeAndRetainsRemovedHistory() throws Exception {
         Path source = source();
         var workflow = new TranslationWorkflow(directory.resolve("workspaces"));

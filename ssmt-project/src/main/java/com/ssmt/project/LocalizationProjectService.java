@@ -35,6 +35,7 @@ import com.ssmt.tm.TranslationQuery;
 import com.ssmt.validation.TranslationValidator;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -69,11 +70,32 @@ public final class LocalizationProjectService {
      * @throws ProjectException when metadata is missing or malformed
      */
     public ProjectSourceDetails inspectSource(Path sourceRoot) throws ProjectException {
+        SourceModIdentity identity = inspectIdentity(sourceRoot);
+        return new ProjectSourceDetails(identity.originalId(), identity.originalName());
+    }
+
+    /**
+     * Reads the automatically located {@code mod_info.json} as immutable source
+     * identity. The returned values describe the mod the user selected and are
+     * never overwritten by Project Go.
+     *
+     * @param sourceRoot selected mod root
+     * @return exact source id, display name, folder name, and game version
+     * @throws ProjectException when metadata is missing or malformed
+     */
+    public SourceModIdentity inspectIdentity(Path sourceRoot) throws ProjectException {
         try {
             ModInfo mod = modInfoReader.read(sourceRoot);
-            return new ProjectSourceDetails(mod.id(), mod.name());
+            Path folder = sourceRoot.toAbsolutePath().normalize().getFileName();
+            return new SourceModIdentity(
+                    mod.id(),
+                    mod.name(),
+                    folder == null ? mod.id() : folder.toString(),
+                    mod.gameVersion());
         } catch (SsmtParseException exception) {
             throw new ProjectException("Could not load mod_info.json", exception);
+        } catch (IllegalArgumentException exception) {
+            throw new ProjectException("mod_info.json must declare a usable id and name", exception);
         }
     }
 
@@ -722,6 +744,9 @@ public final class LocalizationProjectService {
         if (!mod.id().equals(project.sourceModId())) {
             throw new ProjectException("Project source mod id does not match selected source");
         }
+        if (!publishSupportArtifacts) {
+            requireOwnedNormalOutput(outputRoot, mod.id());
+        }
         Map<Path, List<TranslationReplacement>> grouped = new LinkedHashMap<>();
         for (ProjectEntry entry : project.entries()) {
             cancellation.throwIfCancellationRequested();
@@ -774,6 +799,9 @@ public final class LocalizationProjectService {
                     mod.name(),
                     mod.gameVersion(),
                     artifacts);
+            if (!publishSupportArtifacts) {
+                requireOwnedNormalOutput(outputRoot, mod.id());
+            }
             PatchBuildResult result = publishSupportArtifacts
                     ? patchBuilder.build(request)
                     : patchBuilder.buildTranslatedCopy(request);
@@ -784,6 +812,34 @@ public final class LocalizationProjectService {
             throw new ProjectException(
                     "Could not build localization project: " + exception.getMessage(),
                     exception);
+        }
+    }
+
+    /** Readable names are not identity: never replace another mod or an unmanaged copy. */
+    private void requireOwnedNormalOutput(Path outputRoot, String sourceModId) throws ProjectException {
+        Path output = outputRoot.toAbsolutePath().normalize();
+        if (!Files.exists(output, java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
+            return;
+        }
+        try {
+            if (!Files.isDirectory(output, java.nio.file.LinkOption.NOFOLLOW_LINKS)
+                    || Files.isSymbolicLink(output) || !output.toRealPath().equals(output)) {
+                throw new ProjectException("The existing output must be a real translated-copy directory");
+            }
+            ModInfo existing = modInfoReader.read(output);
+            if (!existing.id().equals(sourceModId)) {
+                throw new ProjectException(
+                        "The existing translated-copy folder belongs to a different mod; choose another destination");
+            }
+            Path fingerprint = output.resolve(".ssmt-build-fingerprint");
+            if (!Files.isRegularFile(fingerprint, java.nio.file.LinkOption.NOFOLLOW_LINKS)
+                    || Files.isSymbolicLink(fingerprint) || Files.size(fingerprint) != 64
+                    || !Files.readString(fingerprint, StandardCharsets.UTF_8).matches("[0-9a-f]{64}")) {
+                throw new ProjectException(
+                        "The existing folder is not a Project Go translated copy; choose another destination");
+            }
+        } catch (IOException | SsmtParseException exception) {
+            throw new ProjectException("Could not verify the existing translated-copy destination", exception);
         }
     }
 

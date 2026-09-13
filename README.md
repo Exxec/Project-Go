@@ -18,8 +18,10 @@ or redistribution rights.
 The simplified source-safe workflow is implemented on `main`; exact implementation
 commit `10f274b` passed Windows and Linux CI run `34605294776`. The existing
 `v0.7.0` tag has no published GitHub Release;
-post-tag source on `main` now identifies itself as `0.8.0-dev`, not as the old
-tagged version. It remains development work, not a release candidate. Manual
+post-tag source now identifies itself as `0.8.0-rc.1`, not as the old
+tagged version. See [new-work review and release gates](docs/NEW_WORK_RELEASE_REVIEW.md).
+The release candidate adds readable naming, immutable source identity, explicit
+legacy adoption and same-id lineage choices with source-content checks. Manual
 GUI/file-picker and in-game acceptance remain separate gates.
 Project Go scans Starsector mods, extracts standard CSV/JSON-like and bytecode
 strings without executing mod classes, stores reusable translations in

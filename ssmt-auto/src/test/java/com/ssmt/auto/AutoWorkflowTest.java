@@ -49,10 +49,10 @@ class AutoWorkflowTest {
         assertThat(workspace).isDirectory();
         assertThat(workspace.getParent()).isEqualTo(workspaceRoot);
         assertThat(userFiles.resolve("Project Go - Example Mod")).doesNotExist();
-        Path missing = userFiles.resolve("Example Mod - AI translation request.json");
+        Path missing = userFiles.resolve("Example Mod - Translate to English.json");
         Path response = userFiles.resolve("Example Mod - AI translation library.json");
         assertThat(missing).isRegularFile();
-        assertThat(workspace.resolve("Example Mod - AI translation request.json")).doesNotExist();
+        assertThat(workspace.resolve("Example Mod - Translate to English.json")).doesNotExist();
         ObjectNode translated = (ObjectNode) JSON.readTree(missing.toFile());
         translated.put("translatedModName", "Example");
         ((ObjectNode) translated.withArray("entries").get(0))
@@ -64,10 +64,10 @@ class AutoWorkflowTest {
 
         assertThat(built.status()).isEqualTo(AutoRunResult.Status.PATCH_PUBLISHED);
         assertThat(unchanged.status()).isEqualTo(AutoRunResult.Status.PATCH_UNCHANGED);
-        Path translatedClone = userFiles.resolve("example.mod.english");
+        Path translatedClone = userFiles.resolve("Example Mod - English");
         assertThat(translatedClone.resolve("mod_info.json"))
                 .isRegularFile();
-        assertThat(userFiles.resolve("example.mod.english-source-backup")).doesNotExist();
+        assertThat(userFiles.resolve("Example Mod - English-source-backup")).doesNotExist();
         assertThat(translatedClone.resolve("Project Go Changes.csv")).doesNotExist();
         assertThat(sharedCatalog).isRegularFile();
         assertThat(workspace.resolve("project-go-catalog.db")).doesNotExist();
@@ -117,14 +117,14 @@ class AutoWorkflowTest {
         assertThat(result.status()).isEqualTo(AutoRunResult.Status.MASTER_LIBRARY_NEEDED);
         assertThat(result.workspace().getParent()).isEqualTo(workspaceRoot);
         assertThat(userFiles.resolve("Project Go - Archive Mod")).doesNotExist();
-        assertThat(userFiles.resolve("Archive Mod - AI translation request.json"))
+        assertThat(userFiles.resolve("Archive Mod - Translate to English.json"))
                 .isRegularFile();
-        assertThat(result.workspace().resolve("Archive Mod - AI translation request.json"))
+        assertThat(result.workspace().resolve("Archive Mod - Translate to English.json"))
                 .doesNotExist();
         assertThat(sha256(archive)).isEqualTo(archiveHash);
 
         ObjectNode translated = (ObjectNode) JSON.readTree(
-                userFiles.resolve("Archive Mod - AI translation request.json").toFile());
+                userFiles.resolve("Archive Mod - Translate to English.json").toFile());
         ((ObjectNode) translated.withArray("entries").get(0))
                 .put("translation", "A translated archive line");
         JSON.writerWithDefaultPrettyPrinter().writeValue(
@@ -133,8 +133,8 @@ class AutoWorkflowTest {
         AutoRunResult completed = workflow.runDropped(archive);
 
         assertThat(completed.status()).isEqualTo(AutoRunResult.Status.PATCH_PUBLISHED);
-        assertThat(userFiles.resolve("archive.mod.english")).isDirectory();
-        assertThat(userFiles.resolve("archive.mod.english-source-backup")).doesNotExist();
+        assertThat(userFiles.resolve("Archive Mod - English")).isDirectory();
+        assertThat(userFiles.resolve("Archive Mod - English-source-backup")).doesNotExist();
         assertThat(userFiles.resolve("Project Go - Archive Mod")).doesNotExist();
         assertThat(sha256(archive)).isEqualTo(archiveHash);
     }
@@ -153,7 +153,7 @@ class AutoWorkflowTest {
         assertThat(metadata.status()).isEqualTo(AutoRunResult.Status.MASTER_LIBRARY_NEEDED);
         assertThat(metadata.workspace()).isEqualTo(folder.workspace());
         assertThat(folder.workspace().getParent()).isEqualTo(workspaceRoot);
-        assertThat(source.getParent().resolve("Example Mod - AI translation request.json"))
+        assertThat(source.getParent().resolve("Example Mod - Translate to English.json"))
                 .isRegularFile();
         assertThat(workspaceRoot.resolve("input-cache")).doesNotExist();
     }
@@ -167,7 +167,7 @@ class AutoWorkflowTest {
                 sharedCatalog, temporaryDirectory.resolve("internal/projects"));
 
         AutoRunResult waiting = workflow.run(source);
-        Path request = userFiles.resolve("Example Mod - AI translation request.json");
+        Path request = userFiles.resolve("Example Mod - Translate to English.json");
         ObjectNode translated = (ObjectNode) JSON.readTree(request.toFile());
         translated.put("translatedModName", "Example");
         ((ObjectNode) translated.withArray("entries").get(0))
@@ -179,7 +179,7 @@ class AutoWorkflowTest {
 
         assertThat(waiting.status()).isEqualTo(AutoRunResult.Status.MASTER_LIBRARY_NEEDED);
         assertThat(built.status()).isEqualTo(AutoRunResult.Status.PATCH_PUBLISHED);
-        assertThat(userFiles.resolve("example.mod.english")).isDirectory();
+        assertThat(userFiles.resolve("Example Mod - English")).isDirectory();
         assertThat(request).isRegularFile();
     }
 
@@ -191,7 +191,7 @@ class AutoWorkflowTest {
                 temporaryDirectory.resolve("internal/shared/catalog.db"),
                 temporaryDirectory.resolve("internal/projects"));
         workflow.run(source);
-        Path request = userFiles.resolve("Example Mod - AI translation request.json");
+        Path request = userFiles.resolve("Example Mod - Translate to English.json");
         ObjectNode translated = (ObjectNode) JSON.readTree(request.toFile());
         ((ObjectNode) translated.withArray("entries").get(0))
                 .put("translation", "A translated line");
@@ -217,7 +217,7 @@ class AutoWorkflowTest {
                 temporaryDirectory.resolve("internal/shared/catalog.db"),
                 temporaryDirectory.resolve("internal/projects"));
         workflow.run(source);
-        Path request = userFiles.resolve("Example Mod - AI translation request.json");
+        Path request = userFiles.resolve("Example Mod - Translate to English.json");
         ObjectNode translated = (ObjectNode) JSON.readTree(request.toFile());
         ((ObjectNode) translated.withArray("entries").get(0))
                 .put("translation", "A translated line");
@@ -229,7 +229,7 @@ class AutoWorkflowTest {
 
         assertThat(stillWaiting.status())
                 .isEqualTo(AutoRunResult.Status.MASTER_LIBRARY_NEEDED);
-        assertThat(userFiles.resolve("example.mod.english")).doesNotExist();
+        assertThat(userFiles.resolve("Example Mod - English")).doesNotExist();
     }
 
     @Test
@@ -240,7 +240,7 @@ class AutoWorkflowTest {
                 temporaryDirectory.resolve("internal/shared/catalog.db"),
                 temporaryDirectory.resolve("internal/projects"));
         workflow.run(source);
-        Path request = userFiles.resolve("Example Mod - AI translation request.json");
+        Path request = userFiles.resolve("Example Mod - Translate to English.json");
         ObjectNode first = (ObjectNode) JSON.readTree(request.toFile());
         ((ObjectNode) first.withArray("entries").get(0)).put("translation", "First response");
         Path documented = userFiles.resolve("Example Mod - AI translation library.json");
@@ -269,7 +269,7 @@ class AutoWorkflowTest {
                 temporaryDirectory.resolve("internal/projects"));
         workflow.run(source);
         ObjectNode response = (ObjectNode) JSON.readTree(
-                userFiles.resolve("Example Mod - AI translation request.json").toFile());
+                userFiles.resolve("Example Mod - Translate to English.json").toFile());
         response.put("targetLanguage", "fr");
         ((ObjectNode) response.withArray("entries").get(0)).put("translation", "Une ligne");
         JSON.writerWithDefaultPrettyPrinter().writeValue(
@@ -277,7 +277,7 @@ class AutoWorkflowTest {
 
         assertThat(workflow.run(source).status())
                 .isEqualTo(AutoRunResult.Status.MASTER_LIBRARY_NEEDED);
-        assertThat(userFiles.resolve("example.mod.english")).doesNotExist();
+        assertThat(userFiles.resolve("Example Mod - English")).doesNotExist();
     }
 
     @Test

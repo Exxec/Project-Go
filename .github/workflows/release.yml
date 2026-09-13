@@ -108,8 +108,10 @@ jobs:
           .\gradlew.bat :ssmt-gui:developmentBundleChecksum --no-daemon
           if ($LASTEXITCODE -ne 0) { throw 'Windows packaging failed' }
           $version = (Select-String '^ssmtVersion=' gradle.properties).Line.Split('=')[1]
+          # jpackage projects semantic prerelease versions onto numeric EXE metadata.
+          $nativeVersion = $version.Split('-')[0]
           foreach ($exe in @('ssmt-gui/build/jpackage/Project Go/Project Go.exe', 'ssmt-auto/build/jpackage/Project Go Auto/Project Go Auto.exe')) {
-            if ((Get-Item $exe).VersionInfo.ProductVersion -ne $version) { throw "Unexpected version: $exe" }
+            if ((Get-Item $exe).VersionInfo.ProductVersion -ne $nativeVersion) { throw "Unexpected native version: $exe" }
           }
 
       - name: Upload Windows package

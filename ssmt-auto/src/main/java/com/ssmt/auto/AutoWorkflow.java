@@ -13,7 +13,9 @@ import com.ssmt.project.ProjectBuildResult;
 import com.ssmt.project.ProjectEntry;
 import com.ssmt.project.ProjectException;
 import com.ssmt.project.ProjectRefreshResult;
+import com.ssmt.project.PresentationNames;
 import com.ssmt.project.SourceLanguageDetector;
+import com.ssmt.project.SourceModIdentity;
 import com.ssmt.scanner.ModInfoReader;
 import com.ssmt.tm.MasterTranslationLibrary;
 import com.ssmt.tm.SqliteTranslationMemory;
@@ -125,11 +127,19 @@ public final class AutoWorkflow {
         workspace = workspace.toAbsolutePath().normalize();
         visibleRoot = visibleRoot.toAbsolutePath().normalize();
         String originalName = safeName(mod.name(), mod.id());
+        // Readable, user-visible names come from one shared presentation model.
+        PresentationNames presentation = PresentationNames.forMod(
+                new SourceModIdentity(
+                        mod.id(),
+                        mod.name(),
+                        Objects.requireNonNull(source.getFileName(), "source mod folder").toString(),
+                        mod.gameVersion()),
+                "en");
         Path stateFile = workspace.resolve("project-go-state.json");
         Path legacyCatalog = workspace.resolve(CATALOG_FILE);
-        Path missing = visibleRoot.resolve(originalName + " - AI translation request.json");
+        Path missing = visibleRoot.resolve(presentation.aiRequestFilename());
         Path translated = visibleRoot.resolve(originalName + " - AI translation library.json");
-        Path patch = visibleRoot.resolve(safeName(mod.id(), "translation") + ".english");
+        Path patch = visibleRoot.resolve(presentation.translatedFolderName());
         try {
             Files.createDirectories(workspace);
             prepareSharedCatalog(legacyCatalog);
@@ -156,10 +166,7 @@ public final class AutoWorkflow {
                 projects.write(projectFile, project);
             }
         } else {
-            project = projects.create(
-                    source,
-                    safeName(mod.id(), "translation") + ".english",
-                    "Translation (" + mod.name() + ")");
+            project = projects.create(source, mod.id(), mod.name());
             projects.write(projectFile, project);
         }
 

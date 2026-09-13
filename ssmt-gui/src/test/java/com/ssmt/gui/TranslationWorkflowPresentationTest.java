@@ -31,11 +31,11 @@ class TranslationWorkflowPresentationTest {
 
         assertThat(presentation.action().buttonText()).isEqualTo("Choose a Mod");
         presentation.completed(TranslationWorkflowPresentation.Action.CHOOSE_MOD, false);
-        assertThat(presentation.action().buttonText()).isEqualTo("Save AI Translation Request");
+        assertThat(presentation.action().buttonText()).isEqualTo("Create Translation File");
         presentation.completed(TranslationWorkflowPresentation.Action.EXPORT_TRANSLATION, false);
-        assertThat(presentation.action().buttonText()).isEqualTo("Open AI Translation Response");
+        assertThat(presentation.action().buttonText()).isEqualTo("Open Returned Translation File");
         presentation.completed(TranslationWorkflowPresentation.Action.IMPORT_TRANSLATION, true);
-        assertThat(presentation.action().buttonText()).isEqualTo("Create Translated Mod");
+        assertThat(presentation.action().buttonText()).isEqualTo("Install English Copy");
         presentation.completed(TranslationWorkflowPresentation.Action.BUILD_COPY, true);
         assertThat(presentation.action().buttonText()).isEqualTo("Translate Another Mod");
     }
