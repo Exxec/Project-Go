@@ -7,6 +7,7 @@ import com.ssmt.extractor.CoverageGapFinding;
 import com.ssmt.extractor.CsvGapSchemaSuggester;
 import com.ssmt.extractor.ExtractionCoordinator;
 import com.ssmt.extractor.ExtractionReport;
+import com.ssmt.extractor.StandardCsvGapAuditor;
 import com.ssmt.extractor.GapSchemaStatus;
 import com.ssmt.extractor.GapSchemaSuggestion;
 import com.ssmt.extractor.bytecode.ClassStringExtractor;
@@ -97,6 +98,19 @@ public final class ExtractCommand implements Callable<Integer> {
                                 + "review and consider --suggest-csv-schema, --csv-schema, "
                                 + "or a future schema addition)",
                         finding.relativeSourceFile(), finding.sample());
+            }
+            List<StandardCsvGapAuditor.Finding> standardCsvFindings =
+                    new StandardCsvGapAuditor().audit(mod.sourceDirectory(), report);
+            for (StandardCsvGapAuditor.Finding finding : standardCsvFindings) {
+                if (finding.status().equals("UNSELECTED_COLUMN_WITH_NON_ASCII_TEXT")) {
+                    LOG.warn("Review unselected standard CSV column {} in {}: \"{}...\" "
+                                    + "(text was not exported; confirm player visibility and stable "
+                                    + "identity before extending its schema)",
+                            finding.column(), finding.relativeSourceFile(), finding.sample());
+                } else {
+                    LOG.warn("Could not review unselected standard CSV columns in {}: {}",
+                            finding.relativeSourceFile(), finding.status());
+                }
             }
             LOG.info("Extraction complete: {} string(s), {} unsupported file(s)",
                     report.strings().size(), report.skippedFiles().size());

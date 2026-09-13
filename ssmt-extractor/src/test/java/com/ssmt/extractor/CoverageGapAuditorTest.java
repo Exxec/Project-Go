@@ -13,6 +13,28 @@ import org.junit.jupiter.api.io.TempDir;
 class CoverageGapAuditorTest {
 
     @Test
+    void reportsNonAsciiTextInUnselectedStandardColumnsWithoutSelectingOrSuggestingThem(
+            @TempDir Path modRoot) throws Exception {
+        Path relative = Path.of("data/weapons/weapon_data.csv");
+        write(modRoot.resolve(relative), "id,name,groupTag,tags,damage/shot\n"
+                + "test,Test,æŠ€æœ¯åˆ†ç»„,æ ‡ç­¾,123\n");
+        ExtractionReport report = new ExtractionReport(List.of(), List.of(), List.of(
+                new FileCoverage(relative, "standard", "EXTRACTED", 1, "SELECTED_STRINGS_ONLY")));
+
+        List<StandardCsvGapAuditor.Finding> findings =
+                new StandardCsvGapAuditor().audit(modRoot, report);
+
+        assertThat(findings).extracting(StandardCsvGapAuditor.Finding::column)
+                .containsExactly("groupTag", "tags");
+        assertThat(findings).extracting(StandardCsvGapAuditor.Finding::status)
+                .containsOnly("UNSELECTED_COLUMN_WITH_NON_ASCII_TEXT");
+        assertThat(new CsvGapSchemaSuggester().suggest(modRoot,
+                new CoverageGapAuditor().audit(modRoot, report))).isEmpty();
+        assertThat(Files.readString(modRoot.resolve(relative), StandardCharsets.UTF_8))
+                .contains("æŠ€æœ¯åˆ†ç»„", "æ ‡ç­¾");
+    }
+
+    @Test
     void suggestsAsciiTextWithoutIncludingTechnicalColumns(@TempDir Path modRoot) throws Exception {
         Path relative = Path.of("data/custom/augments.csv");
         write(modRoot.resolve(relative),

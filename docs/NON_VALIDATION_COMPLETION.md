@@ -184,6 +184,20 @@ English clone is built until missing translations are supplied and validated.
 The full roadmap remains active: residual/unknown-format diagnostics, Auto
 convergence, build/package assurance, runtime capture and final-gate integration.
 
+### Residual standard-CSV diagnostic tranche â€” 2026-09-13
+
+Recognized standard CSV files now receive a separate read-only review for
+non-selected columns containing non-ASCII text. Findings name the path and column,
+or explicitly report that the review was unavailable because the source was unsafe,
+oversized, unreadable, malformed, or header-ambiguous. The normal CLI presents
+these as review-only omissions; it neither changes a schema nor creates translated
+entries. A failing fixture proves Chinese `groupTag` and `tags` cells are reported
+but stay excluded from extraction and opt-in schema generation.
+
+Focused extractor/CLI regression passed after the change. Full project validation,
+workflow convergence, independent clone attestation, assessment hardening and
+completion-gate integration remain required before any roadmap item is closed.
+
 ## Deferred validation checklist for later today
 
 The added Nightcross source was subsequently run through normal export/import/build

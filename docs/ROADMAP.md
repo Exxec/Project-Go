@@ -236,6 +236,10 @@ inventory and uncertain custom-format support remain open; P3 is not closed.
 - [ ] Extend advisory gap detection to malformed CSV rows, duplicate or blank
   identities, text in extra columns, unrecognized JSON subtrees, and player-visible
   strings that current standard schemas intentionally skip.
+  Recognized standard CSVs now report non-ASCII text in unselected columns as
+  review-only findings, including an explicit unavailable status for unsafe,
+  oversized, unreadable, malformed, or ambiguous-header inputs. This does not
+  infer visibility or authorize schema expansion.
 - [ ] Require human confirmation of player visibility and stable identity before
   accepting a generated custom schema.
 - [ ] For each accepted ecosystem format, add a synthetic failing fixture first,

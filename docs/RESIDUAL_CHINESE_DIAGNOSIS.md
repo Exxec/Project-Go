@@ -112,3 +112,22 @@ Project Go export/import/build and independent referenced-string/output audit ar
 recorded in NIGHTCROSS_ADDED_RUN.md. That audit confirms zero Chinese-bearing
 selected output strings, but the weapon/custom-CSV extraction gaps remain open.
 The exact historical 18-file report still has not been provided or validated.
+
+## Implemented diagnostic boundary â€” 2026-09-13
+
+`StandardCsvGapAuditor` now examines recognized standard CSV files after normal
+extraction and emits deterministic review findings for a non-selected column that
+contains non-ASCII text. It also reports unreadable, oversized, malformed, unsafe,
+or ambiguous-header CSVs as unavailable for this review rather than silently
+claiming that they have no gap. The normal CLI reports these findings with the
+column name and explicitly says the field was not exported.
+
+The audit is read-only. A finding does **not** establish player visibility, a stable
+identity, an AI-export entry, or permission to extend a standard schema. In
+particular, `groupTag`, `tags`, lookup keys and structured fields remain REVIEW.
+The accompanying regression keeps Chinese weapon grouping/tag cells out of both
+extraction and opt-in schema suggestions while asserting the source is unchanged.
+
+This closes neither the historical 18-file investigation nor the custom-format,
+JAR residual, whole-file-text, or game-visibility work. It makes the current
+selection boundary observable so those decisions can be made with evidence.
