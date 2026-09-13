@@ -212,7 +212,7 @@ public final class WorkflowPreferences {
         }
         try {
             Path realAncestor = existing.toRealPath();
-            if (!realAncestor.equals(existing.toAbsolutePath().normalize())) {
+            if (!realAncestor.equals(existing.toRealPath(LinkOption.NOFOLLOW_LINKS))) {
                 throw new ProjectException(
                         "The translated-copy output must not pass through a symbolic link");
             }

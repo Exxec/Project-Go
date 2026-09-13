@@ -90,11 +90,12 @@ class TranslationWorkflowControllerTest {
         Path attemptedOutput = directory.resolve("attempted-output");
         assertThatThrownBy(() -> controller.buildPatch(attemptedOutput))
                 .isInstanceOf(ProjectException.class);
-        assertThat(controller.lastOutput()).contains(attemptedOutput.toAbsolutePath().normalize());
+        Path canonicalOutput = directory.toRealPath().resolve("attempted-output");
+        assertThat(controller.lastOutput()).contains(canonicalOutput);
         var afterCrash = new TranslationWorkflowController(
                 new TranslationWorkflow(directory.resolve("restart-owned")),
                 new WorkflowPreferences(directory.resolve("settings.json")));
-        assertThat(afterCrash.recoveryOutput()).contains(attemptedOutput.toAbsolutePath().normalize());
+        assertThat(afterCrash.recoveryOutput()).contains(canonicalOutput);
         Path response = directory.resolve("anything.json");
         controller.exportTranslation(response);
         Files.writeString(response, Files.readString(response)
