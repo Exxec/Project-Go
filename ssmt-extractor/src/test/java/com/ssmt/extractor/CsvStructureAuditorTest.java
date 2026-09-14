@@ -35,6 +35,16 @@ class CsvStructureAuditorTest {
         assertThat(new CsvStructureAuditor().audit(root, List.of(path))).isEmpty();
     }
 
+    @Test void reviewsBoundedArchiveEntriesWithoutFilesystemWrites() {
+        var findings = new CsvStructureAuditor().auditBytes(java.util.Map.of(
+                Path.of("data/weapons/weapon_data.csv"),
+                "id,name\na,One,Extra\na,Two\n".getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+
+        assertThat(findings).extracting(CsvStructureAuditor.Finding::code)
+                .containsExactly("EXTRA_COLUMNS", "DUPLICATE_IDENTITY");
+        assertThat(root.resolve("data/weapons/weapon_data.csv")).doesNotExist();
+    }
+
     @Test void malformedAndUnknownIdentityRemainExplicitReview() throws Exception {
         Path malformed = csv("custom.csv", "id,text\na,\"unterminated");
         var findings = new CsvStructureAuditor().audit(root, List.of(malformed));

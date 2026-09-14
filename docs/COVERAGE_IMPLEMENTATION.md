@@ -2,6 +2,20 @@
 
 Parent plan: NON_VALIDATION_COMPLETION.md. P3 is not complete.
 
+## Archive CSV advisory review - 2026-09-14
+
+`ssmt assess ARCHIVE.zip --csv-audit` now reviews CSV entries beneath the
+uniquely selected archive root without extracting the archive. Each selected CSV
+is bounded at 16 MiB, decoded with the existing UTF-8 then GB18030 fallback, and
+passed to the unchanged structural/identity review rules. The complete outer ZIP
+inventory is captured again afterward; any observed byte change fails the review.
+
+The new CLI fixture confirms extra-column and duplicate-identity findings are
+reported as REVIEW from an archive, no wrapper directory is created, and archive
+bytes remain unchanged. This is not extraction coverage, schema approval,
+player-visibility evidence, archive authentication, or authorization to
+translate any newly reported cell.
+
 ## Implemented
 
 ExtractionCoordinator now emits FileCoverage for every discovered regular file,

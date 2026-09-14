@@ -120,6 +120,28 @@ class AssessCommandTest {
         assertThat(Files.readString(csv)).isEqualTo(malformed);
     }
 
+    @Test void archiveCsvReviewReportsStructureWithoutExtraction() throws Exception {
+        Path archive = directory.resolve("candidate.zip");
+        try (var output = new java.util.zip.ZipOutputStream(Files.newOutputStream(archive))) {
+            output.putNextEntry(new java.util.zip.ZipEntry("wrapper/mod_info.json"));
+            output.write("{\"id\":\"archive-csv\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            output.closeEntry();
+            output.putNextEntry(new java.util.zip.ZipEntry("wrapper/data/weapons/weapon_data.csv"));
+            output.write("id,name\na,One,Extra\na,Two\n".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            output.closeEntry();
+        }
+        byte[] before = Files.readAllBytes(archive);
+        var command = new CommandLine(new Main());
+        StringWriter output = new StringWriter();
+        command.setOut(new PrintWriter(output));
+
+        assertThat(command.execute("assess", archive.toString(), "--csv-audit", "--json")).isZero();
+        assertThat(output.toString()).contains("OBSERVED_ADVISORY_STRUCTURE", "EXTRA_COLUMNS",
+                "DUPLICATE_IDENTITY");
+        assertThat(Files.readAllBytes(archive)).isEqualTo(before);
+        assertThat(directory.resolve("wrapper")).doesNotExist();
+    }
+
     @Test void jarInventoryDoesNotValidateOrLoadClassPayloads() throws Exception {
         Files.writeString(directory.resolve("mod_info.json"), "{\"id\":\"jar-review\"}");
         Path jar = directory.resolve("mod.jar");

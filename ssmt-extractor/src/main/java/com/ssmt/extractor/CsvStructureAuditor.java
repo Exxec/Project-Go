@@ -13,11 +13,14 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import org.apache.commons.csv.CSVFormat;
 
 /** Bounded read-only structural review; no schema or text visibility is inferred. */
 public final class CsvStructureAuditor {
-    private static final int MAX_BYTES = 16 * 1024 * 1024;
+    /** Maximum bytes reviewed per CSV, whether from a directory or an archive entry. */
+    public static final int MAX_INPUT_BYTES = 16 * 1024 * 1024;
     private static final int MAX_ROWS = 100_000;
 
     /** Record numbers are CSV records, not physical lines with multiline quoting. */
@@ -40,23 +43,49 @@ public final class CsvStructureAuditor {
                     if (Files.isSymbolicLink(current)) { throw new IOException("Linked CSV path"); }
                 }
                 byte[] bytes;
-                try (var input = Files.newInputStream(file)) { bytes = input.readNBytes(MAX_BYTES + 1); }
-                if (bytes.length > MAX_BYTES) {
-                    add(findings, path, -1, "INPUT_LIMIT_EXCEEDED");
-                    continue;
+                try (var input = Files.newInputStream(file)) {
+                    bytes = input.readNBytes(MAX_INPUT_BYTES + 1);
                 }
-                String text;
-                try { text = decode(bytes, StandardCharsets.UTF_8); }
-                catch (java.nio.charset.CharacterCodingException exception) {
-                    text = decode(bytes, Charset.forName("GB18030"));
-                }
-                if (text.startsWith("\uFEFF")) { text = text.substring(1); }
-                inspect(relative, path, text, findings);
+                inspectBytes(relative, bytes, findings);
             } catch (IOException exception) {
                 add(findings, path, -1, "READ_OR_ENCODING_FAILED");
             }
         }
         return List.copyOf(findings);
+    }
+
+    /** Reviews already-bounded, archive-relative CSV payloads without filesystem access. */
+    public List<Finding> auditBytes(Map<Path, byte[]> entries) {
+        List<Finding> findings = new ArrayList<>();
+        for (var entry : new TreeMap<>(entries).entrySet()) {
+            Path relative = entry.getKey();
+            String path = relative.toString().replace('\\', '/');
+            if (relative.isAbsolute() || relative.normalize().startsWith("..")
+                    || !path.toLowerCase(java.util.Locale.ROOT).endsWith(".csv")) {
+                continue;
+            }
+            inspectBytes(relative, entry.getValue(), findings);
+        }
+        return List.copyOf(findings);
+    }
+
+    private static void inspectBytes(Path relative, byte[] bytes, List<Finding> findings) {
+        String path = relative.toString().replace('\\', '/');
+        if (bytes.length > MAX_INPUT_BYTES) {
+            add(findings, path, -1, "INPUT_LIMIT_EXCEEDED");
+            return;
+        }
+        try {
+            String text;
+            try { text = decode(bytes, StandardCharsets.UTF_8); }
+            catch (java.nio.charset.CharacterCodingException exception) {
+                text = decode(bytes, Charset.forName("GB18030"));
+            }
+            if (text.startsWith("\uFEFF")) { text = text.substring(1); }
+            inspect(relative, path, text, findings);
+        } catch (java.nio.charset.CharacterCodingException exception) {
+            add(findings, path, -1, "READ_OR_ENCODING_FAILED");
+        }
     }
 
     private static void inspect(Path relative, String path, String text, List<Finding> findings) {

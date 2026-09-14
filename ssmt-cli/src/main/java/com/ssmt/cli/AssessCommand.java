@@ -168,16 +168,20 @@ public final class AssessCommand implements Callable<Integer> {
             List<com.ssmt.extractor.CsvStructureAuditor.Finding> csvFindings = List.of();
             String csvStatus = "NOT_ASSESSED";
             if (csvAudit) {
-                if (!kind.equals("DIRECTORY")) {
-                    throw new java.io.IOException("--csv-audit currently requires a directory candidate");
-                }
                 if (declared != null) {
-                    List<Path> csvPaths = tuples.stream().filter(file -> file.path().startsWith(prefix))
-                            .map(file -> Path.of(file.path().substring(prefix.length()))).toList();
-                    csvFindings = new com.ssmt.extractor.CsvStructureAuditor()
-                            .audit(candidate.resolve(root), csvPaths);
-                    if (!entries.equals(new CandidateInventory().capture(candidate))) {
-                        throw new java.io.IOException("Candidate changed during CSV review");
+                    var auditor = new com.ssmt.extractor.CsvStructureAuditor();
+                    if (kind.equals("DIRECTORY")) {
+                        List<Path> csvPaths = tuples.stream().filter(file -> file.path().startsWith(prefix))
+                                .map(file -> Path.of(file.path().substring(prefix.length()))).toList();
+                        csvFindings = auditor.audit(candidate.resolve(root), csvPaths);
+                        if (!entries.equals(new CandidateInventory().capture(candidate))) {
+                            throw new java.io.IOException("Candidate changed during CSV review");
+                        }
+                    } else {
+                        csvFindings = auditor.auditBytes(archiveCsvEntries(candidate, tuples, prefix));
+                        if (!entries.equals(new ArchiveInventory().capture(candidate))) {
+                            throw new java.io.IOException("Archive changed during CSV review");
+                        }
                     }
                     csvStatus = "OBSERVED_ADVISORY_STRUCTURE";
                 }
@@ -306,6 +310,29 @@ public final class AssessCommand implements Callable<Integer> {
                 return bytes;
             }
         }
+    }
+
+    private static java.util.Map<Path, byte[]> archiveCsvEntries(
+            Path archive, List<com.ssmt.scanner.InventoryFingerprint.File> files, String prefix)
+            throws java.io.IOException {
+        var entries = new java.util.TreeMap<Path, byte[]>();
+        try (var zip = new java.util.zip.ZipFile(archive.toFile())) {
+            for (var file : files) {
+                if (!file.path().startsWith(prefix)
+                        || !file.path().toLowerCase(java.util.Locale.ROOT).endsWith(".csv")) {
+                    continue;
+                }
+                var entry = zip.getEntry(file.path());
+                if (entry == null || entry.isDirectory()) {
+                    throw new java.io.IOException("CSV entry disappeared from archive: " + file.path());
+                }
+                try (var input = zip.getInputStream(entry)) {
+                    entries.put(Path.of(file.path().substring(prefix.length())), input.readNBytes(
+                            com.ssmt.extractor.CsvStructureAuditor.MAX_INPUT_BYTES + 1));
+                }
+            }
+        }
+        return java.util.Map.copyOf(entries);
     }
 
     private static String hash(byte[] bytes) {
