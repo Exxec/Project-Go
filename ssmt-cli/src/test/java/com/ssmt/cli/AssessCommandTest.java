@@ -138,6 +138,35 @@ class AssessCommandTest {
         assertThat(Files.readAllBytes(jar)).isEqualTo(before);
     }
 
+    @Test void archiveJarInventoryDoesNotExtractOrLoadClassPayloads() throws Exception {
+        Path jar = directory.resolve("embedded.jar");
+        try (var output = new java.util.zip.ZipOutputStream(Files.newOutputStream(jar))) {
+            output.putNextEntry(new java.util.zip.ZipEntry("Example.class"));
+            output.write("not executable class bytes".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            output.closeEntry();
+        }
+        Path archive = directory.resolve("candidate.zip");
+        try (var output = new java.util.zip.ZipOutputStream(Files.newOutputStream(archive))) {
+            output.putNextEntry(new java.util.zip.ZipEntry("wrapper/mod_info.json"));
+            output.write("{\"id\":\"embedded-jar\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            output.closeEntry();
+            output.putNextEntry(new java.util.zip.ZipEntry("wrapper/jars/embedded.jar"));
+            output.write(Files.readAllBytes(jar));
+            output.closeEntry();
+        }
+        byte[] before = Files.readAllBytes(archive);
+        var command = new CommandLine(new Main());
+        StringWriter output = new StringWriter();
+        command.setOut(new PrintWriter(output));
+
+        assertThat(command.execute("assess", archive.toString(), "--jar-inventory", "--json")).isZero();
+
+        assertThat(output.toString()).contains("OBSERVED_PAYLOAD_INVENTORY",
+                "wrapper/jars/embedded.jar", "CLASS_ENTRY_UNVERIFIED", "NOT_ESTABLISHED");
+        assertThat(Files.readAllBytes(archive)).isEqualTo(before);
+        assertThat(directory.resolve("wrapper")).doesNotExist();
+    }
+
     @Test void optionalSourceManifestAttestsDirectoriesAndMetadataWithoutMutation() throws Exception {
         Files.writeString(directory.resolve("mod_info.json"), "{\"id\":\"source-attestation\"}");
         Files.createDirectory(directory.resolve("empty"));

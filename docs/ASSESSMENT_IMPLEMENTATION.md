@@ -2,6 +2,22 @@
 
 Parent plan: NON_VALIDATION_COMPLETION.md. P2/P4 are not complete.
 
+## Archive-embedded JAR payload inventory - 2026-09-14
+
+`ssmt assess ARCHIVE.zip --jar-inventory` now inventories JAR entries stored
+inside the selected ZIP root without extracting either container to disk. Outer
+candidate inventory binds the embedded JAR hash; the JAR stream is re-hashed
+while a bounded nested ZIP inventory observes its entries. Class entries remain
+`CLASS_ENTRY_UNVERIFIED`, bundled `.java` remains `BUNDLED_SOURCE`, and no
+source/JAR correspondence or execution claim is made.
+
+The nested inventory reuses the 10,000-entry and 1 GiB decompressed-byte limits
+and archive-path validation. After inspection, the outer archive is inventoried
+again and must match the initial captured inventory. The CLI fixture proves an
+invalid class payload can be observed from an archive, no wrapper is created,
+and the original archive bytes remain unchanged. This does not authenticate the
+archive, establish class loading behavior, or resolve source authority.
+
 ## Structured source-authority disposition - 2026-09-14
 
 `ssmt assess` now emits `sourceAuthority` in both deterministic JSON and human

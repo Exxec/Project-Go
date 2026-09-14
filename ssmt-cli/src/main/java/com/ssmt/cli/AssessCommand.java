@@ -144,19 +144,23 @@ public final class AssessCommand implements Callable<Integer> {
             List<com.ssmt.scanner.JarContents> jarContents = new java.util.ArrayList<>();
             String jarStatus = "NOT_ASSESSED";
             if (jarInventory) {
-                if (!kind.equals("DIRECTORY")) {
-                    throw new java.io.IOException("--jar-inventory currently requires a directory candidate");
-                }
                 if (selected) {
                     for (var file : tuples) {
                         if (file.path().startsWith(prefix)
                                 && file.path().toLowerCase(java.util.Locale.ROOT).endsWith(".jar")) {
-                            jarContents.add(com.ssmt.scanner.JarContents.inspect(candidate.resolve(root),
-                                    Path.of(file.path().substring(prefix.length())), file.sha256()));
+                            jarContents.add(kind.equals("DIRECTORY")
+                                    ? com.ssmt.scanner.JarContents.inspect(candidate.resolve(root),
+                                            Path.of(file.path().substring(prefix.length())), file.sha256())
+                                    : com.ssmt.scanner.JarContents.inspectArchiveEntry(candidate,
+                                            Path.of(file.path()), file.sha256()));
                         }
                     }
-                    if (!entries.equals(new CandidateInventory().capture(candidate))) {
-                        throw new java.io.IOException("Candidate changed during JAR inventory");
+                    if (kind.equals("DIRECTORY")) {
+                        if (!entries.equals(new CandidateInventory().capture(candidate))) {
+                            throw new java.io.IOException("Candidate changed during JAR inventory");
+                        }
+                    } else if (!entries.equals(new ArchiveInventory().capture(candidate))) {
+                        throw new java.io.IOException("Archive changed during JAR inventory");
                     }
                     jarStatus = "OBSERVED_PAYLOAD_INVENTORY";
                 }
