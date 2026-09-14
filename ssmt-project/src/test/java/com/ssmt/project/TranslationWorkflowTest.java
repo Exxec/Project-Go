@@ -43,12 +43,14 @@ class TranslationWorkflowTest {
     }
 
     @Test void defaultApplicationRootUsesTheSamePlatformRootAsTheSharedCatalog() {
+        Path localAppData = directory.resolve("local-app-data");
+        Path home = directory.resolve("home");
         assertThat(TranslationWorkflow.defaultApplicationRoot(
-                java.util.Optional.of("C:/test/local-app-data"), Path.of("C:/test/home")))
-                .isEqualTo(Path.of("C:/test/local-app-data/Project Go").toAbsolutePath().normalize());
+                java.util.Optional.of(localAppData.toString()), home))
+                .isEqualTo(localAppData.resolve("Project Go").toAbsolutePath().normalize());
         assertThat(TranslationWorkflow.defaultApplicationRoot(
-                java.util.Optional.empty(), Path.of("C:/test/home")))
-                .isEqualTo(Path.of("C:/test/home/.project-go").toAbsolutePath().normalize());
+                java.util.Optional.empty(), home))
+                .isEqualTo(home.resolve(".project-go").toAbsolutePath().normalize());
     }
 
     @Test void loadInputAcceptsAnArchiveWithoutChangingIt() throws Exception {

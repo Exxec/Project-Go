@@ -43,4 +43,15 @@ class AssuranceCommandTest {
         Files.writeString(root.resolve("mod_info.json"), "{\"id\":\"candidate\"}");
         assertThat(new CommandLine(new Main()).execute("assurance", "--candidate", root.toString())).isEqualTo(1);
     }
+
+    @Test void runtimeTemplateBindsToCandidateWithoutClaimingGameplaySuccess() throws Exception {
+        Path candidate = Files.createDirectory(root.resolve("runtime-candidate"));
+        Files.writeString(candidate.resolve("mod_info.json"), "{\"id\":\"candidate\"}");
+        StringWriter output = new StringWriter();
+        var command = new CommandLine(new Main());
+        command.setOut(new PrintWriter(output));
+        assertThat(command.execute("runtime-evidence", "--candidate", candidate.toString(), "--template"))
+                .isZero();
+        assertThat(output.toString()).contains("candidateSha256", "REPLACE_WITH_EXACT_BUILD");
+    }
 }

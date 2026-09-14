@@ -18,6 +18,7 @@ import picocli.CommandLine.IVersionProvider;
             ScanCommand.class,
             AssessCommand.class,
             AssuranceCommand.class,
+            RuntimeEvidenceCommand.class,
             ExtractCommand.class,
             ValidateCommand.class,
             TranslationMemoryCommand.class,

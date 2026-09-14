@@ -280,6 +280,9 @@ from the recorded inputs without access to the original working directory.
   save/load persistence, and upgrade compatibility.
 - [ ] Capture the exact Starsector build, enabled mods and versions, load order,
   JVM, candidate hash, direct Java process exit state, logs, and any modal dialog.
+  `ssmt runtime-evidence --candidate <mod> --template` emits a candidate-bound pending
+  capture schema. A returned capture is structurally verified with bounded, contained log
+  hashes; its gameplay semantics deliberately remain unverified.
 - [ ] Exercise registrations and consumers: faction/market ownership, variant and
   wing lookups, scripts/plugins, campaign creation, representative combat, and
   content refresh paths.
