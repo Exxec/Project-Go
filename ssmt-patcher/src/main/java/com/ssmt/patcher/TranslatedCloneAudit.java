@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -18,6 +17,7 @@ import java.util.TreeMap;
  * undeclared output file is never silently accepted.</p>
  */
 public final class TranslatedCloneAudit {
+    private record Observed(long bytes, String sha256) { }
     /** Deterministic attestation result for one source/staged-clone comparison. */
     public record Result(List<String> preserved, List<String> translated, List<String> missing,
             List<String> unexpected, List<String> incorrect) {
@@ -38,9 +38,9 @@ public final class TranslatedCloneAudit {
     /** Audits the clone without writing either tree. */
     public Result verify(Path source, Path clone, List<PatchArtifact> artifacts,
             Map<Path, byte[]> generated) throws IOException {
-        Map<String, byte[]> expected = expected(artifacts, generated);
-        Map<String, byte[]> sourceFiles = files(source);
-        Map<String, byte[]> cloneFiles = files(clone);
+        Map<String, Observed> expected = expected(artifacts, generated);
+        Map<String, Observed> sourceFiles = files(source);
+        Map<String, Observed> cloneFiles = files(clone);
         List<String> preserved = new ArrayList<>();
         List<String> translated = new ArrayList<>();
         List<String> missing = new ArrayList<>();
@@ -49,25 +49,25 @@ public final class TranslatedCloneAudit {
 
         for (var sourceEntry : sourceFiles.entrySet()) {
             String path = sourceEntry.getKey();
-            byte[] cloneBytes = cloneFiles.remove(path);
-            byte[] expectedBytes = expected.remove(path);
-            if (cloneBytes == null) {
+            Observed cloneFile = cloneFiles.remove(path);
+            Observed expectedFile = expected.remove(path);
+            if (cloneFile == null) {
                 missing.add(path);
-            } else if (expectedBytes != null) {
-                if (Arrays.equals(expectedBytes, cloneBytes)) {
+            } else if (expectedFile != null) {
+                if (expectedFile.equals(cloneFile)) {
                     translated.add(path);
                 } else {
                     incorrect.add(path);
                 }
-            } else if (Arrays.equals(sourceEntry.getValue(), cloneBytes)) {
+            } else if (sourceEntry.getValue().equals(cloneFile)) {
                 preserved.add(path);
             } else {
                 incorrect.add(path);
             }
         }
         for (var expectedEntry : expected.entrySet()) {
-            byte[] cloneBytes = cloneFiles.remove(expectedEntry.getKey());
-            if (cloneBytes == null || !Arrays.equals(expectedEntry.getValue(), cloneBytes)) {
+            Observed cloneFile = cloneFiles.remove(expectedEntry.getKey());
+            if (cloneFile == null || !expectedEntry.getValue().equals(cloneFile)) {
                 incorrect.add(expectedEntry.getKey());
             } else {
                 translated.add(expectedEntry.getKey());
@@ -77,27 +77,27 @@ public final class TranslatedCloneAudit {
         return new Result(preserved, translated, missing, unexpected, incorrect);
     }
 
-    private static Map<String, byte[]> expected(List<PatchArtifact> artifacts,
+    private static Map<String, Observed> expected(List<PatchArtifact> artifacts,
             Map<Path, byte[]> generated) {
-        Map<String, byte[]> expected = new TreeMap<>();
+        Map<String, Observed> expected = new TreeMap<>();
         for (PatchArtifact artifact : artifacts) {
-            put(expected, path(artifact.relativePath()), artifact.content());
+            put(expected, path(artifact.relativePath()), observed(artifact.content()));
         }
         for (var generatedEntry : generated.entrySet()) {
-            put(expected, path(generatedEntry.getKey()), generatedEntry.getValue());
+            put(expected, path(generatedEntry.getKey()), observed(generatedEntry.getValue()));
         }
         return expected;
     }
 
-    private static void put(Map<String, byte[]> target, String path, byte[] bytes) {
-        if (target.put(path, bytes.clone()) != null) {
+    private static void put(Map<String, Observed> target, String path, Observed value) {
+        if (target.put(path, value) != null) {
             throw new IllegalArgumentException("Duplicate declared clone output: " + path);
         }
     }
 
-    private static Map<String, byte[]> files(Path root) throws IOException {
+    private static Map<String, Observed> files(Path root) throws IOException {
         Path canonical = root.toRealPath(LinkOption.NOFOLLOW_LINKS);
-        Map<String, byte[]> files = new TreeMap<>();
+        Map<String, Observed> files = new TreeMap<>();
         try (var paths = Files.walk(canonical)) {
             for (Path path : paths.toList()) {
                 if (path.equals(canonical)) {
@@ -107,13 +107,37 @@ public final class TranslatedCloneAudit {
                     throw new IOException("Clone audit does not follow symbolic links: " + path);
                 }
                 if (Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) {
-                    files.put(path(canonical.relativize(path)), Files.readAllBytes(path));
+                    files.put(path(canonical.relativize(path)), observed(path));
                 } else if (!Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
                     throw new IOException("Clone audit encountered unsupported path: " + path);
                 }
             }
         }
         return files;
+    }
+
+    private static Observed observed(byte[] bytes) {
+        try {
+            return new Observed(bytes.length, java.util.HexFormat.of().formatHex(
+                    java.security.MessageDigest.getInstance("SHA-256").digest(bytes)));
+        } catch (java.security.NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 unavailable", exception);
+        }
+    }
+
+    private static Observed observed(Path path) throws IOException {
+        try (var input = Files.newInputStream(path)) {
+            var digest = java.security.MessageDigest.getInstance("SHA-256");
+            long bytes = 0;
+            byte[] buffer = new byte[8192];
+            for (int read; (read = input.read(buffer)) >= 0;) {
+                digest.update(buffer, 0, read);
+                bytes = Math.addExact(bytes, read);
+            }
+            return new Observed(bytes, java.util.HexFormat.of().formatHex(digest.digest()));
+        } catch (java.security.NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 unavailable", exception);
+        }
     }
 
     private static String path(Path relative) {

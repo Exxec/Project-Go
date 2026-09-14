@@ -17,6 +17,12 @@ Focused patcher tests passed offline. This is a pre-publication clone guarantee,
 not a substitute for the final directory/ZIP comparison, build-input attestation,
 runtime validation, source authority, or redistribution-rights evidence.
 
+The attestation compares streamed SHA-256 and byte counts for source and staged
+files; it does not retain whole mod files in memory. Declared patch artifacts are
+already complete content by the existing patch contract. The audit still rejects
+symbolic links and unsupported filesystem nodes rather than following or ignoring
+them.
+
 ## Implemented
 
 PackageIdentityAudit compares regular candidate directory files against ZIP
