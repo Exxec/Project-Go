@@ -36,6 +36,20 @@ The same local checkpoint passed `generateSbom`, `releaseChecksums`,
 local build outputs. A tag-triggered workflow must regenerate and upload them
 from the exact pushed source commit before their hashes can support a release.
 
+## Current code-verification checkpoint - 2026-09-14
+
+Local main `6a099e3` adds `ssmt runtime-evidence`: a candidate-bound, portable
+JSON capture for the observed Starsector build, enabled-mod versions, load order,
+JVM, process exit code, log hashes, and modal dialogs. It validates bounded,
+contained log evidence and the candidate binding only; it does not interpret a
+process exit or log as campaign, combat, persistence, upgrade, or release proof.
+
+`gradlew.bat check --offline --console=plain` passed after this change (93 tasks).
+The earlier release-preparation distributions were built at `cdc0301`, not this
+new head, so a fresh full install-distribution rebuild remains required before a
+release checkpoint can cover `6a099e3`. Remote `origin/main` remains deliberately
+at `17c41a5`; local commits from `4a6427c` through `6a099e3` are unpushed.
+
 ## Verified starting state - 2026-09-13
 
 Main HEAD: e32f1f6949ebf4a262082b110e8f0b57643a7d0a. Reviewed live fixes remain
