@@ -113,6 +113,44 @@ class StandardFileInjectorTest {
     }
 
     @Test
+    void renamesDesignTypeColorKeyWithoutCreatingAChineseEnglishPair() throws Exception {
+        Path relative = Path.of("data/config/settings.json");
+        Path source = temporaryDirectory.resolve(relative);
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        Files.writeString(source, """
+                { designTypeColors: { "夜十字军械": [75,125,255,255], other: [1,2,3,4] },
+                  plugin: "technical.class.Name" }
+                """, StandardCharsets.UTF_8);
+
+        PatchArtifact artifact = new StandardFileInjector().inject(temporaryDirectory, List.of(
+                new TranslationReplacement(relative, "json-key:/designTypeColors/夜十字军械",
+                        "夜十字军械", "Nightcross Armory")));
+        JsonNode output = LENIENT_JSON.readTree(artifact.content());
+
+        assertThat(output.path("designTypeColors").has("Nightcross Armory")).isTrue();
+        assertThat(output.path("designTypeColors").has("夜十字军械")).isFalse();
+        assertThat(output.path("designTypeColors").path("Nightcross Armory"))
+                .isEqualTo(LENIENT_JSON.readTree("[75,125,255,255]"));
+        assertThat(Files.readString(source, StandardCharsets.UTF_8)).contains("夜十字军械");
+    }
+
+    @Test
+    void rejectsDesignTypeColorRenameWhenDestinationAlreadyExists() throws Exception {
+        Path relative = Path.of("data/config/settings.json");
+        Path source = temporaryDirectory.resolve(relative);
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        String text = "{ designTypeColors: { \"夜十字军械\": [1], \"Nightcross Armory\": [2] } }";
+        Files.writeString(source, text, StandardCharsets.UTF_8);
+
+        assertThatThrownBy(() -> new StandardFileInjector().inject(temporaryDirectory, List.of(
+                new TranslationReplacement(relative, "json-key:/designTypeColors/夜十字军械",
+                        "夜十字军械", "Nightcross Armory"))))
+                .isInstanceOf(PatchBuilderException.class)
+                .hasMessageContaining("Duplicate JSON object key destination");
+        assertThat(Files.readString(source, StandardCharsets.UTF_8)).isEqualTo(text);
+    }
+
+    @Test
     void injectsHashCommentedFactionJson() throws Exception {
         Path source = temporaryDirectory.resolve("example.faction");
         Files.writeString(source, """

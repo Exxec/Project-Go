@@ -66,7 +66,7 @@ class JsonExtractionSpecTest {
         assertThatThrownBy(() -> JsonExtractionSpec.selected(Set.of(), Set.of()))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() ->
-                        new JsonExtractionSpec(true, List.of(), List.of("/ranks/*"), List.of()))
+                        new JsonExtractionSpec(true, List.of(), List.of("/ranks/*"), List.of(), List.of()))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -90,7 +90,7 @@ class JsonExtractionSpecTest {
         assertThatThrownBy(() -> JsonExtractionSpec.selectedWithSubtrees(Set.of(), Set.of()))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() ->
-                        new JsonExtractionSpec(true, List.of(), List.of(), List.of("/lines")))
+                        new JsonExtractionSpec(true, List.of(), List.of(), List.of(), List.of("/lines")))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

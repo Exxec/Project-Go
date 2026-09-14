@@ -79,6 +79,10 @@ public final class StandardJsonFileExtractor implements FileExtractor {
                             "/vengeanceFleetNamesSingle"));
     private static final JsonExtractionSpec MISSION_DESCRIPTOR_SPEC =
             JsonExtractionSpec.selectedPointers(Set.of("/title", "/difficulty"));
+    // These field names are design-type display strings. Starsector looks them
+    // up against tech/manufacturer, so they must be renamed instead of copied.
+    private static final JsonExtractionSpec SETTINGS_SPEC =
+            JsonExtractionSpec.selectedObjectKeys(Set.of("/designTypeColors/*"));
 
     @Override
     public boolean supports(Path sourceFile) {
@@ -92,6 +96,8 @@ public final class StandardJsonFileExtractor implements FileExtractor {
                 || normalized.endsWith("/data/strings/ship_names.json")
                 || normalized.equals("data/config/planets.json")
                 || normalized.endsWith("/data/config/planets.json")
+                || normalized.equals("data/config/settings.json")
+                || normalized.endsWith("/data/config/settings.json")
                 || normalized.equals("data/config/modfiles/magicbounty_data.json")
                 || normalized.endsWith("/data/config/modfiles/magicbounty_data.json")
                 || isChatterCharacterFile(normalized)
@@ -159,6 +165,8 @@ public final class StandardJsonFileExtractor implements FileExtractor {
             spec = VARIANT_SPEC;
         } else if (relative.equals("data/config/planets.json")) {
             spec = PLANET_SPEC;
+        } else if (relative.equals("data/config/settings.json")) {
+            spec = SETTINGS_SPEC;
         } else if (isHullFile(relative)) {
             spec = HULL_SPEC;
         } else if (relative.equals("data/config/modfiles/magicbounty_data.json")) {

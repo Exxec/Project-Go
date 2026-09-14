@@ -50,13 +50,18 @@ final class JsonTokenPatch {
                         break;
                     }
                 }
-                if (parser.currentToken() != JsonToken.VALUE_STRING) {
+                boolean fieldName = parser.currentToken() == JsonToken.FIELD_NAME;
+                boolean valueString = parser.currentToken() == JsonToken.VALUE_STRING;
+                if (!fieldName && !valueString) {
                     continue;
                 }
-                String key = "json:" + parser.getParsingContext().pathAsPointer();
+                String key = (fieldName ? "json-key:" : "json:")
+                        + parser.getParsingContext().pathAsPointer();
                 int start = Math.toIntExact(parser.currentTokenLocation().getCharOffset());
                 String value = parser.getText();
-                int end = Math.toIntExact(parser.currentLocation().getCharOffset());
+                int end = fieldName
+                        ? fieldNameEnd(text, start)
+                        : Math.toIntExact(parser.currentLocation().getCharOffset());
                 TranslationReplacement item = pending.remove(key);
                 if (item == null) {
                     continue;
@@ -74,6 +79,33 @@ final class JsonTokenPatch {
         }
         output.append(text, copied, text.length());
         return new PatchArtifact(relative, encodeLikeSource(source, text, output.toString()));
+    }
+
+    private static int fieldNameEnd(String text, int start) throws PatchBuilderException {
+        if (start < 0 || start >= text.length()) {
+            throw new PatchBuilderException("Invalid JSON field-name location");
+        }
+        char first = text.charAt(start);
+        if (first != '\'' && first != '"') {
+            int end = start;
+            while (end < text.length() && text.charAt(end) != ':'
+                    && !Character.isWhitespace(text.charAt(end))) {
+                end++;
+            }
+            return end;
+        }
+        boolean escaped = false;
+        for (int index = start + 1; index < text.length(); index++) {
+            char current = text.charAt(index);
+            if (escaped) {
+                escaped = false;
+            } else if (current == '\\') {
+                escaped = true;
+            } else if (current == first) {
+                return index + 1;
+            }
+        }
+        throw new PatchBuilderException("Unterminated JSON field name");
     }
 
     static byte[] encodeLikeSource(Path source, String text, String translated)

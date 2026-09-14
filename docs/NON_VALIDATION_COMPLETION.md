@@ -198,6 +198,23 @@ Focused extractor/CLI regression passed after the change. Full project validatio
 workflow convergence, independent clone attestation, assessment hardening and
 completion-gate integration remain required before any roadmap item is closed.
 
+### Design-type JSON-key preservation tranche — 2026-09-14
+
+`data/config/settings.json` now has a bounded standard extraction rule for
+`/designTypeColors/*` field names. These entries are exported as `json-key:`
+units because Starsector matches them literally to player-visible
+`tech/manufacturer` text. Token-preserving reinjection renames the field rather
+than adding a value or a second field, retaining the color array and non-target
+bytes. Destination collisions, including a proposed Chinese-to-English rename
+when the English key is already present, fail before output is produced.
+
+Extractor, patcher and shared TranslationWorkflow fixtures cover selection,
+Nightcross-style matched manufacturer/key translation, source preservation and
+duplicate rejection. Focused module tests and a full offline `gradlew check`
+passed. Pre-existing historical duplicate pairs remain REVIEW_REQUIRED; Project
+Go does not guess which key to delete. Record this check in the final native/game
+validation run; it does not establish live loading or rendering behavior.
+
 ## Deferred validation checklist for later today
 
 The added Nightcross source was subsequently run through normal export/import/build
@@ -230,6 +247,9 @@ remain implementation findings; no runtime validation/full coverage claim is mad
 - JSON preservation: representative permissive/GB18030 JSON retains comments and
   technical values, loads correctly, and rejects stale/duplicate fields with useful
   native feedback and no source or active-work loss.
+- Design-type colors: each translated `tech/manufacturer` label has exactly one
+  matching `designTypeColors` key, RGBA arrays remain unchanged, and an existing
+  English destination causes a safe rejection rather than a duplicate.
 - CSV preservation: extra/short rows, multiline text, technical cells, comments,
   original separators and GB18030 survive build; game accepts the output. Duplicate
   identity/header and absent-target errors preserve active work. Record hashes,

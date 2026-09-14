@@ -20,6 +20,28 @@ UTF-8 BOM/comments/CRLF/numeric spelling, GB18030 non-target bytes and stale/dup
 field rejection. Three existing assertions now use a permissive reader because output
 deliberately retains the original Starsector dialect instead of normalizing it.
 
+## Design-type color key preservation — 2026-09-14
+
+`data/config/settings.json` has a narrow standard schema for
+`/designTypeColors/*`. These are JSON **field names**, not values: Starsector uses
+each name as the lookup counterpart of a hull, weapon, or hullmod
+`tech/manufacturer` value. Project Go exports them as `json-key:` entries and
+renames the selected field in place during reinjection, retaining the original
+RGBA array and all non-target source bytes.
+
+Before output is created, reinjection rejects a destination key that already
+exists in the same object and rejects two requested renames targeting the same
+destination. It therefore cannot create a Chinese/English pair. It deliberately
+does not infer which side of a pre-existing historical pair to delete; that is a
+review decision, not an automatic translation repair.
+
+Repository fixtures cover an extractor-only selection, direct rename,
+duplicate-destination rejection with source preservation, and a shared workflow
+that translates `夜十字军械` and its matching `tech/manufacturer` to
+`Nightcross Armory`. The latter proves output contains one English color key and
+no Chinese counterpart. Focused extractor/patcher/project tests and the full
+offline `gradlew check` passed. This adds no live-game compatibility claim.
+
 Automated module validation: all 46 patcher tests, Checkstyle main/test and SpotBugs
 main passed. The final whole-project uncached check and GUI/CLI/Auto distribution
 rebuild passed 514 tests, zero failures/errors/skips, all Checkstyle/SpotBugs gates
@@ -62,6 +84,8 @@ This is still local-source evidence, not CI or a published release.
 - This does not authorize arbitrary technical JSON pointers or unknown schemas.
 - Round-trip verification is not an adversarial atomic filesystem snapshot.
 - Existing duplicate-field sources now fail explicitly; no guessed repair is allowed.
+- Existing `designTypeColors` Chinese/English pairs are preserved and require
+  review; importing a translation that would create another pair fails safely.
 - No GUI/live-game validation or full-release promotion was performed for this phase.
 
 ## Deferred validation today
@@ -75,3 +99,7 @@ quoted text and GB18030; expected output retains technical cells/row shape/encod
 and loads in game. Duplicate identities/headers must fail without state loss. Store
 screenshots/logs and hashes beneath `.local/checks/reinjection-validation/`, recording
 the final exact commit/version and fixture identity rather than an earlier build.
+For `designTypeColors`, inspect the final translated mod's manufacturer labels and
+color map together: every translated manufacturer must have exactly one matching
+key, color arrays must be unchanged, and a pre-existing duplicate must show a
+safe import failure without modifying source or active work.

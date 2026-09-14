@@ -101,6 +101,9 @@ public final class JsonExtractor implements FileExtractor {
             if (!spec.patterns().isEmpty()) {
                 collectPatternMatches(root, request, extracted);
             }
+            if (!spec.objectKeyPatterns().isEmpty()) {
+                collectObjectKeyMatches(root, request, extracted);
+            }
             for (String subtreePointer : spec.allTextLeavesUnder()) {
                 JsonNode subtreeRoot = root.at(subtreePointer);
                 if (!subtreeRoot.isMissingNode() && !subtreeRoot.isNull()) {
@@ -110,6 +113,36 @@ public final class JsonExtractor implements FileExtractor {
         }
         extracted.sort(Comparator.comparing(ExtractedString::key));
         return List.copyOf(extracted);
+    }
+
+    private void collectObjectKeyMatches(
+            JsonNode root,
+            ExtractionRequest request,
+            List<ExtractedString> extracted
+    ) throws SsmtParseException {
+        for (String pattern : spec.objectKeyPatterns()) {
+            String objectPointer = pattern.substring(0, pattern.length() - 2);
+            JsonNode object = root.at(objectPointer);
+            if (object.isMissingNode() || object.isNull()) {
+                continue;
+            }
+            if (!object.isObject()) {
+                throw new SsmtParseException(
+                        "Selected JSON object-key parent is not an object: " + objectPointer,
+                        request.sourceFile());
+            }
+            List<String> fields = new ArrayList<>();
+            object.fieldNames().forEachRemaining(fields::add);
+            fields.sort(Comparator.naturalOrder());
+            for (String field : fields) {
+                if (!field.isEmpty()) {
+                    extracted.add(new ExtractedString(
+                            request.modId(), request.relativeSourceFile(),
+                            "json-key:" + objectPointer + "/" + escapePointerToken(field),
+                            field, -1));
+                }
+            }
+        }
     }
 
     private static String normalizeUppercaseLiterals(String source) {

@@ -62,9 +62,30 @@ class StandardJsonFileExtractorTest {
         assertThat(extractor.supports(Path.of("data/variants/test.variant"))).isTrue();
         assertThat(extractor.supports(Path.of("data/hulls/example.ship"))).isTrue();
         assertThat(extractor.supports(Path.of("data/hulls/Example.SHIP"))).isTrue();
-        assertThat(extractor.supports(Path.of("data/config/settings.json"))).isFalse();
+        assertThat(extractor.supports(Path.of("data/config/settings.json"))).isTrue();
         assertThat(extractor.supports(Path.of("data/config/chatter/boss_ships.csv"))).isFalse();
         assertThat(extractor.supports(Path.of("data/config/example.ship"))).isFalse();
+    }
+
+    @Test
+    void settingsExtractsOnlyDesignTypeColorKeys(@TempDir Path modRoot) throws Exception {
+        Path source = modRoot.resolve("data/config/settings.json");
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        Files.writeString(source, """
+                { "designTypeColors": {
+                    "夜十字军械": [75,125,255,255],
+                    "Nightcross Armory": [1,2,3,255]
+                  }, "plugin": "technical.class.Name" }
+                """);
+
+        List<ExtractedString> strings =
+                extractor.extract(new ExtractionRequest("test", modRoot, source));
+
+        assertThat(strings).extracting(ExtractedString::key)
+                .containsExactly("json-key:/designTypeColors/Nightcross Armory",
+                        "json-key:/designTypeColors/夜十字军械");
+        assertThat(strings).extracting(ExtractedString::originalText)
+                .containsExactly("Nightcross Armory", "夜十字军械");
     }
 
     @Test

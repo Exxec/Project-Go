@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -112,7 +113,11 @@ public final class StandardFileInjector {
         try {
             String sourceText = JsonTokenPatch.read(source);
             JsonNode root = JSON.readTree(sourceText);
+            validateJsonKeyReplacements(root, replacements);
             for (TranslationReplacement replacement : replacements) {
+                if (replacement.key().startsWith("json-key:/")) {
+                    continue;
+                }
                 if (!replacement.key().startsWith("json:/")) {
                     throw new PatchBuilderException("Invalid JSON key " + replacement.key());
                 }
@@ -123,6 +128,39 @@ public final class StandardFileInjector {
             throw new PatchBuilderException(
                     "Could not inject JSON file " + relative + ": " + exception.getMessage(),
                     exception);
+        }
+    }
+
+    private static void validateJsonKeyReplacements(
+            JsonNode root, List<TranslationReplacement> replacements) throws PatchBuilderException {
+        HashSet<String> destinations = new HashSet<>();
+        for (TranslationReplacement replacement : replacements) {
+            if (!replacement.key().startsWith("json-key:/")) {
+                continue;
+            }
+            String[] encoded = replacement.key().substring("json-key:/".length()).split("/", -1);
+            JsonNode parent = root;
+            for (int index = 0; index < encoded.length - 1; index++) {
+                parent = child(parent, decodePointer(encoded[index]));
+                if (parent == null) {
+                    throw new PatchBuilderException("Missing JSON path " + replacement.key());
+                }
+            }
+            String sourceName = decodePointer(encoded[encoded.length - 1]);
+            if (!(parent instanceof ObjectNode object) || !object.has(sourceName)
+                    || !sourceName.equals(replacement.originalText())) {
+                throw new PatchBuilderException("Stale JSON object key at " + replacement.key());
+            }
+            String destination = replacement.translatedText();
+            if (!sourceName.equals(destination) && object.has(destination)) {
+                throw new PatchBuilderException(
+                        "Duplicate JSON object key destination at " + replacement.key());
+            }
+            String parentPointer = replacement.key().substring(0, replacement.key().lastIndexOf('/') + 1);
+            if (!destinations.add(parentPointer + destination)) {
+                throw new PatchBuilderException(
+                        "Duplicate JSON object key destination at " + replacement.key());
+            }
         }
     }
 
