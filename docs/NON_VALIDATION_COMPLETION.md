@@ -30,6 +30,12 @@ convergence and other roadmap items remain implementation work. Native UI,
 campaign, combat, save/reload, upgrade, rights, and semantic evidence review
 remain deferred validation/release gates.
 
+The same local checkpoint passed `generateSbom`, `releaseChecksums`,
+`scanReleaseArchives`, and `checkReleaseMetadata` offline. The generated SBOM is
+`build/reports/ssmt-sbom.cdx.json`; checksums and distributions are disposable
+local build outputs. A tag-triggered workflow must regenerate and upload them
+from the exact pushed source commit before their hashes can support a release.
+
 ## Verified starting state - 2026-09-13
 
 Main HEAD: e32f1f6949ebf4a262082b110e8f0b57643a7d0a. Reviewed live fixes remain
