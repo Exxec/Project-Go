@@ -10,6 +10,28 @@ Do not change original mods, shared BridgeForge rigs or existing campaign saves.
 
 ## Verified starting state — 2026-09-13
 
+## Current local release-preparation checkpoint - 2026-09-14
+
+Local main `cdc03016f67e522148d992fac23f01780c9bc761` rebuilt every module and
+all current CLI, GUI and Auto distributions with:
+
+    gradlew.bat check :ssmt-cli:installDist :ssmt-gui:installDist :ssmt-auto:installDist --rerun-tasks --no-build-cache --offline --console=plain
+
+The command completed successfully. Rebuilt installation trees are under
+`ssmt-cli/build/install/ssmt-cli`, `ssmt-gui/build/install/ssmt-gui`, and
+`ssmt-auto/build/install/ssmt-auto`; disposable test and static reports remain
+under each module's `build/` directory. Gradle emitted known native-access and
+static-analysis missing-class warnings. No warning-free, CI, tag, asset-hash, or
+published-release claim follows from this local run.
+
+Remote `origin/main` remains `17c41a5`; local commits `4a6427c`, `5f89f2d`,
+`a592839`, `a0d093c`, and `cdc0301` are unpushed. P1 Auto/shared state-machine
+convergence and other roadmap items remain implementation work. Native UI,
+campaign, combat, save/reload, upgrade, rights, and semantic evidence review
+remain deferred validation/release gates.
+
+## Verified starting state - 2026-09-13
+
 Main HEAD: e32f1f6949ebf4a262082b110e8f0b57643a7d0a. Reviewed live fixes remain
 uncommitted. See LIVE_VALIDATION_0.8.0.md for the 473-test clean-check evidence,
 native development build identity and completed proper-home relocation.
