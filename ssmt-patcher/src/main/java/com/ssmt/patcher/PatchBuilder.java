@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.HexFormat;
 
 /**
@@ -126,6 +127,14 @@ public final class PatchBuilder {
                     translatedStaging.resolve(CACHE_FILE),
                     fingerprint,
                     StandardCharsets.UTF_8);
+            TranslatedCloneAudit.Result attestation = new TranslatedCloneAudit().verify(
+                    request.sourceRoot(), translatedStaging, request.artifacts(),
+                    Map.of(Path.of(CACHE_FILE), fingerprint.getBytes(StandardCharsets.UTF_8)));
+            if (!attestation.valid()) {
+                throw new PatchBuilderException("Translated clone attestation failed: missing="
+                        + attestation.missing() + ", unexpected=" + attestation.unexpected()
+                        + ", incorrect=" + attestation.incorrect());
+            }
             if (publishSourceBackup) {
                 replacePair(
                         output,

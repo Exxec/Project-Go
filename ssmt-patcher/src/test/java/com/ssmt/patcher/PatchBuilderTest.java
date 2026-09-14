@@ -24,6 +24,36 @@ class PatchBuilderTest {
     Path temporaryDirectory;
 
     @Test
+    void cloneAttestationRequiresDeclaredTranslationsAndNoUndeclaredFiles() throws Exception {
+        Path source = Files.createDirectories(temporaryDirectory.resolve("audit-source"));
+        Files.writeString(source.resolve("unchanged.txt"), "source");
+        Files.writeString(source.resolve("translated.txt"), "original");
+        Path clone = Files.createDirectories(temporaryDirectory.resolve("audit-clone"));
+        Files.writeString(clone.resolve("unchanged.txt"), "source");
+        Files.writeString(clone.resolve("translated.txt"), "translated");
+        Files.writeString(clone.resolve(".ssmt-build-fingerprint"), "fingerprint");
+        var audit = new TranslatedCloneAudit();
+
+        var valid = audit.verify(source, clone,
+                List.of(PatchArtifact.utf8(Path.of("translated.txt"), "translated")),
+                java.util.Map.of(Path.of(".ssmt-build-fingerprint"),
+                        "fingerprint".getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(valid.valid()).isTrue();
+        assertThat(valid.preserved()).containsExactly("unchanged.txt");
+        assertThat(valid.translated()).containsExactly("translated.txt", ".ssmt-build-fingerprint");
+        Files.writeString(clone.resolve("unexpected.txt"), "unexpected");
+        Files.writeString(clone.resolve("unchanged.txt"), "changed");
+        var invalid = audit.verify(source, clone,
+                List.of(PatchArtifact.utf8(Path.of("translated.txt"), "translated")),
+                java.util.Map.of(Path.of(".ssmt-build-fingerprint"),
+                        "fingerprint".getBytes(StandardCharsets.UTF_8)));
+        assertThat(invalid.valid()).isFalse();
+        assertThat(invalid.unexpected()).containsExactly("unexpected.txt");
+        assertThat(invalid.incorrect()).containsExactly("unchanged.txt");
+    }
+
+    @Test
     void publishesPristineAndTranslatedClonesWithoutChangingSource() throws Exception {
         Path source = temporaryDirectory.resolve("source");
         Path sourceFile = source.resolve("data/strings/strings.json");

@@ -2,6 +2,21 @@
 
 Parent scope: NON_VALIDATION_COMPLETION.md. P4 is not fully complete.
 
+## Pre-publication translated-clone attestation - 2026-09-14
+
+`PatchBuilder` now performs an independent `TranslatedCloneAudit` after writing
+the staging clone and before replacing an existing output. It compares every
+source file to the staged clone. A file may differ only when it is one of the
+complete, explicit translation artifacts; `.ssmt-build-fingerprint` is the only
+declared generated file. Missing source files, undeclared outputs, or bytes that
+do not match either the source or their declared artifact abort publication.
+
+The patcher regression covers an accepted translated target plus preserved file,
+then detects an extra output and an unexpected change to the preserved path.
+Focused patcher tests passed offline. This is a pre-publication clone guarantee,
+not a substitute for the final directory/ZIP comparison, build-input attestation,
+runtime validation, source authority, or redistribution-rights evidence.
+
 ## Implemented
 
 PackageIdentityAudit compares regular candidate directory files against ZIP
