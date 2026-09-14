@@ -47,12 +47,17 @@ public final class AssessCommand implements Callable<Integer> {
     /** Portable observed handling; counts never imply exhaustive localization. */
     public record Coverage(String path, String handler, String status, int strings, String reason) { }
 
+    /** Explicit provenance limits for this one supplied candidate; never a trust claim. */
+    public record SourceAuthority(String origin, String archiveCoverage, String selectedVariant,
+            String sourceJarCorrespondence, String competingInputs) { }
+
     /** Inventory-level report, not a declaration that a mod is valid or compatible. */
     public record Report(int schemaVersion, String inputKind, List<String> metadataPaths,
             String selectedRoot, String rootSelection, String status,
             List<?> files, List<String> trustLimits, String metadataValidity, Metadata metadata,
             com.ssmt.scanner.PackageIdentityAudit.Result packageIdentity,
             String inventorySha256, String candidateSha256, String archiveSha256,
+            SourceAuthority sourceAuthority,
             String coverageStatus, List<Coverage> extractionCoverage,
             String csvAuditStatus, List<com.ssmt.extractor.CsvStructureAuditor.Finding> csvFindings,
             String jarInventoryStatus, List<com.ssmt.scanner.JarContents> jarContents,
@@ -215,6 +220,18 @@ public final class AssessCommand implements Callable<Integer> {
                 }
                 sourceStatus = "UNCHANGED_OBSERVED_BYTES_AND_METADATA";
             }
+            SourceAuthority authority = new SourceAuthority(
+                    kind.equals("ZIP")
+                            ? "USER_SUPPLIED_ARCHIVE_UNVERIFIED"
+                            : "USER_SUPPLIED_DIRECTORY_UNVERIFIED",
+                    kind.equals("ZIP")
+                            ? "HASHED_CONTAINER_AND_ENTRY_INVENTORY"
+                            : "NOT_APPLICABLE_DIRECTORY_INPUT",
+                    selected ? "UNIQUE_METADATA_ROOT_SELECTED" : "NO_UNIQUE_METADATA_ROOT",
+                    jarInventory
+                            ? "NOT_ESTABLISHED_PAYLOADS_OBSERVED"
+                            : "NOT_ASSESSED",
+                    "NOT_ASSESSED_SINGLE_INPUT_ONLY");
             Report report = new Report(1, kind, metadata, root,
                     selected ? "SELECTED" : metadata.isEmpty() ? "MISSING" : "AMBIGUOUS",
                     "ASSESSMENT_ONLY", entries, List.of(
@@ -224,6 +241,7 @@ public final class AssessCommand implements Callable<Integer> {
                             "Archive authentication and extractability NOT_ASSESSED",
                             "Runtime, save compatibility and redistribution rights NOT_TESTED"),
                     validity, declared, identity, inventoryHash, candidateHash, archiveHash,
+                    authority,
                     coverageStatus, observedCoverage, csvStatus, csvFindings, jarStatus, jarContents,
                     sourceStatus, sourceNodes);
             if (json) {
@@ -239,6 +257,7 @@ public final class AssessCommand implements Callable<Integer> {
                 output.println("Inventory SHA-256: " + inventoryHash);
                 output.println("Selected candidate SHA-256: " + candidateHash);
                 if (!archiveHash.isEmpty()) { output.println("Archive SHA-256: " + archiveHash); }
+                output.println("Source authority: " + authority);
                 output.println("Coverage: " + coverageStatus);
                 observedCoverage.forEach(output::println);
                 output.println("CSV audit: " + csvStatus);

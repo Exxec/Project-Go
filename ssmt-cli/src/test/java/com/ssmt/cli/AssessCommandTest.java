@@ -44,7 +44,10 @@ class AssessCommandTest {
         command.setOut(new PrintWriter(output));
         assertThat(command.execute("assess", archive.toString(), "--json")).isZero();
         assertThat(output.toString()).contains("\"metadataValidity\":\"VALID\"",
-                "\"id\":\"MagicLib\"", "\"version\":\"1\"", "NOT_TESTED");
+                "\"id\":\"MagicLib\"", "\"version\":\"1\"", "NOT_TESTED",
+                "\"origin\":\"USER_SUPPLIED_ARCHIVE_UNVERIFIED\"",
+                "\"archiveCoverage\":\"HASHED_CONTAINER_AND_ENTRY_INVENTORY\"",
+                "\"competingInputs\":\"NOT_ASSESSED_SINGLE_INPUT_ONLY\"");
         assertThat(Files.readAllBytes(archive)).isEqualTo(before);
         assertThat(directory.resolve("wrapper")).doesNotExist();
         Path copy = Files.createDirectory(directory.resolve("directory-copy"));
@@ -63,6 +66,10 @@ class AssessCommandTest {
         assertThat(archiveReport.path("archiveSha256").asText()).isEqualTo(
                 java.util.HexFormat.of().formatHex(
                         java.security.MessageDigest.getInstance("SHA-256").digest(before)));
+        assertThat(directoryReport.path("sourceAuthority").path("origin").asText())
+                .isEqualTo("USER_SUPPLIED_DIRECTORY_UNVERIFIED");
+        assertThat(directoryReport.path("sourceAuthority").path("archiveCoverage").asText())
+                .isEqualTo("NOT_APPLICABLE_DIRECTORY_INPUT");
     }
 
     @Test void comparisonFailureIncludesSeparatePackageDifferences() throws Exception {

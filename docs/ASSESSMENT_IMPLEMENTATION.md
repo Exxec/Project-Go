@@ -2,6 +2,24 @@
 
 Parent plan: NON_VALIDATION_COMPLETION.md. P2/P4 are not complete.
 
+## Structured source-authority disposition - 2026-09-14
+
+`ssmt assess` now emits `sourceAuthority` in both deterministic JSON and human
+output. It records whether the one supplied input was a directory or an archive,
+whether archive container and entries were observed and hashed, whether exactly
+one metadata root was selected, whether JAR payload inspection occurred, and that
+competing historical inputs were not assessed. Every status remains deliberately
+non-authoritative: a caller-supplied archive is
+`USER_SUPPLIED_ARCHIVE_UNVERIFIED`; a directory is
+`USER_SUPPLIED_DIRECTORY_UNVERIFIED`; source/JAR correspondence remains
+`NOT_ESTABLISHED` or `NOT_ASSESSED`.
+
+The archive/directory assessment regression proves the dispositions are present
+and that the candidate/archive bytes remain unchanged. Focused CLI tests plus
+CLI Checkstyle and SpotBugs passed offline. This records provenance limits for a
+single candidate; it does not authenticate an origin, resolve competing variants,
+or establish dependency, runtime, persistence, or redistribution compatibility.
+
 ## Implemented inventory foundation
 
 ssmt-scanner CandidateInventory.capture records a deterministic sorted regular
