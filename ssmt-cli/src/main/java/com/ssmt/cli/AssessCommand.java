@@ -30,6 +30,8 @@ public final class AssessCommand implements Callable<Integer> {
     private boolean sourceManifest;
     @Option(names = "--compare-zip", description = "Independently compare directory bytes with this ZIP.")
     private Path compareZip;
+    @Option(names = "--compare-input", description = "Read-only competing directory or ZIP input; never establishes origin authority.")
+    private Path compareInput;
     @Option(names = "--archive-root", defaultValue = "",
             description = "Explicit ZIP wrapper for comparison; outside files remain extra.")
     private String archiveRoot;
@@ -114,6 +116,14 @@ public final class AssessCommand implements Callable<Integer> {
                             file.path().substring(prefix.length()), file.bytes(), file.sha256())).toList()) : "";
             String archiveHash = kind.equals("ZIP")
                     ? com.ssmt.scanner.InventoryFingerprint.archive(candidate) : "";
+            String competingInputs = "NOT_ASSESSED_SINGLE_INPUT_ONLY";
+            if (compareInput != null) {
+                competingInputs = selected
+                        ? selectedCandidateHash(compareInput).equals(candidateHash)
+                                ? "COMPETING_INPUT_MATCHES_SELECTED_CANDIDATE"
+                                : "COMPETING_INPUT_DIFFERS_FROM_SELECTED_CANDIDATE"
+                        : "NOT_ASSESSED_NO_SELECTED_CANDIDATE";
+            }
             Metadata declared = null;
             String validity = "NOT_ASSESSED";
             if (selected) {
@@ -239,7 +249,7 @@ public final class AssessCommand implements Callable<Integer> {
                     jarInventory
                             ? "NOT_ESTABLISHED_PAYLOADS_OBSERVED"
                             : "NOT_ASSESSED",
-                    "NOT_ASSESSED_SINGLE_INPUT_ONLY");
+                    competingInputs);
             Report report = new Report(1, kind, metadata, root,
                     selected ? "SELECTED" : metadata.isEmpty() ? "MISSING" : "AMBIGUOUS",
                     "ASSESSMENT_ONLY", entries, List.of(
@@ -310,6 +320,33 @@ public final class AssessCommand implements Callable<Integer> {
                 return bytes;
             }
         }
+    }
+
+    private static String selectedCandidateHash(Path input) throws java.io.IOException {
+        List<com.ssmt.scanner.InventoryFingerprint.File> tuples;
+        List<String> metadata;
+        if (Files.isDirectory(input)) {
+            var inventory = new CandidateInventory().capture(input);
+            metadata = inventory.stream().map(CandidateInventory.Entry::path)
+                    .filter(AssessCommand::isMetadata).toList();
+            tuples = inventory.stream().map(file -> new com.ssmt.scanner.InventoryFingerprint.File(
+                    file.path(), file.bytes(), file.sha256())).toList();
+        } else {
+            var inventory = new ArchiveInventory().capture(input);
+            metadata = inventory.stream().map(ArchiveInventory.Entry::path)
+                    .filter(AssessCommand::isMetadata).toList();
+            tuples = inventory.stream().map(file -> new com.ssmt.scanner.InventoryFingerprint.File(
+                    file.path(), file.bytes(), file.sha256())).toList();
+        }
+        if (metadata.size() != 1) {
+            throw new java.io.IOException("Competing input has no unique mod_info.json root");
+        }
+        String root = parent(metadata.getFirst());
+        String prefix = root.isEmpty() ? "" : root + "/";
+        return com.ssmt.scanner.InventoryFingerprint.tree(tuples.stream()
+                .filter(file -> file.path().startsWith(prefix))
+                .map(file -> new com.ssmt.scanner.InventoryFingerprint.File(
+                        file.path().substring(prefix.length()), file.bytes(), file.sha256())).toList());
     }
 
     private static java.util.Map<Path, byte[]> archiveCsvEntries(

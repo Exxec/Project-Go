@@ -213,6 +213,9 @@ implemented; native acceptance validation remains deferred.
 - [ ] Record source authority explicitly: origin, archive hash, archive coverage,
   selected variant, source/JAR correspondence, and conflicts among competing
   historical inputs.
+  The optional read-only `assess --compare-input <directory-or-zip>` records whether
+  a second uniquely rooted input matches the selected candidate bytes or differs;
+  neither outcome asserts historical origin authority.
 - [ ] Distinguish supported, review, manual, and blocking findings. Any uncertain
   bytecode-only behavior, save-state migration, internal API use, undeclared
   library ownership, or architecture redesign must remain an escalation gate.

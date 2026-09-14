@@ -213,4 +213,18 @@ class AssessCommandTest {
         assertThat(command.execute("assess", directory.toString(), "--json")).isEqualTo(1);
         assertThat(output.toString()).contains("AMBIGUOUS", "\"selectedRoot\":\"\"");
     }
+
+    @Test void competingInputComparisonIsExplicitWithoutClaimingAuthority() throws Exception {
+        Path candidate = Files.createDirectory(directory.resolve("candidate"));
+        Files.writeString(candidate.resolve("mod_info.json"), "{\"id\":\"candidate\"}");
+        Path competing = Files.createDirectory(directory.resolve("competing"));
+        Files.writeString(competing.resolve("mod_info.json"), "{\"id\":\"candidate\"}");
+        var command = new CommandLine(new Main());
+        StringWriter output = new StringWriter();
+        command.setOut(new PrintWriter(output));
+        assertThat(command.execute("assess", candidate.toString(), "--compare-input", competing.toString(), "--json"))
+                .isZero();
+        assertThat(output.toString()).contains("COMPETING_INPUT_MATCHES_SELECTED_CANDIDATE",
+                "USER_SUPPLIED_DIRECTORY_UNVERIFIED");
+    }
 }
