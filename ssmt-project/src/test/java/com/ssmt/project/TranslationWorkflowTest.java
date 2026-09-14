@@ -42,6 +42,15 @@ class TranslationWorkflowTest {
         return file;
     }
 
+    @Test void defaultApplicationRootUsesTheSamePlatformRootAsTheSharedCatalog() {
+        assertThat(TranslationWorkflow.defaultApplicationRoot(
+                java.util.Optional.of("C:/test/local-app-data"), Path.of("C:/test/home")))
+                .isEqualTo(Path.of("C:/test/local-app-data/Project Go").toAbsolutePath().normalize());
+        assertThat(TranslationWorkflow.defaultApplicationRoot(
+                java.util.Optional.empty(), Path.of("C:/test/home")))
+                .isEqualTo(Path.of("C:/test/home/.project-go").toAbsolutePath().normalize());
+    }
+
     @Test void loadInputAcceptsAnArchiveWithoutChangingIt() throws Exception {
         Path archive = directory.resolve("mod.zip");
         try (ZipOutputStream output = new ZipOutputStream(Files.newOutputStream(archive))) {

@@ -3,6 +3,7 @@ package com.ssmt.project;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.ssmt.tm.MasterTranslationLibrary;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
@@ -80,8 +81,19 @@ public final class TranslationWorkflow {
 
     /** Returns the application-owned storage root used by normal workflows. */
     public static Path defaultApplicationRoot() {
-        return Path.of(System.getProperty("projectgo.data",
-                Path.of(System.getProperty("user.home"), ".project-go").toString()));
+        String configured = System.getProperty("projectgo.data", "").strip();
+        if (!configured.isEmpty()) {
+            return Path.of(configured).toAbsolutePath().normalize();
+        }
+        return defaultApplicationRoot(
+                Optional.ofNullable(System.getenv("LOCALAPPDATA")),
+                Path.of(System.getProperty("user.home")));
+    }
+
+    /** Uses the same platform-root policy as the shared translation catalog. */
+    static Path defaultApplicationRoot(Optional<String> localAppData, Path userHome) {
+        return MasterTranslationLibrary.resolve(Optional.empty(), localAppData, userHome)
+                .getParent();
     }
 
     public TranslationWorkflow(Path root) {
