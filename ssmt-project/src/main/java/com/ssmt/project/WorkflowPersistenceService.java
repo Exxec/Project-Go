@@ -60,11 +60,10 @@ public final class WorkflowPersistenceService {
      * manifest permits the next process to finish recovery after interruption.
      */
     public void commit(Path workspace, List<Update> updates) throws ProjectException {
-        Path root = workspace.toAbsolutePath().normalize();
+        Path root = canonicalWorkspace(workspace);
         if (updates == null || updates.isEmpty() || updates.size() > MAX_DOCUMENTS) {
             throw new IllegalArgumentException("updates must contain 1-" + MAX_DOCUMENTS + " documents");
         }
-        validateWorkspace(root);
         recover(root);
         List<Path> targets = validateTargets(root, updates);
         Path transaction = root.resolve(TRANSACTION_DIRECTORY);
@@ -119,8 +118,7 @@ public final class WorkflowPersistenceService {
 
     /** Recovers a previously interrupted publication before its documents are read. */
     public void recover(Path workspace) throws ProjectException {
-        Path root = workspace.toAbsolutePath().normalize();
-        validateWorkspace(root);
+        Path root = canonicalWorkspace(workspace);
         Path transaction = root.resolve(TRANSACTION_DIRECTORY);
         if (!Files.exists(transaction, LinkOption.NOFOLLOW_LINKS)) {
             return;
@@ -164,21 +162,23 @@ public final class WorkflowPersistenceService {
         Set<Path> unique = new HashSet<>();
         List<Path> targets = new ArrayList<>();
         for (Update update : updates) {
-            Path target = update.target.toAbsolutePath().normalize();
-            if (!target.startsWith(root) || target.equals(root) || !unique.add(target)) {
+            Path requested = update.target.toAbsolutePath().normalize();
+            Path parent = requested.getParent();
+            Path canonicalParent;
+            try {
+                canonicalParent = parent == null ? null : parent.toRealPath();
+            } catch (IOException exception) {
+                throw new ProjectException("Could not resolve workflow document parent", exception);
+            }
+            if (canonicalParent == null || !canonicalParent.equals(root)) {
                 throw new ProjectException("Workflow document target is outside its workspace or repeated");
             }
-            Path relative = root.relativize(target);
-            Path current = root;
-            for (Path component : relative) {
-                current = current.resolve(component);
-                if (Files.isSymbolicLink(current)) {
-                    throw new ProjectException("Workflow document target must not use symbolic links");
-                }
+            Path target = root.resolve(requested.getFileName());
+            if (!unique.add(target)) {
+                throw new ProjectException("Workflow document target is outside its workspace or repeated");
             }
-            Path parent = target.getParent();
-            if (parent == null || !parent.equals(root)) {
-                throw new ProjectException("Workflow documents must be direct children of their workspace");
+            if (Files.isSymbolicLink(target)) {
+                throw new ProjectException("Workflow document target must not use symbolic links");
             }
             if (Files.exists(target, LinkOption.NOFOLLOW_LINKS)
                     && !Files.isRegularFile(target, LinkOption.NOFOLLOW_LINKS)) {
@@ -279,12 +279,13 @@ public final class WorkflowPersistenceService {
         }
     }
 
-    private static void validateWorkspace(Path root) throws ProjectException {
+    private static Path canonicalWorkspace(Path workspace) throws ProjectException {
+        Path root = workspace.toAbsolutePath().normalize();
         try {
-            if (Files.isSymbolicLink(root) || !Files.isDirectory(root, LinkOption.NOFOLLOW_LINKS)
-                    || !root.toRealPath().equals(root)) {
+            if (Files.isSymbolicLink(root) || !Files.isDirectory(root, LinkOption.NOFOLLOW_LINKS)) {
                 throw new ProjectException("Workflow workspace must be a canonical directory");
             }
+            return root.toRealPath();
         } catch (IOException exception) {
             throw new ProjectException("Could not resolve workflow workspace", exception);
         }
