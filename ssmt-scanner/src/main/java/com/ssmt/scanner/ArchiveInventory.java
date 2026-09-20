@@ -26,16 +26,16 @@ public final class ArchiveInventory {
 
     /** Captures safe regular entries, counting actual decompressed bytes. */
     public List<Entry> capture(Path archive) throws IOException {
-        Path file = archive.toAbsolutePath().normalize();
-        for (Path current = file; current != null; current = current.getParent()) {
+        Path requested = archive.toAbsolutePath().normalize();
+        for (Path current = requested; current != null; current = current.getParent()) {
             if (Files.isSymbolicLink(current)) {
                 throw new IOException("Linked archives require review: " + current);
             }
         }
-        if (!Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)
-                || !file.toRealPath().equals(file)) {
-            throw new IOException("Archive must be a regular canonical file: " + file);
+        if (!Files.isRegularFile(requested, LinkOption.NOFOLLOW_LINKS)) {
+            throw new IOException("Archive must be a regular file: " + requested);
         }
+        Path file = requested.toRealPath();
         var before = Files.readAttributes(file, BasicFileAttributes.class);
         List<Entry> result;
         try (var input = Files.newInputStream(file)) {

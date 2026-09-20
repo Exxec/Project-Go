@@ -111,8 +111,8 @@ public final class AssuranceLedgerReader {
         for (Path current = file; current != null; current = current.getParent()) {
             if (Files.isSymbolicLink(current)) { throw new IOException("Linked ledger/evidence paths require review"); }
         }
-        if (!Files.isRegularFile(file, java.nio.file.LinkOption.NOFOLLOW_LINKS) || !file.toRealPath().equals(file)) {
-            throw new IOException("Ledger/evidence must be regular canonical files");
+        if (!Files.isRegularFile(file, java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
+            throw new IOException("Ledger/evidence must be regular files");
         }
     }
 

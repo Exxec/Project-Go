@@ -8,6 +8,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -28,20 +29,23 @@ public final class CsvStructureAuditor {
 
     /** Audits explicitly listed mod-relative CSV paths without changing their bytes. */
     public List<Finding> audit(Path modRoot, List<Path> files) {
-        Path root = modRoot.toAbsolutePath().normalize();
+        Path requestedRoot = modRoot.toAbsolutePath().normalize();
         List<Finding> findings = new ArrayList<>();
         for (Path relative : files.stream().sorted(Comparator.comparing(Path::toString)).toList()) {
             String path = relative.toString().replace('\\', '/');
             if (!path.toLowerCase(java.util.Locale.ROOT).endsWith(".csv")) { continue; }
-            Path file = root.resolve(relative).normalize();
             try {
+                rejectSymbolicComponents(requestedRoot);
+                if (!Files.isDirectory(requestedRoot, LinkOption.NOFOLLOW_LINKS)) {
+                    throw new IOException("CSV root is not a directory");
+                }
+                Path root = requestedRoot.toRealPath();
+                Path file = root.resolve(relative).normalize();
                 if (relative.isAbsolute() || !file.startsWith(root)
                         || !file.toRealPath().equals(file)) {
                     throw new IOException("Unsafe CSV path");
                 }
-                for (Path current = file; current != null; current = current.getParent()) {
-                    if (Files.isSymbolicLink(current)) { throw new IOException("Linked CSV path"); }
-                }
+                rejectSymbolicComponents(file);
                 byte[] bytes;
                 try (var input = Files.newInputStream(file)) {
                     bytes = input.readNBytes(MAX_INPUT_BYTES + 1);
@@ -52,6 +56,12 @@ public final class CsvStructureAuditor {
             }
         }
         return List.copyOf(findings);
+    }
+
+    private static void rejectSymbolicComponents(Path path) throws IOException {
+        for (Path current = path; current != null; current = current.getParent()) {
+            if (Files.isSymbolicLink(current)) { throw new IOException("Linked CSV path"); }
+        }
     }
 
     /** Reviews already-bounded, archive-relative CSV payloads without filesystem access. */

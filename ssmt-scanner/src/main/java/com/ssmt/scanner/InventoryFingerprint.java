@@ -46,16 +46,16 @@ public final class InventoryFingerprint {
 
     /** Hashes exact container bytes, without decompressing or writing. */
     public static String archive(Path archive) throws IOException {
-        Path file = archive.toAbsolutePath().normalize();
-        for (Path current = file; current != null; current = current.getParent()) {
+        Path requested = archive.toAbsolutePath().normalize();
+        for (Path current = requested; current != null; current = current.getParent()) {
             if (Files.isSymbolicLink(current)) {
                 throw new IOException("Linked archive hash inputs require review");
             }
         }
-        if (!Files.isRegularFile(file, java.nio.file.LinkOption.NOFOLLOW_LINKS)
-                || !file.toRealPath().equals(file)) {
-            throw new IOException("Archive hash input must be a regular canonical file");
+        if (!Files.isRegularFile(requested, java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
+            throw new IOException("Archive hash input must be a regular file");
         }
+        Path file = requested.toRealPath();
         var before = Files.readAttributes(file, java.nio.file.attribute.BasicFileAttributes.class);
         MessageDigest digest = digest();
         try (var input = Files.newInputStream(file)) {
