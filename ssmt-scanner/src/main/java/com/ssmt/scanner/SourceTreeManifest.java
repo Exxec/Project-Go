@@ -19,7 +19,14 @@ public final class SourceTreeManifest {
 
     /** Captures regular files and directories, including empty directories and root. */
     public List<Node> capture(Path candidate) throws IOException {
-        Path root = candidate.toAbsolutePath().normalize();
+        Path requestedRoot = candidate.toAbsolutePath().normalize();
+        if (Files.isSymbolicLink(requestedRoot)
+                || !Files.isDirectory(requestedRoot, LinkOption.NOFOLLOW_LINKS)) {
+            throw new IOException("Source manifest root must be a real directory: " + candidate);
+        }
+        // Hosted Windows paths can use an equivalent spelling for a real directory.
+        // Walk from the canonical root, then continue rejecting linked child nodes.
+        Path root = requestedRoot.toRealPath();
         var inventory = new CandidateInventory().capture(root);
         var files = new HashMap<String, CandidateInventory.Entry>();
         inventory.forEach(entry -> files.put(entry.path(), entry));
