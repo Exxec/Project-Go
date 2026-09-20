@@ -95,7 +95,7 @@ release claim.
     Route inputs by validated type and workflow state, retain pickers as a
     fallback, and keep rejected drops from replacing active work.
 
-## P1 implementation evidence â€” 2026-09-11
+## P1 implementation evidence — 2026-09-11
 
 - Auto accepts completed responses under arbitrary sibling JSON names using a
   bounded 128-file/16 MiB discovery window and embedded identity/integrity. It
@@ -245,6 +245,10 @@ adding more normal-path controls.
 - [x] Make GUI, Auto, and simple CLI exercise the same workflow service and
   state-transition contract. Auto retains catalog and response-discovery
   adapters around the shared project-module service.
+- [ ] Run the native clean-profile ZIP-to-output acceptance path through GUI,
+  Auto, and simple CLI on the supported packaged applications. Automated shared
+  service/state-machine and isolated Auto round-trip coverage do not replace this
+  exit test.
 - [x] Rewrite the normal user guide around the visible task; keep database,
   schema, report, and portable-project instructions in Advanced sections.
 
@@ -255,10 +259,10 @@ cancelled and failed operations preserve source, project state, and prior output
 Evidence: the isolated Auto ZIP round trip now accepts an arbitrarily named
 response, publishes one translated folder, preserves the archive hash, and exposes
 no project, backup, or report sibling. Destination persistence and hash-bound
-cleanup/recovery have isolated regression coverage. GUI and Auto now share one
-bounded input-preparation service, while full GUI/Auto/simple-CLI state-machine
-unification remains required before P1 closes. Explicit GUI/CLI legacy adoption is
-implemented; native acceptance validation remains deferred.
+cleanup/recovery have isolated regression coverage. GUI, Auto, and simple CLI now
+converge on the shared workflow service and state-transition contract. Explicit
+GUI/CLI legacy adoption is implemented; native acceptance validation remains
+deferred.
 
 ## P2 — evidence-first revival assessment
 

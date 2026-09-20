@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -26,11 +27,28 @@ class AssuranceLedgerReaderTest {
                         new BuildEvidenceReader.Authority("LOADER_PROVIDER", verified, "reviewed")));
         new com.fasterxml.jackson.databind.ObjectMapper().writeValue(evidence.toFile(), profile);
         String evidenceHash = com.ssmt.scanner.InventoryFingerprint.archive(evidence);
+        Path runtimeLog = Files.writeString(root.resolve("runtime.log"), "runtime scenarios observed");
+        Path runtimeEvidence = root.resolve("runtime.json");
+        var scenarios = java.util.Arrays.stream(AssuranceSummary.Gate.values())
+                .filter(AssuranceLedgerReaderTest::runtimeGate)
+                .map(gate -> new RuntimeEvidenceReader.ScenarioResult(gate,
+                        AssuranceSummary.Disposition.PASS, gate.name(), ""))
+                .toList();
+        var runtime = new RuntimeEvidenceReader.Profile(2, HASH, "0.98a-RC8",
+                List.of(new RuntimeEvidenceReader.EnabledMod("candidate", "1.0")),
+                List.of("candidate"), "java.exe", "25", 0,
+                List.of(new RuntimeEvidenceReader.LogReference("runtime.log",
+                        com.ssmt.scanner.InventoryFingerprint.archive(runtimeLog))),
+                List.of(), scenarios);
+        new com.fasterxml.jackson.databind.ObjectMapper().writeValue(runtimeEvidence.toFile(), runtime);
         var results = java.util.Arrays.stream(AssuranceSummary.Gate.values())
                 .map(gate -> new AssuranceSummary.Result(gate, AssuranceSummary.Disposition.PASS,
-                        HASH, gate.name(), evidencePath, "")).toList();
+                        HASH, gate.name(), runtimeGate(gate) ? "runtime.json" : evidencePath, ""))
+                .toList();
         var ledger = new AssuranceLedgerReader.Ledger(1, HASH, results,
-                List.of(new AssuranceLedgerReader.Reference(evidencePath, evidenceHash)));
+                List.of(new AssuranceLedgerReader.Reference(evidencePath, evidenceHash),
+                        new AssuranceLedgerReader.Reference("runtime.json",
+                                com.ssmt.scanner.InventoryFingerprint.archive(runtimeEvidence))));
         Path file = root.resolve("ledger.json");
         new com.fasterxml.jackson.databind.ObjectMapper().writeValue(file.toFile(), ledger);
         return file;
@@ -39,6 +57,13 @@ class AssuranceLedgerReaderTest {
     private BuildEvidenceReader.FileReference reference(Path file) throws Exception {
         return new BuildEvidenceReader.FileReference(root.relativize(file).toString().replace('\\', '/'),
                 com.ssmt.scanner.InventoryFingerprint.archive(file));
+    }
+
+    private static boolean runtimeGate(AssuranceSummary.Gate gate) {
+        return switch (gate) {
+            case AUTOMATED_BOOT, CAMPAIGN, COMBAT, SAVE_RELOAD, UPGRADE_COMPATIBILITY -> true;
+            default -> false;
+        };
     }
 
     @Test void verifiesReferencedBytesAndCandidateWithoutMutatingLedger() throws Exception {
@@ -92,5 +117,59 @@ class AssuranceLedgerReaderTest {
 
         assertThatThrownBy(() -> new AssuranceLedgerReader().read(file, HASH))
                 .isInstanceOf(java.io.IOException.class);
+    }
+
+    @Test void rejectsReadyWhenBuildFailedOrAuthorityRemainsUnresolved() throws Exception {
+        Path ledgerFile = ledger("result.log");
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        Path buildFile = root.resolve("result.log");
+        var valid = mapper.readValue(buildFile.toFile(), BuildEvidenceReader.Profile.class);
+        var failed = new BuildEvidenceReader.Profile(valid.schemaVersion(), valid.candidateSha256(),
+                valid.jdkExecutable(), valid.jdkVersion(), valid.command(), valid.workingDirectory(),
+                7, valid.buildInputs(), valid.classpath(), valid.outputs(), valid.authorities());
+        rewriteBuildAndReference(mapper, ledgerFile, buildFile, failed);
+        assertThatThrownBy(() -> new AssuranceLedgerReader().read(ledgerFile, HASH))
+                .hasMessageContaining("exit code 0");
+
+        var authorities = new ArrayList<>(valid.authorities());
+        authorities.set(0, new BuildEvidenceReader.Authority("SOURCE",
+                BuildEvidenceReader.AuthorityDisposition.REVIEW_REQUIRED, "review pending"));
+        var unresolved = new BuildEvidenceReader.Profile(valid.schemaVersion(),
+                valid.candidateSha256(), valid.jdkExecutable(), valid.jdkVersion(),
+                valid.command(), valid.workingDirectory(), 0, valid.buildInputs(),
+                valid.classpath(), valid.outputs(), authorities);
+        rewriteBuildAndReference(mapper, ledgerFile, buildFile, unresolved);
+        assertThatThrownBy(() -> new AssuranceLedgerReader().read(ledgerFile, HASH))
+                .hasMessageContaining("VERIFIED authority: SOURCE");
+    }
+
+    @Test void rejectsBuildRecordReusedAsRuntimeEvidence() throws Exception {
+        Path ledgerFile = ledger("result.log");
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        var ledger = mapper.readValue(ledgerFile.toFile(), AssuranceLedgerReader.Ledger.class);
+        var results = ledger.results().stream().map(result -> runtimeGate(result.gate())
+                ? new AssuranceSummary.Result(result.gate(), result.disposition(),
+                        result.candidateSha256(), result.scenario(), "result.log", result.reason())
+                : result).toList();
+        var rewritten = new AssuranceLedgerReader.Ledger(1, HASH, results,
+                List.of(new AssuranceLedgerReader.Reference("result.log",
+                        com.ssmt.scanner.InventoryFingerprint.archive(root.resolve("result.log")))));
+        mapper.writeValue(ledgerFile.toFile(), rewritten);
+
+        assertThatThrownBy(() -> new AssuranceLedgerReader().read(ledgerFile, HASH))
+                .isInstanceOf(java.io.IOException.class);
+    }
+
+    private static void rewriteBuildAndReference(
+            com.fasterxml.jackson.databind.ObjectMapper mapper, Path ledgerFile, Path buildFile,
+            BuildEvidenceReader.Profile profile) throws Exception {
+        mapper.writeValue(buildFile.toFile(), profile);
+        var ledger = mapper.readValue(ledgerFile.toFile(), AssuranceLedgerReader.Ledger.class);
+        String buildHash = com.ssmt.scanner.InventoryFingerprint.archive(buildFile);
+        var references = ledger.references().stream().map(reference -> reference.path().equals("result.log")
+                ? new AssuranceLedgerReader.Reference(reference.path(), buildHash)
+                : reference).toList();
+        mapper.writeValue(ledgerFile.toFile(), new AssuranceLedgerReader.Ledger(
+                ledger.schemaVersion(), ledger.candidateSha256(), ledger.results(), references));
     }
 }

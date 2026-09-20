@@ -43,6 +43,28 @@ class BuildEvidenceReaderTest {
                 .hasMessageContaining("Build file hash mismatch");
     }
 
+    @Test void passingBuildRequiresZeroExitAndVerifiedAuthorities() throws Exception {
+        Path input = Files.writeString(root.resolve("source.zip"), "input");
+        Path dependency = Files.writeString(root.resolve("api.jar"), "dependency");
+        Path output = Files.writeString(root.resolve("mod.jar"), "output");
+        var valid = profile(reference(input), reference(dependency), reference(output));
+        var reader = new BuildEvidenceReader();
+
+        assertThatThrownBy(() -> reader.verifySuccessful(new BuildEvidenceReader.Profile(
+                valid.schemaVersion(), valid.candidateSha256(), valid.jdkExecutable(),
+                valid.jdkVersion(), valid.command(), valid.workingDirectory(), 1,
+                valid.buildInputs(), valid.classpath(), valid.outputs(), valid.authorities())))
+                .hasMessageContaining("exit code 0");
+        var review = new BuildEvidenceReader.Authority("SOURCE",
+                BuildEvidenceReader.AuthorityDisposition.REVIEW_REQUIRED, "pending review");
+        assertThatThrownBy(() -> reader.verifySuccessful(new BuildEvidenceReader.Profile(
+                valid.schemaVersion(), valid.candidateSha256(), valid.jdkExecutable(),
+                valid.jdkVersion(), valid.command(), valid.workingDirectory(), 0,
+                valid.buildInputs(), valid.classpath(), valid.outputs(),
+                List.of(review, valid.authorities().get(1), valid.authorities().get(2)))))
+                .hasMessageContaining("VERIFIED authority: SOURCE");
+    }
+
     private Path write(BuildEvidenceReader.Profile profile) throws Exception {
         Path record = root.resolve("build-evidence.json");
         new ObjectMapper().writeValue(record.toFile(), profile);

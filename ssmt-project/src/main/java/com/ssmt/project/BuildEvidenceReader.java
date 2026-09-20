@@ -118,6 +118,19 @@ public final class BuildEvidenceReader {
         return profile;
     }
 
+    /** Rejects mechanically contradictory success claims after structural/hash validation. */
+    public void verifySuccessful(Profile profile) throws IOException {
+        if (profile.processExitCode() != 0) {
+            throw new IOException("Passing build evidence requires process exit code 0");
+        }
+        for (Authority authority : profile.authorities()) {
+            if (authority.disposition() != AuthorityDisposition.VERIFIED) {
+                throw new IOException("Passing build evidence requires VERIFIED authority: "
+                        + authority.subject());
+            }
+        }
+    }
+
     private static List<FileReference> allReferences(Profile profile) {
         var references = new java.util.ArrayList<FileReference>();
         references.addAll(profile.buildInputs());

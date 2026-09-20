@@ -33,11 +33,42 @@ public final class RuntimeEvidenceReader {
         }
     }
 
+    /** One explicitly named runtime-gate outcome observed in this capture. */
+    public record ScenarioResult(AssuranceSummary.Gate gate,
+            AssuranceSummary.Disposition disposition, String scenario, String reason) {
+        public ScenarioResult {
+            Objects.requireNonNull(gate, "gate");
+            Objects.requireNonNull(disposition, "disposition");
+            requireText(scenario, "Runtime scenario");
+            reason = Objects.requireNonNullElse(reason, "");
+            if (!runtimeGate(gate)) {
+                throw new IllegalArgumentException("Runtime capture cannot claim gate: " + gate);
+            }
+            if (disposition != AssuranceSummary.Disposition.PASS
+                    && disposition != AssuranceSummary.Disposition.FAIL
+                    && disposition != AssuranceSummary.Disposition.NOT_TESTED) {
+                throw new IllegalArgumentException("Invalid runtime scenario disposition: " + disposition);
+            }
+            if (disposition != AssuranceSummary.Disposition.PASS && reason.isBlank()) {
+                throw new IllegalArgumentException("Non-passing runtime scenario requires a reason");
+            }
+        }
+    }
+
     /** Exact observed launch context, bound to the candidate bytes. */
     public record Profile(int schemaVersion, String candidateSha256, String starsectorBuild,
             List<EnabledMod> enabledMods, List<String> loadOrder, String javaExecutable,
             String javaVersion, Integer processExitCode, List<LogReference> logs,
-            List<String> modalDialogs) {
+            List<String> modalDialogs, List<ScenarioResult> scenarios) {
+        /** Preserves the schema-1 construction API for launch-context-only captures. */
+        public Profile(int schemaVersion, String candidateSha256, String starsectorBuild,
+                List<EnabledMod> enabledMods, List<String> loadOrder, String javaExecutable,
+                String javaVersion, Integer processExitCode, List<LogReference> logs,
+                List<String> modalDialogs) {
+            this(schemaVersion, candidateSha256, starsectorBuild, enabledMods, loadOrder,
+                    javaExecutable, javaVersion, processExitCode, logs, modalDialogs, List.of());
+        }
+
         public Profile {
             requireHash(candidateSha256);
             requireText(starsectorBuild, "Starsector build");
@@ -48,7 +79,13 @@ public final class RuntimeEvidenceReader {
             Objects.requireNonNull(processExitCode, "processExitCode");
             logs = List.copyOf(Objects.requireNonNull(logs, "logs"));
             modalDialogs = List.copyOf(Objects.requireNonNull(modalDialogs, "modalDialogs"));
-            if (schemaVersion != 1) { throw new IllegalArgumentException("Unsupported runtime evidence schema"); }
+            scenarios = List.copyOf(Objects.requireNonNullElse(scenarios, List.of()));
+            if (schemaVersion != 1 && schemaVersion != 2) {
+                throw new IllegalArgumentException("Unsupported runtime evidence schema");
+            }
+            if (schemaVersion == 1 && !scenarios.isEmpty()) {
+                throw new IllegalArgumentException("Runtime scenarios require schema 2");
+            }
             var modIds = new HashSet<String>();
             for (EnabledMod mod : enabledMods) {
                 if (!modIds.add(mod.id())) { throw new IllegalArgumentException("Repeated enabled mod: " + mod.id()); }
@@ -61,6 +98,40 @@ public final class RuntimeEvidenceReader {
             if (!modIds.equals(orderedIds)) {
                 throw new IllegalArgumentException("Load order must contain every enabled mod exactly once");
             }
+            var scenarioGates = new HashSet<AssuranceSummary.Gate>();
+            for (ScenarioResult scenario : scenarios) {
+                if (!scenarioGates.add(scenario.gate())) {
+                    throw new IllegalArgumentException("Repeated runtime scenario gate: " + scenario.gate());
+                }
+            }
+        }
+    }
+
+    /** Requires a schema-2 scenario record that exactly matches one terminal ledger result. */
+    public void verifyScenario(Profile profile, AssuranceSummary.Result result) throws IOException {
+        if (!runtimeGate(result.gate())
+                || (result.disposition() != AssuranceSummary.Disposition.PASS
+                && result.disposition() != AssuranceSummary.Disposition.FAIL)) {
+            throw new IOException("Runtime scenario verification requires a terminal runtime gate");
+        }
+        if (profile.schemaVersion() != 2) {
+            throw new IOException("Runtime PASS/FAIL requires schema 2 scenario evidence");
+        }
+        ScenarioResult scenario = profile.scenarios().stream()
+                .filter(candidate -> candidate.gate() == result.gate())
+                .findFirst()
+                .orElseThrow(() -> new IOException(
+                        "Runtime evidence does not contain gate: " + result.gate()));
+        if (scenario.disposition() != result.disposition()
+                || !scenario.scenario().equals(result.scenario())) {
+            throw new IOException("Runtime evidence does not match ledger scenario: " + result.gate());
+        }
+        if (profile.logs().isEmpty()) {
+            throw new IOException("Runtime PASS/FAIL requires at least one captured log");
+        }
+        if (result.disposition() == AssuranceSummary.Disposition.PASS
+                && profile.processExitCode() != 0) {
+            throw new IOException("Passing runtime evidence requires process exit code 0");
         }
     }
 
@@ -115,6 +186,12 @@ public final class RuntimeEvidenceReader {
         if (hash == null || !hash.matches("[0-9a-f]{64}")) {
             throw new IllegalArgumentException("Candidate SHA-256 must be 64 lowercase hex characters");
         }
+    }
+    private static boolean runtimeGate(AssuranceSummary.Gate gate) {
+        return switch (gate) {
+            case AUTOMATED_BOOT, CAMPAIGN, COMBAT, SAVE_RELOAD, UPGRADE_COMPATIBILITY -> true;
+            default -> false;
+        };
     }
     private static void safeFile(Path file) throws IOException {
         for (Path current = file; current != null; current = current.getParent()) {

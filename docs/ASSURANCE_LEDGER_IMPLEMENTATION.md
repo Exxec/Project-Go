@@ -10,28 +10,33 @@ pairs). Unknown fields, duplicate JSON keys, trailing JSON, missing/invalid hash
 unsupported schemas, missing/repeated/foreign gates and missing/repeated/unused
 references are rejected. Input JSON is bounded at 1 MiB, references at 128 and
 combined actual evidence bytes at 64 MiB. Evidence stays beneath the ledger parent;
-linked/noncanonical/nonregular files are rejected. Hash mismatch fails the ledger.
+linked/nonregular files are rejected. Windows canonical path aliases are accepted
+after component-link rejection. Hash mismatch fails the ledger.
 The reader does not modify ledger, evidence or candidate bytes.
 
 Expected candidate hash is an independent API argument, not inherited from an
 untrusted ledger declaration. Evidence references must exist for every nonempty
 result evidence string; PASS/FAIL requires a reference. Runtime dispositions stay
-independent. References can be shared across gates only if the same artifact really
-contains each named scenario's evidence. Contents are not semantically interpreted:
+independent. References can be shared across runtime gates only when a schema-2
+runtime capture contains an exact gate, scenario-name, and PASS/FAIL match for every
+referencing ledger result. Schema-1 captures remain readable as historical launch
+context, but cannot substantiate a terminal runtime gate. A terminal runtime record
+also requires at least one hashed log, and PASS requires process exit zero. Contents
+are not semantically interpreted:
 a hash-matched arbitrary log is not proof that a scenario passed, source authority
 is valid or rights exist. BUILD `PASS`/`FAIL` is the exception at the structural
 boundary: its evidence must be a candidate-bound build-evidence record with verified
-input/classpath/output hashes and explicit authority dispositions. Those dispositions
-still require human review. The derived status describes recorded dispositions;
+input/classpath/output hashes and explicit authority dispositions. BUILD PASS also
+requires process exit zero and VERIFIED source, compiled-JAR, and loader/provider
+authority; unresolved authority cannot reach READY. The derived status describes
+recorded dispositions;
 release/runtime certification requires reviewing actual scenario evidence.
 
-Four regressions cover immutable valid input and tampering, contained paths and
-foreign candidate, unknown/duplicate/trailing completion declarations, missing
-candidate hash and actual oversized input. Project tests plus Checkstyle main/test
-and SpotBugs main PASS: BUILD SUCCESSFUL in 12s, 21 tasks (6 executed).
-AssuranceLedgerReaderTest: 4 tests, zero failures/errors/skips. Local XML/static reports are under
-ssmt-project/build/; tests remain durable source. Current additions are uncommitted
-after local source checkpoint 3795002. Push remains approval-paused.
+Regressions cover immutable valid input and tampering, contained paths and foreign
+candidates, unknown/duplicate/trailing completion declarations, missing candidate
+hashes, oversized input, failed/unresolved builds, and incorrect evidence types.
+Tests remain the durable evidence; local XML/static reports under
+`ssmt-project/build/` are disposable build output.
 
 ## CLI/template tranche
 
@@ -52,12 +57,11 @@ not semantic certification; other dispositions/errors exit 1. Template generatio
 exits 0 for successfully generated pending data. Supply ledger or --template,
 never both/neither. No game launch or release promotion happens.
 
-Two CLI regressions cover complete pending template, independent source binding,
+CLI regressions cover the complete pending template, independent source binding,
 immutable source, non-READY pending ledger, explicit semantic trust limit, stale
 candidate and explicit operation choice. CLI tests/Checkstyle main/test/SpotBugs
-main PASS: BUILD SUCCESSFUL in 9s, 24 tasks (7 executed). Source remains uncommitted
-after 3795002, whose push is still approval-paused. Local evidence: module build/
-XML/static reports. The earlier Next paragraph below predates this CLI integration.
+main are part of the repository check. Local `build/` XML/static reports remain
+disposable evidence. The earlier Next paragraph below predates this CLI integration.
 
 Deferred validation is now runnable after final rebuild: generate pending template
 outside the mod source, inspect it, record actual independent scenarios/references,

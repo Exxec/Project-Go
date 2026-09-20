@@ -97,14 +97,35 @@ public final class AssuranceLedgerReader {
                 throw new IOException("Evidence hash mismatch: " + reference.path());
             }
         }
-        AssuranceSummary.Result build = summary.results().stream()
-                .filter(result -> result.gate() == AssuranceSummary.Gate.BUILD)
-                .findFirst().orElseThrow();
-        if (build.disposition() == AssuranceSummary.Disposition.PASS
-                || build.disposition() == AssuranceSummary.Disposition.FAIL) {
-            new BuildEvidenceReader().read(root.resolve(build.evidence()).normalize(), expectedCandidateSha256);
+        for (AssuranceSummary.Result result : summary.results()) {
+            if (result.gate() == AssuranceSummary.Gate.BUILD
+                    && terminal(result.disposition())) {
+                var reader = new BuildEvidenceReader();
+                var profile = reader.read(root.resolve(result.evidence()).normalize(),
+                        expectedCandidateSha256);
+                if (result.disposition() == AssuranceSummary.Disposition.PASS) {
+                    reader.verifySuccessful(profile);
+                }
+            } else if (runtimeGate(result.gate()) && terminal(result.disposition())) {
+                var reader = new RuntimeEvidenceReader();
+                var profile = reader.read(root.resolve(result.evidence()).normalize(),
+                        expectedCandidateSha256);
+                reader.verifyScenario(profile, result);
+            }
         }
         return summary;
+    }
+
+    private static boolean terminal(AssuranceSummary.Disposition disposition) {
+        return disposition == AssuranceSummary.Disposition.PASS
+                || disposition == AssuranceSummary.Disposition.FAIL;
+    }
+
+    private static boolean runtimeGate(AssuranceSummary.Gate gate) {
+        return switch (gate) {
+            case AUTOMATED_BOOT, CAMPAIGN, COMBAT, SAVE_RELOAD, UPGRADE_COMPATIBILITY -> true;
+            default -> false;
+        };
     }
 
     private static void safeFile(Path file) throws IOException {

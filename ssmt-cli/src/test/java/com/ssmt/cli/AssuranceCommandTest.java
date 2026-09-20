@@ -52,7 +52,9 @@ class AssuranceCommandTest {
         command.setOut(new PrintWriter(output));
         assertThat(command.execute("runtime-evidence", "--candidate", candidate.toString(), "--template"))
                 .isZero();
-        assertThat(output.toString()).contains("candidateSha256", "REPLACE_WITH_EXACT_BUILD");
+        assertThat(output.toString()).contains("candidateSha256", "REPLACE_WITH_EXACT_BUILD",
+                "\"schemaVersion\" : 2", "AUTOMATED_BOOT", "UPGRADE_COMPATIBILITY",
+                "NOT_TESTED");
     }
 
     @Test void buildTemplateBindsToCandidateAndKeepsAuthorityUnderReview() throws Exception {

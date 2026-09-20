@@ -5,7 +5,6 @@ import com.ssmt.scanner.CandidateInventory;
 import com.ssmt.scanner.InventoryFingerprint;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -39,13 +38,13 @@ public final class RuntimeEvidenceCommand implements Callable<Integer> {
             var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
             if (template) {
                 spec.commandLine().getOut().println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(
-                        Map.of("schemaVersion", 1, "candidateSha256", hash,
-                                "starsectorBuild", "REPLACE_WITH_EXACT_BUILD",
-                                "enabledMods", List.of(Map.of("id", "REPLACE_WITH_MOD_ID", "version", "REPLACE_WITH_MOD_VERSION")),
-                                "loadOrder", List.of("REPLACE_WITH_MOD_ID"),
-                                "javaExecutable", "REPLACE_WITH_EXACT_JAVA_EXECUTABLE",
-                                "javaVersion", "REPLACE_WITH_EXACT_JAVA_VERSION", "processExitCode", 0,
-                                "logs", List.of(), "modalDialogs", List.of())));
+                        new RuntimeEvidenceReader.Profile(2, hash, "REPLACE_WITH_EXACT_BUILD",
+                                List.of(new RuntimeEvidenceReader.EnabledMod(
+                                        "REPLACE_WITH_MOD_ID", "REPLACE_WITH_MOD_VERSION")),
+                                List.of("REPLACE_WITH_MOD_ID"),
+                                "REPLACE_WITH_EXACT_JAVA_EXECUTABLE",
+                                "REPLACE_WITH_EXACT_JAVA_VERSION", 0, List.of(), List.of(),
+                                runtimeScenarioTemplate())));
                 return 0;
             }
             var profile = new RuntimeEvidenceReader().read(evidence, hash);
@@ -64,5 +63,17 @@ public final class RuntimeEvidenceCommand implements Callable<Integer> {
             spec.commandLine().getErr().println("Runtime evidence inspection failed: " + exception.getMessage());
             return 1;
         }
+    }
+
+    private static List<RuntimeEvidenceReader.ScenarioResult> runtimeScenarioTemplate() {
+        return List.of(com.ssmt.project.AssuranceSummary.Gate.AUTOMATED_BOOT,
+                com.ssmt.project.AssuranceSummary.Gate.CAMPAIGN,
+                com.ssmt.project.AssuranceSummary.Gate.COMBAT,
+                com.ssmt.project.AssuranceSummary.Gate.SAVE_RELOAD,
+                com.ssmt.project.AssuranceSummary.Gate.UPGRADE_COMPATIBILITY).stream()
+                .map(gate -> new RuntimeEvidenceReader.ScenarioResult(gate,
+                        com.ssmt.project.AssuranceSummary.Disposition.NOT_TESTED,
+                        "REPLACE_WITH_" + gate + "_SCENARIO", "Pending live execution"))
+                .toList();
     }
 }
