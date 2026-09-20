@@ -1,6 +1,8 @@
 # Assurance ledger checkpoint — 2026-09-13
 
-Parent plan: NON_VALIDATION_COMPLETION.md. P5/P6 remain incomplete.
+Parent plan: NON_VALIDATION_COMPLETION.md. The P5/P6 machine-readable gate,
+capture, derived-status, feedback, and final-byte binding foundations are complete;
+live scenarios and actual per-attempt/release evidence remain open.
 
 AssuranceLedgerReader reads schemaVersion 1, candidateSha256, results (the
 AssuranceSummary.Result records) and references (portable relative path/sha256
@@ -17,7 +19,10 @@ result evidence string; PASS/FAIL requires a reference. Runtime dispositions sta
 independent. References can be shared across gates only if the same artifact really
 contains each named scenario's evidence. Contents are not semantically interpreted:
 a hash-matched arbitrary log is not proof that a scenario passed, source authority
-is valid or rights exist. The derived status describes recorded dispositions;
+is valid or rights exist. BUILD `PASS`/`FAIL` is the exception at the structural
+boundary: its evidence must be a candidate-bound build-evidence record with verified
+input/classpath/output hashes and explicit authority dispositions. Those dispositions
+still require human review. The derived status describes recorded dispositions;
 release/runtime certification requires reviewing actual scenario evidence.
 
 Four regressions cover immutable valid input and tampering, contained paths and
@@ -60,10 +65,29 @@ check that untested gates remain explicit and changed candidate rejects the ledg
 Review actual contents of every evidence artifact before accepting recorded PASS.
 Runtime capture, scenario coverage and final package/report binding remain open.
 
-Next: runtime capture and scenario assurance integration, independently recomputed current candidate
-binding, runtime environment/process/log capture, evidence scenario coverage and
-final report/package binding. No live test or published-release claim here.
-Filesystem races restoring all observed state are not a snapshot guarantee.
+## Attempt feedback and final-byte binding - 2026-09-20
+
+`ssmt attempt-feedback --candidate MOD_DIRECTORY --template` emits a review-pending,
+candidate-bound record. Inspection accepts only the four roadmap classifications and
+requires every recorded surprise to reference exact hashed evidence, a reusable
+fixture, and a concrete tool or documentation change. Repeated surprises, unused or
+missing references, escaping/linked paths, tampering, and foreign candidates fail.
+Only an explicitly completed review derives `READY_FOR_NEXT_CANDIDATE`; the tool
+cannot prove that a reviewer disclosed every real-world surprise.
+
+`ssmt finalize-evidence` consumes the exact candidate, final ZIP, READY assurance
+ledger, and completed feedback record. It reruns candidate-to-ZIP identity after
+those reports are final, rechecks candidate/package stability, and writes a new
+non-overwriting JSON report containing candidate, package, ledger, and feedback
+hashes. The printed report SHA-256 can be archived with release checksums. Its status
+is deliberately `FINAL_BYTES_AND_RECORDED_EVIDENCE_AGREE` and
+`evidenceSemanticsIndependentlyVerified` remains false; publication, rights, and
+actual scenario review stay external gates.
+
+The earlier "Next" work is now implemented by the runtime capture, ledger,
+attempt-feedback, and finalize-evidence commands described above. No live test or
+published-release claim follows. Filesystem races restoring all observed state are
+not a snapshot guarantee.
 
 Deferred validation once the final ledger frontend exists: record every required
 scenario against the final candidate hash; leave untested scenarios NOT_TESTED.

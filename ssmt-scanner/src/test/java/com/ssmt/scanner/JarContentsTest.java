@@ -33,6 +33,10 @@ class JarContentsTest {
         assertThat(report.sourceJarCorrespondence()).isEqualTo("NOT_ESTABLISHED");
         assertThat(report.entries()).extracting(JarContents.Entry::category)
                 .containsExactly("CLASS_ENTRY_UNVERIFIED", "BUNDLED_SOURCE", "RESOURCE");
+        assertThat(report.entries()).extracting(JarContents.Entry::handlingStatus)
+                .containsOnly("NOT_ASSESSED");
+        assertThat(report.entries()).extracting(JarContents.Entry::reason)
+                .containsOnly("RUN_DIRECTORY_COVERAGE_FOR_ENTRY_HANDLING");
         assertThat(report).isEqualTo(JarContents.inspect(root, relative, hash));
         assertThat(Files.readAllBytes(root.resolve(relative))).isEqualTo(before);
     }

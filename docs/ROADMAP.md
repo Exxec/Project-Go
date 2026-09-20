@@ -132,6 +132,63 @@ release claim.
   exact commit and version `0.8.0-dev`. Interactive drag/drop and live-game
   behavior remain manual acceptance gates.
 
+### Shared transition-contract checkpoint - 2026-09-19
+
+- `WorkflowTransitionContract` now defines the source-bound phases used by the
+  normal facade and Auto: input accepted, project ready, response pending,
+  response imported, and output published. The contract binds the exact mod id,
+  protected entry/source-text digest, entry count, and untranslated count.
+- `SharedTranslationWorkflowService` now owns create, refresh, export, import,
+  and build orchestration. GUI and simple CLI reach it through
+  `TranslationWorkflow`; Auto keeps catalog reuse and bounded response discovery
+  as adapters around the same service. Incomplete output and response entry-set
+  drift fail before publication.
+- Auto state schema 2 persists the shared boundary. Schema 1 workspaces migrate
+  in place on the next successful pass; a forged or stale schema 2 binding is
+  rejected before source or project bytes change.
+- Auto now defers refreshed/imported project persistence until response
+  discovery/import and request export or clone publication succeed. A rejected
+  response after source refresh leaves the last committed project byte-identical.
+- `WorkflowPersistenceService` publishes the normal workspace document and
+  Auto's project/state pair through one hash-manifested transaction. In-process
+  failure restores every previous document; restart recovery rolls partial
+  publication back, accepts an entirely published set, and removes staging that
+  never reached a prepared manifest. Targets are bounded, direct workspace
+  children and may not traverse symbolic links.
+- A fresh, initially absent `LOCALAPPDATA` full check and CLI/GUI/Auto
+  distribution rebuild passed 547 tests with zero failures, errors, or skips;
+  all 102 Gradle tasks executed. This is local working-source evidence, not
+  exact-commit CI or release evidence. Known native-access, Gradle 10, and
+  static-analysis missing-class warnings remain visible.
+- P1 automated implementation is converged through the shared operation,
+  transition, and persistence services with normal and Auto injected-failure
+  coverage. Native drag/drop and picker acceptance remains a deferred manual
+  gate and is not inferred from automated tests.
+
+## Phased roadmap application checkpoint - 2026-09-20
+
+- P2 is closed at the read-only assessment boundary with deterministic severity
+  findings; `ASSESSMENT_ONLY` remains mandatory.
+- P3 now records handling for every outer file and nested JAR entry, reports
+  unselected standard JSON leaves and CSV structural/column gaps for review, and
+  requires an explicitly supplied opt-in catalog before generated schemas apply.
+- P4 now enforces independent clone and directory/ZIP audits plus structured,
+  candidate-bound build evidence. Assessment records independent pre/post
+  manifests, while shared create, refresh, response-import, and clone-build
+  operations reject source-byte or metadata drift and transactionally retain a
+  bounded manifest attestation ledger in the internal workspace.
+- P5/P6 machine-readable gates, runtime capture, strict evidence references,
+  evidence-derived status, and escalation-preserving completion are implemented.
+  Candidate-bound feedback now requires classified surprises with hashed evidence,
+  fixture, and change artifacts. Finalization reruns package identity after READY
+  assurance/feedback records and emits release hashes. Live execution and actual
+  per-attempt review/archive work remain open.
+- A fresh-profile offline full check and CLI/GUI/Auto distribution rebuild passed
+  564 tests with zero failures, errors, or skips; all 102 Gradle tasks executed.
+  The rebuilt CLI launcher reported `SSMT 0.8.0-rc.1`; GUI and Auto launchers
+  passed `--smoke-test`. This is working-source evidence, not exact-commit CI or
+  release evidence.
+
 ## P0 — restore trustworthy build and release evidence
 
 - [x] Make translation-memory creation safely create its normalized parent
@@ -178,15 +235,16 @@ adding more normal-path controls.
 - [x] Keep `Project Go Changes.csv`, project JSON, state, history, reports,
   translation memory, extraction cache, and recovery data internal by default.
   Offer explicit exports and paths under Advanced.
-- [ ] Add bounded cache cleanup, interrupted-output recovery, and legacy-project
+- [x] Add bounded cache cleanup, interrupted-output recovery, and legacy-project
   adoption without deleting existing workspaces or copies. Hash-bound preview and
   cleanup plus unambiguous prior-output recovery are implemented in CLI and GUI;
   the GUI reports ambiguous states without changing them. Explicit legacy
   adoption is implemented through hash-bound GUI/CLI choices and covered by
-  TranslationWorkflowTest; shared Auto state convergence remains open, so this
-  combined item is not closed.
-- [ ] Make GUI, Auto, and simple CLI exercise the same workflow service and
-  state-transition contract.
+  TranslationWorkflowTest. Auto now persists and validates the shared
+  source/entry-bound transition state while migrating its schema 1 workspaces.
+- [x] Make GUI, Auto, and simple CLI exercise the same workflow service and
+  state-transition contract. Auto retains catalog and response-discovery
+  adapters around the shared project-module service.
 - [x] Rewrite the normal user guide around the visible task; keep database,
   schema, report, and portable-project instructions in Advanced sections.
 
@@ -204,56 +262,69 @@ implemented; native acceptance validation remains deferred.
 
 ## P2 — evidence-first revival assessment
 
-- [ ] Add a read-only assessment command for a directory or archive. Normalize
+- [x] Add a read-only assessment command for a directory or archive. Normalize
   archive wrappers, require exactly one selected `mod_info.json`, reject unsafe
   entries, and never write beneath the candidate or original archive.
-- [ ] Emit deterministic JSON plus human-readable output containing candidate and
+- [x] Emit deterministic JSON plus human-readable output containing candidate and
   archive SHA-256, selected root, file inventory, mod/game versions, declared
   dependencies, JAR/class/source inventory, extraction coverage, and trust limits.
-- [ ] Record source authority explicitly: origin, archive hash, archive coverage,
+- [x] Record source authority explicitly: origin, archive hash, archive coverage,
   selected variant, source/JAR correspondence, and conflicts among competing
   historical inputs.
   The optional read-only `assess --compare-input <directory-or-zip>` records whether
   a second uniquely rooted input matches the selected candidate bytes or differs;
   neither outcome asserts historical origin authority.
-- [ ] Distinguish supported, review, manual, and blocking findings. Any uncertain
+- [x] Distinguish supported, review, manual, and blocking findings. Any uncertain
   bytecode-only behavior, save-state migration, internal API use, undeclared
   library ownership, or architecture redesign must remain an escalation gate.
-- [ ] Report nested wrapper selection separately from mod validity so scanning the
+- [x] Report nested wrapper selection separately from mod validity so scanning the
   wrong directory cannot masquerade as a broken mod.
 
 Exit criteria: two runs over identical bytes produce identical reports, the
 candidate remains byte-for-byte unchanged, and the report cannot label a mod
 revived or runtime-compatible.
 
+P2 checkpoint - 2026-09-19: the existing deterministic directory/ZIP assessment,
+portable candidate/archive fingerprints, metadata/dependency report, JAR payload
+inventory, source-authority disposition and competing-input comparison satisfy
+the read-only report boundary. Findings now use an explicit `SUPPORTED`, `REVIEW`,
+`MANUAL`, or `BLOCKING` severity. Bytecode without observed source, save-state
+migration, internal API use, library ownership and architecture redesign remain
+manual escalation findings. Nested wrapper selection is a review finding separate
+from metadata validity. Assessment status remains `ASSESSMENT_ONLY`; exit zero is
+not a revival, runtime, persistence, authority, or redistribution claim.
+
 ## P3 — close localization coverage gaps safely
 
 Implementation checkpoint 2026-09-13: seven public weapon tooltip override fields
 have synthetic extraction/shared-workflow round trips, including GB18030 and
 placeholder preservation. AI exports explicitly state selected-entry coverage,
-not complete mod coverage. See WEAPON_TOOLTIP_COVERAGE.md. Broad file/JAR gap
-inventory and uncertain custom-format support remain open; P3 is not closed.
+not complete mod coverage. File and nested-JAR handling inventories plus advisory
+CSV/JSON gap detection are now explicit; uncertain custom-format acceptance and
+complete reinjection preservation remain open. See WEAPON_TOOLTIP_COVERAGE.md and
+COVERAGE_IMPLEMENTATION.md; P3 is not closed.
 
-- [ ] Produce a complete supported/extracted/skipped inventory for CSV, JSON-like,
+- [x] Produce a complete supported/extracted/skipped inventory for CSV, JSON-like,
   `.ship`, plain text, loose classes, and JAR entries.
-- [ ] Extend advisory gap detection to malformed CSV rows, duplicate or blank
+- [x] Extend advisory gap detection to malformed CSV rows, duplicate or blank
   identities, text in extra columns, unrecognized JSON subtrees, and player-visible
   strings that current standard schemas intentionally skip.
   Recognized standard CSVs now report non-ASCII text in unselected columns as
   review-only findings, including an explicit unavailable status for unsafe,
   oversized, unreadable, malformed, or ambiguous-header inputs. This does not
   infer visibility or authorize schema expansion.
-- [ ] Require human confirmation of player visibility and stable identity before
+- [x] Require human confirmation of player visibility and stable identity before
   accepting a generated custom schema.
 - [ ] For each accepted ecosystem format, add a synthetic failing fixture first,
   implement the narrowest compatible rule, then rerun module, full-suite, and
   source-immutability checks.
-- [ ] Preserve technical cells, row shape, comments, encoding, non-target JAR
+- [x] Preserve technical cells, row shape, comments, encoding, non-target JAR
   entries, and original text checks during reinjection.
   JSON and CSV now use token-only edits with strict source encoding/BOM and original
   text guards; extra/short CSV rows and ambiguous identities have regressions.
-  Whole-file text encoding and complete non-target JAR assurance remain open. See
-  `REINJECTION_IMPLEMENTATION.md`; the broader item is not yet complete.
+  Whole-file mission text now retains strict UTF-8/GB18030 encoding and UTF-8 BOM;
+  JSON/CSV use token-only same-encoding edits, and JAR injection preserves every
+  non-target entry's content bytes. See `REINJECTION_IMPLEMENTATION.md`.
 
 Exit criteria: every skipped candidate file has a deterministic reason, accepted
 coverage round-trips through a repository-owned fixture, and uncertain content is
@@ -261,16 +332,20 @@ reported rather than guessed.
 
 ## P4 — reproducible candidate and package audit
 
-- [ ] Record pre/post source tree manifests and prove that assessment, extraction,
+- [x] Record pre/post source tree manifests and prove that assessment, extraction,
   translation, and build did not change source bytes or metadata.
-- [ ] Attest the output clone independently: expected translations changed, every
+  Assessment JSON retains its two captures. Normal and Auto workspaces retain the
+  latest equal-manifest attestation for `CREATE_EXTRACTION`, `REFRESH_EXTRACTION`,
+  `IMPORT_RESPONSE`, and `BUILD_CLONE`; project/state and attestations publish in
+  the same recoverable transaction where those documents change.
+- [x] Attest the output clone independently: expected translations changed, every
   non-target file remained byte-identical, and no undeclared output appeared.
-- [ ] Compare the final candidate directory with its ZIP entry-by-entry using
+- [x] Compare the final candidate directory with its ZIP entry-by-entry using
   normalized relative paths, sizes, and SHA-256. Report missing, extra, and changed
   files separately from stale report bookkeeping.
-- [ ] Require the selected JDK, dependency/classpath hashes, build inputs, exact
+- [x] Require the selected JDK, dependency/classpath hashes, build inputs, exact
   commands, and source/JAR/loader authority for any compilation evidence.
-- [ ] Keep clone output as the supported path until a standalone overlay passes
+- [x] Keep clone output as the supported path until a standalone overlay passes
   equivalent format and game-loading tests.
 
 Exit criteria: another machine can reproduce the assessment and package identity
@@ -278,10 +353,10 @@ from the recorded inputs without access to the original working directory.
 
 ## P5 — runtime and persistence gates
 
-- [ ] Define separate machine-readable gates for offline validation, automated
+- [x] Define separate machine-readable gates for offline validation, automated
   launcher/main-menu boot, interactive campaign behavior, combat behavior,
   save/load persistence, and upgrade compatibility.
-- [ ] Capture the exact Starsector build, enabled mods and versions, load order,
+- [x] Capture the exact Starsector build, enabled mods and versions, load order,
   JVM, candidate hash, direct Java process exit state, logs, and any modal dialog.
   `ssmt runtime-evidence --candidate <mod> --template` emits a candidate-bound pending
   capture schema. A returned capture is structurally verified with bounded, contained log
@@ -292,7 +367,7 @@ from the recorded inputs without access to the original working directory.
 - [ ] Test a new campaign and, when the mod owns persistent state, save/reload and
   an explicitly approved upgrade path. Absence of a crash at the main menu is not
   persistence evidence.
-- [ ] Keep unsupported semantics at a review gate; do not replace IDs, providers,
+- [x] Keep unsupported semantics at a review gate; do not replace IDs, providers,
   dependencies, or historical weights merely to suppress a load error.
 
 Exit criteria: each claimed behavior maps to a recorded scenario and result;
@@ -301,17 +376,23 @@ another gate.
 
 ## P6 — completion and future-attempt feedback
 
-- [ ] Generate the final status and summary from per-gate evidence. Reject missing,
+- [x] Generate the final status and summary from per-gate evidence. Reject missing,
   repeated, contradictory, or non-final completion declarations.
-- [ ] Require source review, compile/build evidence when applicable, static
+- [x] Require source review, compile/build evidence when applicable, static
   validation, dependency and API checks, package validation, save-compatibility
   disposition, live-test disposition, and redistribution-rights disposition.
 - [ ] Run the candidate-to-ZIP identity audit after all reports and packaging are
   final, then archive the report with the release hashes.
+  `ssmt finalize-evidence` now enforces this order and emits the hashes without
+  overwriting an existing report; executing it against the eventual release bytes
+  remains required.
 - [ ] After every attempt, classify each surprise as candidate-specific, detector
   gap, workflow gap, or documentation gap. Add the smallest reusable fixture and
   tool change before starting the next candidate.
-- [ ] Never move an assessment copy to a completed state while a manual,
+  `ssmt attempt-feedback` now enforces these classifications and hash-bound evidence,
+  fixture, and change artifacts for each recorded surprise. Real-attempt review
+  remains a procedural gate.
+- [x] Never move an assessment copy to a completed state while a manual,
   bytecode-only, authority, persistence, runtime, or rights gate remains open.
 
 Exit criteria: “complete” means the exact published bytes and their evidence agree;

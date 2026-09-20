@@ -78,11 +78,13 @@ public final class MissionTextExtractor implements FileExtractor {
     private static String decode(Path file) throws SsmtParseException {
         try {
             byte[] bytes = Files.readAllBytes(file);
+            String decoded;
             try {
-                return decodeStrict(bytes, StandardCharsets.UTF_8);
+                decoded = decodeStrict(bytes, StandardCharsets.UTF_8);
             } catch (CharacterCodingException invalidUtf8) {
-                return decodeStrict(bytes, Charset.forName("GB18030"));
+                decoded = decodeStrict(bytes, Charset.forName("GB18030"));
             }
+            return decoded.startsWith("\uFEFF") ? decoded.substring(1) : decoded;
         } catch (IOException exception) {
             throw new SsmtParseException("Could not read mission text file", file, exception);
         }

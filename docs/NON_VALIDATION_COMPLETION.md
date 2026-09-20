@@ -8,7 +8,58 @@ Defer hands-on desktop and live Starsector scenarios to the checklist below.
 Do not claim runtime compatibility or full-release readiness from offline checks.
 Do not change original mods, shared BridgeForge rigs or existing campaign saves.
 
+## Current phased roadmap checkpoint - 2026-09-20
+
+Working source after `54fbce7` now closes the automated implementation boundary
+for P1 and P2. P3 has complete outer-file and nested-JAR handling inventories,
+review-only CSV/JSON gap detection, and explicit user opt-in for generated schemas.
+P4 has independent translated-clone and directory/ZIP audits, clone-only supported
+publication, durable source-manifest attestations around shared create, refresh,
+response-import, and build operations, and candidate-bound build evidence.
+Assurance BUILD `PASS` or `FAIL` rejects a
+generic log and requires the exact JDK, argv, input, classpath, output, exit-state,
+and authority record. P5/P6 have independent runtime gates, bounded runtime capture,
+strict hash-bound ledgers, derived status, and escalation-preserving completion.
+
+Authoritative local verification used initially absent
+`.local/checks/roadmap-phases-final-9b8e580f30bf4cc7972fcc915876edcd` as
+`LOCALAPPDATA`. The offline full check and CLI/GUI/Auto `installDist` rebuild passed
+564 tests with zero failures, errors, or skips; all 102 Gradle tasks executed.
+Checkstyle and SpotBugs gates passed with the existing native-access, Gradle 10,
+and missing-analysis-class warnings still visible. The rebuilt CLI launcher reported
+`SSMT 0.8.0-rc.1`; rebuilt GUI and Auto launchers passed `--smoke-test`. These are working-tree results;
+the rebuilt version metadata still describes committed source, so it is not
+publishable exact-source evidence.
+
+The remaining unchecked roadmap items are execution gates rather than missing
+general-purpose automation: fixture-first work applies when a future ecosystem
+format is accepted; final package binding and surprise classification require the
+actual attempt bytes; and runtime scenarios require the game. Native UI, campaign,
+combat, save/reload, upgrade,
+rights review, exact-commit CI, tag, hashes, and release publication remain manual or
+external gates and must not inherit success from this offline run.
+
 ## Verified starting state — 2026-09-13
+
+## Current P1 transition checkpoint - 2026-09-19
+
+Working source after `54fbce7` adds the shared source/entry-bound transition
+contract and create/refresh/export/import/build service to `TranslationWorkflow`
+and Auto. Auto state schema 2 persists its phase and binding, migrates schema 1
+workspaces, and rejects binding drift before changing source or project bytes.
+Auto also defers project persistence until response validation and its next
+external operation succeed; a rejected response after refresh retains the prior
+project bytes. Shared hash-manifested persistence now commits Auto project/state
+as a pair and the normal workspace through the same recovery rules; injected
+failure and simulated process-exit fixtures cover rollback/roll-forward decisions.
+The initially absent fresh-profile full check plus CLI/GUI/Auto
+`installDist` rebuild executed all 102 tasks and passed 547 tests with zero failures, errors,
+or skips. This is uncommitted local evidence;
+rebuilt manifests still identify committed source `54fbce7` and version
+`0.8.0-rc.1`, so they are not publishable source-matching artifacts.
+
+P1 automated convergence is implemented. Native UI and live-game validation,
+exact-commit CI, tag, checksums, and release publication remain separate gates.
 
 ## Current local release-preparation checkpoint - 2026-09-14
 
@@ -107,10 +158,10 @@ Checkstyle main/test and SpotBugs main PASS: BUILD SUCCESSFUL in 13s, 21 tasks
 (6 executed). Local reports: ssmt-project/build/test-results/test and build/reports;
 regression source is durable. Current changes remain uncommitted on e32f1f6.
 
-Remaining integration: bounded ledger CLI/schema, independently verify evidence
-references and hashes, runtime environment/process/log capture, required-scenario
-coverage, final report/package hash binding and future-attempt feedback fixtures.
-P5/P6 are not complete merely because the record model exists.
+This historical remaining-integration list is superseded by the current 2026-09-19
+checkpoint at the top of this file. Tooling now covers the bounded ledger, runtime
+capture, final-byte binding, and feedback records; actual scenario evidence and
+per-attempt fixtures remain required.
 
 Deferred validation addition: on the final tooling version record boot/campaign/
 combat/save/upgrade scenarios separately against the actual candidate hash, leave
@@ -175,11 +226,10 @@ part of the next local checkpoint. See ASSESSMENT_IMPLEMENTATION.md,
 COVERAGE_IMPLEMENTATION.md, PACKAGE_AUDIT_IMPLEMENTATION.md,
 ASSURANCE_LEDGER_IMPLEMENTATION.md and REINJECTION_IMPLEMENTATION.md.
 
-The goal remains active: Auto/shared workflow convergence, CSV format preservation,
-assessment authority/global limits, independent clone audit/build binding and runtime
-capture/final assurance integration are not complete. Push to Exxec/Project-Go main
-is awaiting explicit user approval after the previous push was rejected; no retry or
-alternate publication path has been attempted. No new release has been published.
+The historical goal statement above has been superseded by the 2026-09-19 current
+phased roadmap checkpoint. Push to Exxec/Project-Go main is awaiting explicit user
+approval; no retry or alternate publication path has been attempted. No new release
+has been published.
 
 Combined automated validation after the JSON compatibility and CSV test-helper fixes:
 `check :ssmt-cli:installDist :ssmt-gui:installDist :ssmt-auto:installDist` with

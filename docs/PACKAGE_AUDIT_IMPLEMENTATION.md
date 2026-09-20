@@ -55,7 +55,7 @@ static checks PASS (BUILD SUCCESSFUL in 8s). Existing regression source is durab
 local XML/static reports under module build/ directories remain disposable.
 Current changes uncommitted on e32f1f6; no release publication claim.
 
-## Remaining P4 implementation
+## P4 implementation status
 
 ### Observed source-state manifest tranche
 
@@ -93,12 +93,25 @@ original timestamps to test this. An access-time change alone does not constitut
 an attested write violation. Archive-container metadata support and other metadata
 dispositions remain implementation work.
 
-Source pre/post manifests including metadata disposition; independently verify
-expected translated targets and all non-target clone files; build input/JDK/
-classpath authority records; integrate final package identity into evidence-driven
-completion after reports are final. Inventories detect ordinary observed races,
-not an adversarial filesystem snapshot. Directory empty entries and permissions
-are not file-byte identity. Do not mark those stronger gates complete.
+The independent translated-clone audit and directory/ZIP identity comparison are
+complete, and clone output remains the only supported publication path. Assessment
+retains explicit pre/post source manifests. Shared create, refresh, response-import,
+and clone-build operations compare observed source bytes and metadata before and
+after, fail on drift, and retain the equal manifest plus its deterministic pre/post
+digest in the internal workspace's `source-attestations.json`. Project/state and
+new attestations use the same recoverable transaction where those documents change.
+The still-open final package identity step is execution evidence for the actual
+release bytes after all reports are final, not an unimplemented audit path.
+
+`ssmt build-evidence --candidate MOD_DIRECTORY --template` emits a candidate-bound
+schema for exact JDK executable/version, argv, working directory, exit code, build
+inputs, classpath, outputs, and explicit source/compiled-JAR/loader-provider authority
+dispositions. Inspection re-hashes every bounded contained file. An assurance ledger
+with BUILD `PASS` or `FAIL` must reference a valid build-evidence record; a generic
+log is rejected. This validates recorded bytes and structure, not authority semantics
+or compatibility. Inventories detect ordinary observed races, not an adversarial
+filesystem snapshot. Directory empty entries and permissions are not file-byte
+identity.
 
 ## Deferred validation for later today
 

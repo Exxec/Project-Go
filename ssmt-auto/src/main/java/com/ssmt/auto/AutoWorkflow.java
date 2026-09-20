@@ -4,18 +4,19 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.ssmt.core.model.ModInfo;
-import com.ssmt.project.AiTranslationExchangeService;
-import com.ssmt.project.AiTranslationImportResult;
 import com.ssmt.project.LocalizationProject;
 import com.ssmt.project.LocalizationProjectService;
 import com.ssmt.project.ModInputPreparationService;
 import com.ssmt.project.ProjectBuildResult;
 import com.ssmt.project.ProjectEntry;
 import com.ssmt.project.ProjectException;
-import com.ssmt.project.ProjectRefreshResult;
 import com.ssmt.project.PresentationNames;
+import com.ssmt.project.SharedTranslationWorkflowService;
 import com.ssmt.project.SourceLanguageDetector;
 import com.ssmt.project.SourceModIdentity;
+import com.ssmt.project.SourceAttestationStore;
+import com.ssmt.project.WorkflowTransitionContract;
+import com.ssmt.project.WorkflowPersistenceService;
 import com.ssmt.scanner.ModInfoReader;
 import com.ssmt.tm.MasterTranslationLibrary;
 import com.ssmt.tm.SqliteTranslationMemory;
@@ -24,7 +25,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -42,18 +42,20 @@ import java.util.Optional;
  */
 public final class AutoWorkflow {
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final int STATE_VERSION = 1;
+    private static final int STATE_VERSION = 2;
     private static final String CATALOG_FILE = MasterTranslationLibrary.DEFAULT_FILENAME;
     private static final int MAX_RESPONSE_CANDIDATES = 128;
     private static final long MAX_DISCOVERED_RESPONSE_BYTES = 16L * 1024 * 1024;
 
     private final LocalizationProjectService projects =
             new LocalizationProjectService();
-    private final AiTranslationExchangeService exchange =
-            new AiTranslationExchangeService();
+    private final SharedTranslationWorkflowService workflow =
+            new SharedTranslationWorkflowService();
     private final SourceLanguageDetector languages = new SourceLanguageDetector();
     private final ModInfoReader modInfoReader = new ModInfoReader();
     private final ModInputPreparationService inputs = new ModInputPreparationService();
+    private final WorkflowPersistenceService persistence;
+    private final SourceAttestationStore sourceAttestations = new SourceAttestationStore();
     private final Path sharedCatalog;
     private final Path workspaceRoot;
 
@@ -75,8 +77,14 @@ public final class AutoWorkflow {
      * @param workspaceRoot internal root for per-source project workspaces
      */
     public AutoWorkflow(Path sharedCatalog, Path workspaceRoot) {
+        this(sharedCatalog, workspaceRoot, new WorkflowPersistenceService());
+    }
+
+    AutoWorkflow(Path sharedCatalog, Path workspaceRoot,
+            WorkflowPersistenceService persistence) {
         this.sharedCatalog = sharedCatalog.toAbsolutePath().normalize();
         this.workspaceRoot = workspaceRoot.toAbsolutePath().normalize();
+        this.persistence = Objects.requireNonNull(persistence, "persistence");
     }
 
     /**
@@ -143,6 +151,7 @@ public final class AutoWorkflow {
         try {
             Files.createDirectories(workspace);
             prepareSharedCatalog(legacyCatalog);
+            persistence.recover(workspace);
         } catch (IOException exception) {
             throw new ProjectException(
                     "Could not prepare automation workspace or shared catalog",
@@ -157,22 +166,25 @@ public final class AutoWorkflow {
             throw new ProjectException("Automation state contains an unsafe project path");
         }
         LocalizationProject project;
+        SharedTranslationWorkflowService.Prepared prepared;
         String currentVersion = Objects.requireNonNullElse(mod.version(), "");
         if (Files.isRegularFile(projectFile)) {
             project = projects.read(projectFile);
+            if (state != null && state.workflowState() != null) {
+                workflow.verifyPersisted(state.workflowState(), project);
+            }
             // Source bytes, not an author's version bump, determine entry freshness.
-            ProjectRefreshResult refresh = projects.refresh(source, project);
-            project = refresh.project();
-            projects.write(projectFile, project);
+            prepared = workflow.refresh(source, project);
+            project = prepared.project();
         } else {
-            project = projects.create(source, mod.id(), mod.name());
-            projects.write(projectFile, project);
+            prepared = workflow.create(source, mod.id(), mod.name());
+            project = prepared.project();
         }
 
         String sourceLanguage = languages.detect(project.entries());
         project = applyUniqueExactMatches(
                 project, sharedCatalog, sourceLanguage, "en");
-        projects.write(projectFile, project);
+        prepared = workflow.bind(project, prepared.sourceAttestations());
 
         String responseHash = state == null ? "" : state.responseHash();
         Path response = findResponse(
@@ -180,17 +192,15 @@ public final class AutoWorkflow {
         if (response != null) {
             String currentHash = sha256(response);
             if (!currentHash.equals(responseHash)) {
-                AiTranslationImportResult imported =
-                        exchange.importResponse(response, project, sharedCatalog);
-                project = imported.project();
+                var imported = workflow.importResponse(source, response, prepared, sharedCatalog);
+                project = imported.result().project();
                 responseHash = currentHash;
                 Path suggested = workspace.resolve(projectFileName(
                         project.patchName(), mod.name()));
-                projects.write(suggested, project);
                 projectFile = suggested;
                 project = applyUniqueExactMatches(
                         project, sharedCatalog, sourceLanguage, "en");
-                projects.write(projectFile, project);
+                prepared = workflow.bind(project, imported.sourceAttestations());
             }
         }
 
@@ -199,20 +209,20 @@ public final class AutoWorkflow {
                 .filter(entry -> entry.translatedText().isBlank())
                 .toList();
         if (!untranslated.isEmpty()) {
-            exchange.exportPackage(
+            WorkflowTransitionContract.State pending = workflow.exportSelected(
                     missing,
-                    project,
+                    prepared,
                     untranslated,
                     mod.name(),
                     sourceLanguage,
                     "en");
-            writeState(
-                    stateFile,
+            commitState(workspace, projectFile, project, stateFile,
                     new State(
                             STATE_VERSION,
                             currentVersion,
                             fileName(projectFile),
-                            responseHash));
+                            responseHash,
+                            pending), prepared.sourceAttestations());
             return new AutoRunResult(
                     Files.isRegularFile(sharedCatalog)
                             ? AutoRunResult.Status.MASTER_LIBRARY_INCOMPLETE
@@ -226,14 +236,17 @@ public final class AutoWorkflow {
                             + sharedCatalog);
         }
 
-        ProjectBuildResult build = projects.buildTranslatedCopy(source, patch, project);
-        writeState(
-                stateFile,
+        SharedTranslationWorkflowService.Built built =
+                workflow.build(source, patch, prepared);
+        ProjectBuildResult build = built.result();
+        WorkflowTransitionContract.State published = built.state();
+        commitState(workspace, projectFile, project, stateFile,
                 new State(
                         STATE_VERSION,
                         currentVersion,
                         fileName(projectFile),
-                        responseHash));
+                        responseHash,
+                        published), built.sourceAttestations());
         return new AutoRunResult(
                 build.changed()
                         ? AutoRunResult.Status.PATCH_PUBLISHED
@@ -320,49 +333,61 @@ public final class AutoWorkflow {
         try {
             JsonNode root = JSON.readTree(stateFile.toFile());
             int version = root.path("schemaVersion").asInt(-1);
-            if (version != STATE_VERSION) {
+            if (version != 1 && version != STATE_VERSION) {
                 throw new ProjectException(
                         "Unsupported automation state version " + version);
+            }
+            WorkflowTransitionContract.State workflowState = null;
+            if (version >= 2) {
+                JsonNode workflow = root.path("workflow");
+                workflowState = new WorkflowTransitionContract.State(
+                        WorkflowTransitionContract.Phase.valueOf(
+                                workflow.path("phase").asText()),
+                        workflow.path("sourceModId").asText(),
+                        workflow.path("entrySetSha256").asText(),
+                        workflow.path("entryCount").asInt(-1),
+                        workflow.path("untranslatedCount").asInt(-1));
             }
             return new State(
                     version,
                     root.path("modVersion").asText(),
                     root.path("projectFile").asText(),
-                    root.path("responseHash").asText());
-        } catch (IOException exception) {
+                    root.path("responseHash").asText(),
+                    workflowState);
+        } catch (IOException | IllegalArgumentException exception) {
             throw new ProjectException("Could not read automation state", exception);
         }
     }
 
-    private static void writeState(Path stateFile, State state)
-            throws ProjectException {
+    private static byte[] serializeState(State state) throws ProjectException {
         ObjectNode root = JSON.createObjectNode();
         root.put("schemaVersion", state.schemaVersion());
         root.put("modVersion", state.modVersion());
         root.put("projectFile", state.projectFile());
         root.put("responseHash", state.responseHash());
-        Path staged = stateFile.resolveSibling(
-                stateFile.getFileName() + ".ssmt-stage");
+        ObjectNode workflow = root.putObject("workflow");
+        workflow.put("phase", state.workflowState().phase().name());
+        workflow.put("sourceModId", state.workflowState().sourceModId());
+        workflow.put("entrySetSha256", state.workflowState().entrySetSha256());
+        workflow.put("entryCount", state.workflowState().entryCount());
+        workflow.put("untranslatedCount", state.workflowState().untranslatedCount());
         try {
-            JSON.writerWithDefaultPrettyPrinter().writeValue(staged.toFile(), root);
-            try {
-                Files.move(
-                        staged,
-                        stateFile,
-                        StandardCopyOption.ATOMIC_MOVE,
-                        StandardCopyOption.REPLACE_EXISTING);
-            } catch (java.nio.file.AtomicMoveNotSupportedException exception) {
-                Files.move(staged, stateFile, StandardCopyOption.REPLACE_EXISTING);
-            }
+            return JSON.writerWithDefaultPrettyPrinter().writeValueAsBytes(root);
         } catch (IOException exception) {
-            throw new ProjectException("Could not write automation state", exception);
-        } finally {
-            try {
-                Files.deleteIfExists(staged);
-            } catch (IOException ignored) {
-                // Failed cleanup does not invalidate a published state file.
-            }
+            throw new ProjectException("Could not serialize automation state", exception);
         }
+    }
+
+    private void commitState(Path workspace, Path projectFile,
+            LocalizationProject project, Path stateFile, State state,
+            List<com.ssmt.project.SourceIntegrityGuard.Attestation> attestations)
+            throws ProjectException {
+        persistence.commit(workspace, List.of(
+                new WorkflowPersistenceService.Update(projectFile,
+                        projects.serialize(project)),
+                new WorkflowPersistenceService.Update(stateFile,
+                        serializeState(state)),
+                sourceAttestations.update(workspace, attestations)));
     }
 
     private static String projectFileName(String patchName, String originalName) {
@@ -520,6 +545,7 @@ public final class AutoWorkflow {
             int schemaVersion,
             String modVersion,
             String projectFile,
-            String responseHash) {
+            String responseHash,
+            WorkflowTransitionContract.State workflowState) {
     }
 }

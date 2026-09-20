@@ -325,6 +325,31 @@ class StandardFileInjectorTest {
     }
 
     @Test
+    void preservesPlainTextGb18030EncodingAndUtf8Bom() throws Exception {
+        Path gbSource = temporaryDirectory.resolve("data/missions/gb/mission_text.txt");
+        Files.createDirectories(Objects.requireNonNull(gbSource.getParent()));
+        java.nio.charset.Charset gb18030 = java.nio.charset.Charset.forName("GB18030");
+        Files.write(gbSource, "ä»»åŠ¡ç®€æŠ¥".getBytes(gb18030));
+        var gbReplacement = new TranslationReplacement(
+                Path.of("data/missions/gb/mission_text.txt"), "text:file", "ä»»åŠ¡ç®€æŠ¥", "Translated brief");
+        PatchArtifact gbArtifact = new StandardFileInjector().inject(
+                temporaryDirectory, List.of(gbReplacement));
+        assertThat(gbArtifact.content()).isEqualTo("Translated brief".getBytes(gb18030));
+
+        Path bomSource = temporaryDirectory.resolve("data/missions/bom/mission_text.txt");
+        Files.createDirectories(Objects.requireNonNull(bomSource.getParent()));
+        byte[] bom = {(byte) 0xef, (byte) 0xbb, (byte) 0xbf};
+        Files.write(bomSource, java.nio.ByteBuffer.allocate(bom.length + 6)
+                .put(bom).put("Source".getBytes(StandardCharsets.UTF_8)).array());
+        var bomReplacement = new TranslationReplacement(
+                Path.of("data/missions/bom/mission_text.txt"), "text:file", "Source", "Target");
+        PatchArtifact bomArtifact = new StandardFileInjector().inject(
+                temporaryDirectory, List.of(bomReplacement));
+        assertThat(bomArtifact.content()).startsWith(bom)
+                .endsWith("Target".getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Test
     void injectsShipHullNameAndDescriptionPreservingStructuralFields() throws Exception {
         byte[] fixture = readFixtureBytes("/fixtures/json/hull.ship");
         Path source = temporaryDirectory.resolve("data/hulls/example.ship");

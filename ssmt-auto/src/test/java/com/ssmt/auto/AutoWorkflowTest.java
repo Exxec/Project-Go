@@ -2,8 +2,11 @@ package com.ssmt.auto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.ssmt.project.WorkflowPersistenceService;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -72,6 +75,10 @@ class AutoWorkflowTest {
         assertThat(sharedCatalog).isRegularFile();
         assertThat(workspace.resolve("project-go-catalog.db")).doesNotExist();
         assertThat(workspace.resolve("Example - Example Mod.ssmt.json")).isRegularFile();
+        JsonNode attestations = JSON.readTree(workspace.resolve("source-attestations.json").toFile())
+                .path("attestations");
+        assertThat(attestations.toString()).contains(
+                "CREATE_EXTRACTION", "REFRESH_EXTRACTION", "IMPORT_RESPONSE", "BUILD_CLONE");
         assertThat(sha256(strings)).isEqualTo(sourceHash);
 
         Files.writeString(
@@ -329,6 +336,115 @@ class AutoWorkflowTest {
         assertThat(secondRun.workspace()).isNotEqualTo(firstRun.workspace());
         assertThat(firstRun.workspace().getParent()).isEqualTo(workspaceRoot);
         assertThat(secondRun.workspace().getParent()).isEqualTo(workspaceRoot);
+    }
+
+    @Test
+    void persistsSharedWorkflowBoundaryAndMigratesVersionOneState() throws Exception {
+        Path source = createMod("user-files/Example", "example.mod", "Example Mod");
+        AutoWorkflow workflow = new AutoWorkflow(
+                temporaryDirectory.resolve("internal/shared/catalog.db"),
+                temporaryDirectory.resolve("internal/projects"));
+
+        AutoRunResult first = workflow.run(source);
+        Path stateFile = first.workspace().resolve("project-go-state.json");
+        ObjectNode state = (ObjectNode) JSON.readTree(stateFile.toFile());
+
+        assertThat(state.path("schemaVersion").asInt()).isEqualTo(2);
+        assertThat(state.path("workflow").path("phase").asText())
+                .isEqualTo("RESPONSE_PENDING");
+        assertThat(state.path("workflow").path("sourceModId").asText())
+                .isEqualTo("example.mod");
+        assertThat(state.path("workflow").path("entrySetSha256").asText())
+                .hasSize(64);
+
+        state.put("schemaVersion", 1);
+        state.remove("workflow");
+        JSON.writerWithDefaultPrettyPrinter().writeValue(stateFile.toFile(), state);
+
+        AutoRunResult migrated = workflow.run(source);
+        JsonNode migratedState = JSON.readTree(stateFile.toFile());
+        assertThat(migrated.status()).isEqualTo(AutoRunResult.Status.MASTER_LIBRARY_NEEDED);
+        assertThat(migratedState.path("schemaVersion").asInt()).isEqualTo(2);
+        assertThat(migratedState.path("workflow").path("phase").asText())
+                .isEqualTo("RESPONSE_PENDING");
+    }
+
+    @Test
+    void rejectsPersistedWorkflowBindingDriftWithoutChangingSourceOrProject()
+            throws Exception {
+        Path source = createMod("user-files/Example", "example.mod", "Example Mod");
+        AutoWorkflow workflow = new AutoWorkflow(
+                temporaryDirectory.resolve("internal/shared/catalog.db"),
+                temporaryDirectory.resolve("internal/projects"));
+        AutoRunResult first = workflow.run(source);
+        Path stateFile = first.workspace().resolve("project-go-state.json");
+        ObjectNode state = (ObjectNode) JSON.readTree(stateFile.toFile());
+        Path projectFile = first.workspace().resolve(state.path("projectFile").asText());
+        String sourceHash = sha256(source.resolve("data/strings/strings.json"));
+        String projectHash = sha256(projectFile);
+        ((ObjectNode) state.path("workflow")).put("entrySetSha256", "0".repeat(64));
+        JSON.writerWithDefaultPrettyPrinter().writeValue(stateFile.toFile(), state);
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> workflow.run(source))
+                .isInstanceOf(com.ssmt.project.ProjectException.class)
+                .hasMessageContaining("previous workflow step");
+        assertThat(sha256(source.resolve("data/strings/strings.json"))).isEqualTo(sourceHash);
+        assertThat(sha256(projectFile)).isEqualTo(projectHash);
+    }
+
+    @Test
+    void rejectedResponseAfterSourceRefreshLeavesCommittedProjectUnchanged()
+            throws Exception {
+        Path source = createMod("user-files/Example", "example.mod", "Example Mod");
+        AutoWorkflow workflow = new AutoWorkflow(
+                temporaryDirectory.resolve("internal/shared/catalog.db"),
+                temporaryDirectory.resolve("internal/projects"));
+        AutoRunResult first = workflow.run(source);
+        JsonNode state = JSON.readTree(
+                first.workspace().resolve("project-go-state.json").toFile());
+        Path projectFile = first.workspace().resolve(state.path("projectFile").asText());
+        String committedHash = sha256(projectFile);
+        Files.writeString(source.resolve("data/strings/strings.json"),
+                "{\"welcome\":\"Changed source text\",\"new\":\"New text\"}");
+        Files.writeString(temporaryDirectory.resolve(
+                        "user-files/Example Mod - AI translation library.json"),
+                "{\"sourceModId\":\"wrong.mod\"}");
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> workflow.run(source))
+                .isInstanceOf(com.ssmt.project.ProjectException.class)
+                .hasMessageContaining("does not match the current English translation request");
+        assertThat(sha256(projectFile)).isEqualTo(committedHash);
+    }
+
+    @Test
+    void failedProjectStatePublicationRollsBackBothDocuments() throws Exception {
+        Path source = createMod("user-files/Example", "example.mod", "Example Mod");
+        Path catalog = temporaryDirectory.resolve("internal/shared/catalog.db");
+        Path workspaces = temporaryDirectory.resolve("internal/projects");
+        AutoRunResult first = new AutoWorkflow(catalog, workspaces).run(source);
+        Path stateFile = first.workspace().resolve("project-go-state.json");
+        JsonNode state = JSON.readTree(stateFile.toFile());
+        Path projectFile = first.workspace().resolve(state.path("projectFile").asText());
+        String projectHash = sha256(projectFile);
+        String stateHash = sha256(stateFile);
+        Files.writeString(source.resolve("data/strings/strings.json"),
+                "{\"welcome\":\"Changed after the committed state\"}");
+        java.util.concurrent.atomic.AtomicInteger publications =
+                new java.util.concurrent.atomic.AtomicInteger();
+        var persistence = new WorkflowPersistenceService((staging, target) -> {
+            if (publications.incrementAndGet() == 2) {
+                throw new IOException("injected state publication failure");
+            }
+            Files.move(staging, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        });
+        AutoWorkflow failing = new AutoWorkflow(catalog, workspaces, persistence);
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> failing.run(source))
+                .isInstanceOf(com.ssmt.project.ProjectException.class)
+                .hasMessageContaining("previous state was retained");
+        assertThat(sha256(projectFile)).isEqualTo(projectHash);
+        assertThat(sha256(stateFile)).isEqualTo(stateHash);
+        assertThat(first.workspace().resolve(".workflow-transaction")).doesNotExist();
     }
 
     private Path createMod(String relativePath, String id, String name) throws Exception {

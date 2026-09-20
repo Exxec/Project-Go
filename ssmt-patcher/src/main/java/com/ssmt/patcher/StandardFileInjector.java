@@ -103,7 +103,13 @@ public final class StandardFileInjector {
         if (!currentText.equals(replacement.originalText())) {
             throw new PatchBuilderException("Stale plain-text source text at " + relative);
         }
-        return PatchArtifact.utf8(relative, replacement.translatedText());
+        try {
+            return new PatchArtifact(relative, JsonTokenPatch.encodeLikeSource(
+                    source, currentText, replacement.translatedText()));
+        } catch (IOException exception) {
+            throw new PatchBuilderException(
+                    "Could not preserve plain-text encoding for " + relative, exception);
+        }
     }
 
     private static PatchArtifact injectJson(

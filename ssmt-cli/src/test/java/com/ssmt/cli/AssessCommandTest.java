@@ -47,7 +47,9 @@ class AssessCommandTest {
                 "\"id\":\"MagicLib\"", "\"version\":\"1\"", "NOT_TESTED",
                 "\"origin\":\"USER_SUPPLIED_ARCHIVE_UNVERIFIED\"",
                 "\"archiveCoverage\":\"HASHED_CONTAINER_AND_ENTRY_INVENTORY\"",
-                "\"competingInputs\":\"NOT_ASSESSED_SINGLE_INPUT_ONLY\"");
+                "\"competingInputs\":\"NOT_ASSESSED_SINGLE_INPUT_ONLY\"",
+                "\"severity\":\"REVIEW\"", "NESTED_WRAPPER_SELECTED",
+                "SAVE_STATE_MIGRATION_NOT_ASSESSED");
         assertThat(Files.readAllBytes(archive)).isEqualTo(before);
         assertThat(directory.resolve("wrapper")).doesNotExist();
         Path copy = Files.createDirectory(directory.resolve("directory-copy"));
@@ -94,6 +96,9 @@ class AssessCommandTest {
         Files.writeString(directory.resolve("mod_info.json"), "{\"id\":\"coverage\"}");
         Path strings = Files.createDirectories(directory.resolve("data/strings"));
         Files.writeString(strings.resolve("strings.json"), "{\"hello\":\"Hello\"}");
+        Path hulls = Files.createDirectories(directory.resolve("data/hulls"));
+        Files.writeString(hulls.resolve("review.ship"),
+                "{hullName:'Visible',spriteName:'technical.png'}");
         Files.writeString(directory.resolve("unsupported.xyz"), "Review me");
         var before = new com.ssmt.scanner.CandidateInventory().capture(directory);
         var command = new CommandLine(new Main());
@@ -101,7 +106,8 @@ class AssessCommandTest {
         command.setOut(new PrintWriter(output));
         assertThat(command.execute("assess", directory.toString(), "--coverage", "--json")).isZero();
         assertThat(output.toString()).contains("OBSERVED_STANDARD_EXTRACTION", "UNSUPPORTED",
-                "\"strings\":1", "\"path\":\"data/strings/strings.json\"");
+                "\"strings\":1", "\"path\":\"data/strings/strings.json\"",
+                "OBSERVED_REVIEW_ONLY", "json:/spriteName", "UNSELECTED_TEXT_REVIEW");
         assertThat(new com.ssmt.scanner.CandidateInventory().capture(directory)).isEqualTo(before);
     }
 
@@ -156,7 +162,8 @@ class AssessCommandTest {
         command.setOut(new PrintWriter(output));
         assertThat(command.execute("assess", directory.toString(), "--jar-inventory", "--json")).isZero();
         assertThat(output.toString()).contains("OBSERVED_PAYLOAD_INVENTORY",
-                "CLASS_ENTRY_UNVERIFIED", "NOT_ESTABLISHED");
+                "CLASS_ENTRY_UNVERIFIED", "NOT_ESTABLISHED",
+                "BYTECODE_ONLY_BEHAVIOR_UNVERIFIED", "\"severity\":\"MANUAL\"");
         assertThat(Files.readAllBytes(jar)).isEqualTo(before);
     }
 
@@ -212,6 +219,8 @@ class AssessCommandTest {
         command.setOut(new PrintWriter(output));
         assertThat(command.execute("assess", directory.toString(), "--json")).isEqualTo(1);
         assertThat(output.toString()).contains("AMBIGUOUS", "\"selectedRoot\":\"\"");
+        assertThat(output.toString()).contains("\"severity\":\"BLOCKING\"",
+                "MOD_ROOT_AMBIGUOUS");
     }
 
     @Test void competingInputComparisonIsExplicitWithoutClaimingAuthority() throws Exception {

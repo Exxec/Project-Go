@@ -34,10 +34,22 @@ NOT_ASSESSED coverage. ZIP --coverage currently fails with a clear directory-onl
 diagnostic rather than silently extracting content or claiming coverage.
 No custom schema is approved, no strings are translated, no source bytes written.
 
-This inventory covers discovered regular files, not individual JAR resource entries
-or every skipped JSON subtree/CSV field. JAR counts represent selected class strings
-after existing policy, not all player-visible text. Existing CoverageGapAuditor and
-CsvGapSchemaSuggester remain advisory; they are not automatically accepted here.
+This inventory covers every discovered regular file. With directory `--coverage`
+and `--jar-inventory` together, every nested JAR entry also receives an exact
+handling disposition. Class names are read from bytecode and mapped to the existing
+allowlisted extracted keys, producing `EXTRACTED` with a selected count or
+`SUPPORTED_NO_STRINGS`; bundled source and resources are `UNSUPPORTED` with distinct
+reasons. JAR inventory without directory coverage remains explicitly `NOT_ASSESSED`.
+These dispositions are not player-visibility or bytecode-semantic claims.
+
+StandardJsonGapAuditor now inventories all textual leaves in JSON-like files handled
+by the standard extractor and reports every unselected pointer as
+`UNSELECTED_TEXT_REVIEW`. The ordinary extract command logs the same review queue;
+`assess --coverage` includes it in deterministic JSON. It does not infer that a
+technical path, identifier, sprite name, or custom value is player-visible.
+Existing CoverageGapAuditor and CsvGapSchemaSuggester remain advisory; generated
+catalogs only take effect when a user reviews and explicitly supplies one through
+`--csv-schema`.
 
 ## Automated evidence
 
@@ -87,12 +99,11 @@ extraction to parse successfully; coverage parse failure is not hidden by adviso
 success. Unknown-schema IDENTITY_NOT_ASSESSED requires human confirmation, not a
 schema approval. ZIP CSV advisory support and gap visibility remain open.
 
-Individual JAR class/resource entry inventory; bounded advisory malformed CSV,
-extra-column and duplicate/blank identity findings; skipped JSON subtree evidence;
-gap/suggestion integration with explicit human approval; format-preserving
-reinjection including comments/encoding where current JSON serialization normalizes
-them. Accepted formats need synthetic round-trip fixtures. Full suite and exact
-version/source release artifacts remain required. Do not close P3 on file counts.
+Format-preserving reinjection now covers whole-file encoding/BOM and byte-identical
+non-target JAR resources in addition to JSON/CSV token preservation. The continuing
+fixture-first gate for each newly accepted ecosystem format remains open. Full-suite
+and exact version/source release artifacts remain required. Inventory and advisory
+findings do not authorize a schema.
 
 ## Deferred validation for later today
 

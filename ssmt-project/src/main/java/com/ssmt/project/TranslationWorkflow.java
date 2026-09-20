@@ -31,8 +31,11 @@ public final class TranslationWorkflow {
     private final Path root;
     private final Path inputCache;
     private final LocalizationProjectService projects = new LocalizationProjectService();
-    private final AiTranslationExchangeService exchange = new AiTranslationExchangeService();
+    private final SharedTranslationWorkflowService workflow =
+            new SharedTranslationWorkflowService();
     private final WorkspacePublisher publisher;
+    private final WorkflowPersistenceService persistence;
+    private final SourceAttestationStore sourceAttestations = new SourceAttestationStore();
     private static final int MAX_LEGACY_DIRECTORIES = 128;
     private static final int MAX_LEGACY_PROJECTS = 256;
     private static final long MAX_LEGACY_PROJECT_BYTES = 64L * 1024L * 1024L;
@@ -105,6 +108,7 @@ public final class TranslationWorkflow {
         this.root = root.toAbsolutePath().normalize();
         this.inputCache = this.root.resolveSibling("input-cache");
         this.publisher = publisher;
+        this.persistence = new WorkflowPersistenceService(publisher::publish);
     }
 
     /** Accepts a mod folder, mod_info.json, or ZIP and opens its normalized mod root. */
@@ -175,9 +179,11 @@ public final class TranslationWorkflow {
             adoption.put("entries", selected.entries());
             adoption.put("translatedEntries", selected.translatedEntries());
             adoption.put("adoptedAt", java.time.Instant.now().toString());
-            var refreshed = projects.refresh(canonical, legacy);
+            var workflowPrepared = workflow.refresh(canonical, legacy);
+            var refreshed = workflowPrepared.refresh().orElseThrow();
             retainHistory(metadata, legacy, refreshed);
-            Session session = commit(canonical, workspace, refreshed.project(), identity, metadata);
+            Session session = commit(canonical, workspace, refreshed.project(), identity, metadata,
+                    workflowPrepared.sourceAttestations());
             recordLineage(workspace, identity, canonical, workspace, refreshed.project(), false);
             return session;
         });
@@ -225,18 +231,22 @@ public final class TranslationWorkflow {
     /** Creates or resumes one workspace, stopping for a choice on a foreign source. */
     private Session openWorkspace(Path canonical, SourceModIdentity identity, Path primary,
             Path workspace, LineageChoice choice) throws ProjectException {
+        persistence.recover(workspace);
         Path file = workspace.resolve(PROJECT_FILE);
         ObjectNode metadata = Files.exists(file) ? readState(file) : JSON.createObjectNode();
         LocalizationProject previous = Files.exists(file) ? projects.read(file) : null;
         boolean separated = !workspace.equals(primary);
         if (previous == null) {
-            LocalizationProject created = projects.create(
+            var prepared = workflow.create(
                     canonical, identity.originalId(), identity.originalName());
-            Session session = commit(canonical, workspace, created, identity, metadata);
+            LocalizationProject created = prepared.project();
+            Session session = commit(canonical, workspace, created, identity, metadata,
+                    prepared.sourceAttestations());
             recordLineage(primary, identity, canonical, workspace, created, separated);
             return session;
         }
-        var refreshed = projects.refresh(canonical, previous);
+        var prepared = workflow.refresh(canonical, previous);
+        var refreshed = prepared.refresh().orElseThrow();
         boolean samePathUpdate = canonical.toString().equals(metadata.path("sourceRoot").asText())
                 && sharesEntryLocations(previous, refreshed.project());
         if (choice != LineageChoice.USE_PREVIOUS && !samePathUpdate
@@ -244,7 +254,8 @@ public final class TranslationWorkflow {
             return separateOrResumeFork(canonical, identity, primary, workspace, refreshed.project(), choice);
         }
         retainHistory(metadata, previous, refreshed);
-        Session session = commit(canonical, workspace, refreshed.project(), identity, metadata);
+        Session session = commit(canonical, workspace, refreshed.project(), identity, metadata,
+                prepared.sourceAttestations());
         recordLineage(primary, identity, canonical, workspace, refreshed.project(), separated);
         return session;
     }
@@ -283,8 +294,8 @@ public final class TranslationWorkflow {
         requireOutsideWorkspace(session.workspace(), destination);
         locked(session.workspace(), () -> {
             requireCurrent(session);
-            exchange.exportPackage(destination, session.project(), session.modName(),
-                    session.sourceLanguage(), TARGET_LANGUAGE);
+            workflow.exportAll(destination, workflow.bind(session.project()),
+                    session.modName(), session.sourceLanguage(), TARGET_LANGUAGE);
             return null;
         });
     }
@@ -294,20 +305,23 @@ public final class TranslationWorkflow {
         return locked(session.workspace(), () -> {
             requireCurrent(session);
             ObjectNode metadata = readState(session.workspace().resolve(PROJECT_FILE));
-            var refreshed = projects.refresh(session.source(), session.project());
-            var imported = exchange.importResponse(response, refreshed.project(), null);
+            var prepared = workflow.refresh(session.source(), session.project());
+            var refreshed = prepared.refresh().orElseThrow();
+            var imported = workflow.importResponse(session.source(), response,
+                    prepared, null);
             retainHistory(metadata, session.project(), refreshed);
             // A newly supplied translation resolves that entry's pending review flag.
             var pending = metadata.withArray("pendingReview");
             for (int index = pending.size() - 1; index >= 0; index--) {
                 JsonNode finding = pending.get(index);
-                if (imported.project().entries().stream().anyMatch(e ->
+                if (imported.result().project().entries().stream().anyMatch(e ->
                         e.sourceFile().toString().replace('\\', '/').equals(finding.path("sourceFile").asText())
                         && e.key().equals(finding.path("key").asText()) && !e.translatedText().isBlank())) {
                     pending.remove(index);
                 }
             }
-            return commit(session.source(), session.workspace(), imported.project(), session.identity(), metadata);
+            return commit(session.source(), session.workspace(), imported.result().project(),
+                    session.identity(), metadata, imported.sourceAttestations());
         });
     }
 
@@ -317,14 +331,11 @@ public final class TranslationWorkflow {
         requireOutsideWorkspace(session.workspace(), destination);
         return locked(session.workspace(), () -> {
             requireCurrent(session);
-            var current = projects.refresh(session.source(), session.project()).project();
-            long missing = current.entries().stream().filter(e -> !e.originalText().isBlank()
-                    && e.translatedText().isBlank()).count();
-            if (missing > 0) {
-                throw new ProjectException(missing
-                    + " texts still need translation. Export the translation file, finish it, and import it before building.");
-            }
-            return projects.buildTranslatedCopy(session.source(), destination, current);
+            var current = workflow.refresh(session.source(), session.project());
+            var built = workflow.build(session.source(), destination, current);
+            persistence.commit(session.workspace(), List.of(
+                    sourceAttestations.update(session.workspace(), built.sourceAttestations())));
+            return built.result();
         });
     }
 
@@ -628,12 +639,13 @@ public final class TranslationWorkflow {
     }
 
     private Session commit(Path source, Path workspace, LocalizationProject candidate,
-            SourceModIdentity identity, ObjectNode metadata) throws ProjectException {
-        Path staging = null;
+            SourceModIdentity identity, ObjectNode metadata,
+            List<SourceIntegrityGuard.Attestation> attestations) throws ProjectException {
+        workflow.bind(candidate);
+        Path target = workspace.resolve(PROJECT_FILE);
+        ObjectNode document;
         try {
-            staging = Files.createTempFile(workspace, ".candidate-", ".json");
-            projects.write(staging, candidate);
-            ObjectNode document = (ObjectNode) JSON.readTree(staging.toFile());
+            document = (ObjectNode) JSON.readTree(projects.serialize(candidate));
             metadata.put("workspaceVersion", 1);
             metadata.put("sourceRoot", source.toString());
             // Source metadata is recorded exactly as declared; it is never overwritten.
@@ -644,25 +656,17 @@ public final class TranslationWorkflow {
             metadata.put("sourceLanguage", new SourceLanguageDetector().detect(candidate.entries()));
             // Embed metadata with the project: a single publication commits both together.
             document.set("workspace", metadata);
-            JSON.writerWithDefaultPrettyPrinter().writeValue(staging.toFile(), document);
-            String committedRevision = revision(staging);
-            Path target = workspace.resolve(PROJECT_FILE);
-            try (FileChannel channel = FileChannel.open(staging, StandardOpenOption.WRITE)) { channel.force(true); }
-            publisher.publish(staging, target);
-            return new Session(source, workspace, candidate, identity,
-                    PresentationNames.forMod(identity, TARGET_LANGUAGE),
-                    metadata.path("sourceLanguage").asText(), committedRevision,
-                    metadata.path("pendingReview").size());
+            byte[] contents = JSON.writerWithDefaultPrettyPrinter().writeValueAsBytes(document);
+            persistence.commit(workspace, List.of(
+                    new WorkflowPersistenceService.Update(target, contents),
+                    sourceAttestations.update(workspace, attestations)));
         } catch (IOException exception) {
-            throw new ProjectException("Could not save translation workspace; previous state was retained", exception);
-        } finally {
-            if (staging != null) {
-                try { Files.deleteIfExists(staging); }
-                catch (IOException exception) {
-                    LOG.log(System.Logger.Level.WARNING, "Workspace staging cleanup failed", exception);
-                }
-            }
+            throw new ProjectException("Could not prepare translation workspace", exception);
         }
+        return new Session(source, workspace, candidate, identity,
+                PresentationNames.forMod(identity, TARGET_LANGUAGE),
+                metadata.path("sourceLanguage").asText(), revision(target),
+                metadata.path("pendingReview").size());
     }
 
     private static ObjectNode readState(Path file) throws ProjectException {

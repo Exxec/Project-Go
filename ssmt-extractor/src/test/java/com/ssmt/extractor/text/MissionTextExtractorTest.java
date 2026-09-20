@@ -60,6 +60,20 @@ class MissionTextExtractorTest {
     }
 
     @Test
+    void excludesUtf8BomFromTheTranslatableUnit(@TempDir Path modRoot) throws Exception {
+        Path source = modRoot.resolve("data/missions/aglaia/mission_text.txt");
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        Files.write(source, new byte[] {(byte) 0xef, (byte) 0xbb, (byte) 0xbf,
+                'B', 'r', 'i', 'e', 'f'});
+
+        List<ExtractedString> strings =
+                extractor.extract(new ExtractionRequest("test", modRoot, source));
+
+        assertThat(strings).singleElement().extracting(ExtractedString::originalText)
+                .isEqualTo("Brief");
+    }
+
+    @Test
     void rejectsUnsupportedFile(@TempDir Path modRoot) throws Exception {
         Path source = modRoot.resolve("data/missions/aglaia/descriptor.json");
         Files.createDirectories(Objects.requireNonNull(source.getParent()));

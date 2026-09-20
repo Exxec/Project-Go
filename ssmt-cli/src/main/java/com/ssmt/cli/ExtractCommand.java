@@ -8,6 +8,7 @@ import com.ssmt.extractor.CsvGapSchemaSuggester;
 import com.ssmt.extractor.ExtractionCoordinator;
 import com.ssmt.extractor.ExtractionReport;
 import com.ssmt.extractor.StandardCsvGapAuditor;
+import com.ssmt.extractor.StandardJsonGapAuditor;
 import com.ssmt.extractor.GapSchemaStatus;
 import com.ssmt.extractor.GapSchemaSuggestion;
 import com.ssmt.extractor.bytecode.ClassStringExtractor;
@@ -111,6 +112,12 @@ public final class ExtractCommand implements Callable<Integer> {
                     LOG.warn("Could not review unselected standard CSV columns in {}: {}",
                             finding.relativeSourceFile(), finding.status());
                 }
+            }
+            for (StandardJsonGapAuditor.Finding finding :
+                    new StandardJsonGapAuditor().audit(mod.sourceDirectory(), mod.id(), report)) {
+                LOG.warn("Review unselected JSON text at {} in {}: \"{}...\" "
+                                + "(text was not exported; confirm player visibility and stable identity)",
+                        finding.pointer(), finding.relativeSourceFile(), finding.sample());
             }
             LOG.info("Extraction complete: {} string(s), {} unsupported file(s)",
                     report.strings().size(), report.skippedFiles().size());

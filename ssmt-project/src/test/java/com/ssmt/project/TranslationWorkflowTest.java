@@ -216,6 +216,10 @@ class TranslationWorkflowTest {
         assertThat(com.ssmt.patcher.PatchBuilder.sourceBackupRoot(output)).doesNotExist();
         assertThat(Files.readAllBytes(source.resolve("data/strings/strings.json"))).isEqualTo(before);
         assertThat(workflow.buildPatch(completed, output).changed()).isFalse();
+        var attestations = json.readTree(completed.workspace()
+                .resolve(SourceAttestationStore.FILE_NAME).toFile()).path("attestations");
+        assertThat(attestations.toString()).contains(
+                "CREATE_EXTRACTION", "REFRESH_EXTRACTION", "IMPORT_RESPONSE", "BUILD_CLONE");
     }
 
     @Test void bytecodeOrdinalsRemainPositionalAndInsertedConstantsDoNotInheritTranslations() throws Exception {

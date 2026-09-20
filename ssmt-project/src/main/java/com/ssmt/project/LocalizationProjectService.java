@@ -600,24 +600,11 @@ public final class LocalizationProjectService {
      * @throws ProjectException on write failure
      */
     public void write(Path destination, LocalizationProject project) throws ProjectException {
-        ObjectNode root = JSON.createObjectNode();
-        root.put("schemaVersion", project.schemaVersion());
-        root.put("sourceModId", project.sourceModId());
-        root.put("patchId", project.patchId());
-        root.put("patchName", project.patchName());
-        ArrayNode entries = root.putArray("entries");
-        for (ProjectEntry entry : project.entries()) {
-            ObjectNode node = entries.addObject();
-            node.put("sourceFile", entry.sourceFile().toString().replace('\\', '/'));
-            node.put("key", entry.key());
-            node.put("originalText", entry.originalText());
-            node.put("translatedText", entry.translatedText());
-            node.put("provenance", entry.provenance().name());
-        }
+        byte[] contents = serialize(project);
         Path target = destination.toAbsolutePath().normalize();
         Path staging = target.resolveSibling(target.getFileName() + ".ssmt-stage");
         try {
-            JSON.writerWithDefaultPrettyPrinter().writeValue(staging.toFile(), root);
+            Files.write(staging, contents);
             try {
                 Files.move(
                         staging,
@@ -635,6 +622,29 @@ public final class LocalizationProjectService {
             } catch (IOException ignored) {
                 // A failed staging cleanup must not hide the original write result.
             }
+        }
+    }
+
+    /** Returns the deterministic UTF-8 document used by atomic workflow persistence. */
+    public byte[] serialize(LocalizationProject project) throws ProjectException {
+        ObjectNode root = JSON.createObjectNode();
+        root.put("schemaVersion", project.schemaVersion());
+        root.put("sourceModId", project.sourceModId());
+        root.put("patchId", project.patchId());
+        root.put("patchName", project.patchName());
+        ArrayNode entries = root.putArray("entries");
+        for (ProjectEntry entry : project.entries()) {
+            ObjectNode node = entries.addObject();
+            node.put("sourceFile", entry.sourceFile().toString().replace('\\', '/'));
+            node.put("key", entry.key());
+            node.put("originalText", entry.originalText());
+            node.put("translatedText", entry.translatedText());
+            node.put("provenance", entry.provenance().name());
+        }
+        try {
+            return JSON.writerWithDefaultPrettyPrinter().writeValueAsBytes(root);
+        } catch (IOException exception) {
+            throw new ProjectException("Could not serialize localization project", exception);
         }
     }
 

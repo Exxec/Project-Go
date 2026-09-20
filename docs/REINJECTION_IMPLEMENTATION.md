@@ -79,14 +79,22 @@ This is still local-source evidence, not CI or a published release.
 
 - The CSV limitations stated in the earlier JSON phase are superseded by the
   subsequent CSV phase above; advisory findings still do not authorize repairs.
-- Whole-file text injection still emits UTF-8. Its intended whole-file replacement is
-  distinct from token-only preservation; reconcile encoding contract separately.
+- Whole-file mission text now uses the same strict UTF-8/GB18030 detection,
+  round-trip guard, UTF-8 BOM retention, and source reread as token-preserving
+  formats. A translation that cannot be represented in the source encoding fails
+  before publication. Extracted text excludes the BOM from the translatable unit.
 - This does not authorize arbitrary technical JSON pointers or unknown schemas.
 - Round-trip verification is not an adversarial atomic filesystem snapshot.
 - Existing duplicate-field sources now fail explicitly; no guessed repair is allowed.
 - Existing `designTypeColors` Chinese/English pairs are preserved and require
   review; importing a translation that would create another pair fails safely.
 - No GUI/live-game validation or full-release promotion was performed for this phase.
+
+`ClassFileInjectorTest` independently proves a translated JAR changes the targeted
+class string while a non-target resource entry remains byte-identical. Together with
+the JSON, CSV, and whole-file fixtures, the current supported reinjection formats now
+meet the source-format preservation gate. New ecosystem formats still require their
+own failing fixture and narrow acceptance review.
 
 ## Deferred validation today
 

@@ -53,31 +53,41 @@ public final class AssessCommand implements Callable<Integer> {
     public record SourceAuthority(String origin, String archiveCoverage, String selectedVariant,
             String sourceJarCorrespondence, String competingInputs) { }
 
+    /** One deterministic assessment disposition; MANUAL/BLOCKING never imply compatibility. */
+    public record Finding(String severity, String code, String detail) { }
+
     /** Inventory-level report, not a declaration that a mod is valid or compatible. */
     public record Report(int schemaVersion, String inputKind, List<String> metadataPaths,
             String selectedRoot, String rootSelection, String status,
-            List<?> files, List<String> trustLimits, String metadataValidity, Metadata metadata,
+            List<?> files, List<Finding> findings, List<String> trustLimits,
+            String metadataValidity, Metadata metadata,
             com.ssmt.scanner.PackageIdentityAudit.Result packageIdentity,
             String inventorySha256, String candidateSha256, String archiveSha256,
             SourceAuthority sourceAuthority,
             String coverageStatus, List<Coverage> extractionCoverage,
+            String jsonGapStatus, List<com.ssmt.extractor.StandardJsonGapAuditor.Finding> jsonGapFindings,
             String csvAuditStatus, List<com.ssmt.extractor.CsvStructureAuditor.Finding> csvFindings,
             String jarInventoryStatus, List<com.ssmt.scanner.JarContents> jarContents,
-            String sourceManifestStatus, List<com.ssmt.scanner.SourceTreeManifest.Node> sourceNodes) {
+            String sourceManifestStatus, List<com.ssmt.scanner.SourceTreeManifest.Node> sourceNodes,
+            List<com.ssmt.scanner.SourceTreeManifest.Node> sourceNodesAfter) {
         public Report {
             metadataPaths = List.copyOf(metadataPaths);
             files = List.copyOf(files);
+            findings = List.copyOf(findings);
             trustLimits = List.copyOf(trustLimits);
             extractionCoverage = List.copyOf(extractionCoverage);
+            jsonGapFindings = List.copyOf(jsonGapFindings);
             csvFindings = List.copyOf(csvFindings);
             jarContents = List.copyOf(jarContents);
             sourceNodes = List.copyOf(sourceNodes);
+            sourceNodesAfter = List.copyOf(sourceNodesAfter);
         }
     }
 
     @Override public Integer call() {
         try {
             List<com.ssmt.scanner.SourceTreeManifest.Node> sourceNodes = List.of();
+            List<com.ssmt.scanner.SourceTreeManifest.Node> sourceNodesAfter = List.of();
             if (sourceManifest) {
                 sourceNodes = new com.ssmt.scanner.SourceTreeManifest().capture(candidate);
             }
@@ -197,6 +207,8 @@ public final class AssessCommand implements Callable<Integer> {
                 }
             }
             List<Coverage> observedCoverage = List.of();
+            List<com.ssmt.extractor.StandardJsonGapAuditor.Finding> jsonGapFindings = List.of();
+            String jsonGapStatus = "NOT_ASSESSED";
             String coverageStatus = "NOT_ASSESSED";
             if (coverage) {
                 if (!kind.equals("DIRECTORY")) {
@@ -213,10 +225,33 @@ public final class AssessCommand implements Callable<Integer> {
                         observedCoverage = extracted.fileCoverage().stream().map(file -> new Coverage(
                                 file.sourceFile().toString().replace('\\', '/'), file.handler(),
                                 file.status(), file.extractedStrings(), file.reason())).toList();
+                        jsonGapFindings = new com.ssmt.extractor.StandardJsonGapAuditor()
+                                .audit(candidate.resolve(root), declared.id(), extracted);
+                        var entryCoverage = new com.ssmt.extractor.JarEntryCoverage();
+                        Path selectedRoot = candidate.resolve(root);
+                        jarContents = jarContents.stream().map(contents -> {
+                            try {
+                                var byPath = entryCoverage.audit(selectedRoot.resolve(contents.path()),
+                                                Path.of(contents.path()), extracted).stream()
+                                        .collect(java.util.stream.Collectors.toMap(
+                                                com.ssmt.extractor.JarEntryCoverage.Entry::path,
+                                                java.util.function.Function.identity()));
+                                var covered = contents.entries().stream().map(entry -> {
+                                    var handling = byPath.get(entry.path());
+                                    return new com.ssmt.scanner.JarContents.Entry(entry.path(), entry.bytes(),
+                                            entry.sha256(), entry.category(), handling.status(), handling.reason());
+                                }).toList();
+                                return new com.ssmt.scanner.JarContents(contents.path(), contents.containerSha256(),
+                                        covered, contents.sourceJarCorrespondence());
+                            } catch (com.ssmt.core.exception.SsmtParseException exception) {
+                                throw new java.io.UncheckedIOException(new java.io.IOException(exception));
+                            }
+                        }).toList();
                         if (!entries.equals(new CandidateInventory().capture(candidate))) {
                             throw new java.io.IOException("Candidate changed during coverage extraction");
                         }
                         coverageStatus = "OBSERVED_STANDARD_EXTRACTION";
+                        jsonGapStatus = "OBSERVED_REVIEW_ONLY";
                     } catch (com.ssmt.core.exception.SsmtParseException exception) {
                         throw new java.io.IOException("Coverage extraction failed: " + exception.getMessage(), exception);
                     }
@@ -233,7 +268,8 @@ public final class AssessCommand implements Callable<Integer> {
             }
             String sourceStatus = "NOT_ASSESSED";
             if (sourceManifest) {
-                if (!sourceNodes.equals(new com.ssmt.scanner.SourceTreeManifest().capture(candidate))) {
+                sourceNodesAfter = new com.ssmt.scanner.SourceTreeManifest().capture(candidate);
+                if (!sourceNodes.equals(sourceNodesAfter)) {
                     throw new java.io.IOException("Observed source bytes or metadata changed during assessment");
                 }
                 sourceStatus = "UNCHANGED_OBSERVED_BYTES_AND_METADATA";
@@ -250,9 +286,49 @@ public final class AssessCommand implements Callable<Integer> {
                             ? "NOT_ESTABLISHED_PAYLOADS_OBSERVED"
                             : "NOT_ASSESSED",
                     competingInputs);
+            boolean bytecodePresent = tuples.stream().anyMatch(file -> {
+                String path = file.path().toLowerCase(java.util.Locale.ROOT);
+                return path.endsWith(".class") || path.endsWith(".jar");
+            });
+            boolean sourcePresent = tuples.stream().anyMatch(file ->
+                    file.path().toLowerCase(java.util.Locale.ROOT).endsWith(".java"));
+            List<Finding> findings = new java.util.ArrayList<>();
+            findings.add(new Finding("SUPPORTED", "READ_ONLY_INVENTORY_CAPTURED",
+                    "Candidate bytes were inventoried without extraction or mutation"));
+            findings.add(selected
+                    ? new Finding(root.isEmpty() ? "SUPPORTED" : "REVIEW",
+                            root.isEmpty() ? "DIRECT_ROOT_SELECTED" : "NESTED_WRAPPER_SELECTED",
+                            root.isEmpty() ? "mod_info.json is at the supplied root"
+                                    : "Selected nested root " + root + " independently of metadata validity")
+                    : new Finding("BLOCKING",
+                            metadata.isEmpty() ? "MOD_ROOT_MISSING" : "MOD_ROOT_AMBIGUOUS",
+                            "Exactly one mod_info.json root is required"));
+            if (selected) {
+                findings.add(new Finding(validity.equals("VALID") ? "SUPPORTED" : "BLOCKING",
+                        validity.equals("VALID") ? "DECLARED_METADATA_PARSED" : "DECLARED_METADATA_INVALID",
+                        validity.equals("VALID") ? "Declared metadata was parsed from inventoried bytes"
+                                : "Selected mod_info.json is not valid declared metadata"));
+            }
+            if (bytecodePresent && !sourcePresent) {
+                findings.add(new Finding("MANUAL", "BYTECODE_ONLY_BEHAVIOR_UNVERIFIED",
+                        "Executable payload exists without observed Java source; semantics require escalation"));
+            } else if (bytecodePresent) {
+                findings.add(new Finding("REVIEW", "SOURCE_JAR_CORRESPONDENCE_NOT_ESTABLISHED",
+                        "Observed source and executable payload names do not establish correspondence"));
+            }
+            findings.add(new Finding("REVIEW", "SOURCE_AUTHORITY_UNVERIFIED",
+                    "Caller-supplied bytes do not establish historical origin authority"));
+            findings.add(new Finding("MANUAL", "SAVE_STATE_MIGRATION_NOT_ASSESSED",
+                    "Persistent campaign state and upgrade behavior require explicit review"));
+            findings.add(new Finding("MANUAL", "INTERNAL_API_USE_NOT_ASSESSED",
+                    "Internal game API use requires source or bytecode review"));
+            findings.add(new Finding("MANUAL", "LIBRARY_OWNERSHIP_NOT_ASSESSED",
+                    "Bundled and undeclared dependency ownership requires explicit review"));
+            findings.add(new Finding("MANUAL", "ARCHITECTURE_REDESIGN_NOT_ASSESSED",
+                    "Architecture changes cannot be inferred or authorized by inventory"));
             Report report = new Report(1, kind, metadata, root,
                     selected ? "SELECTED" : metadata.isEmpty() ? "MISSING" : "AMBIGUOUS",
-                    "ASSESSMENT_ONLY", entries, List.of(
+                    "ASSESSMENT_ONLY", entries, findings, List.of(
                             "Dependencies are declarations; availability/version compatibility NOT_ASSESSED",
                             "Source/JAR correspondence and origin authority NOT_ASSESSED",
                             "Coverage counts are selected strings only, not exhaustive player-visible content",
@@ -260,8 +336,9 @@ public final class AssessCommand implements Callable<Integer> {
                             "Runtime, save compatibility and redistribution rights NOT_TESTED"),
                     validity, declared, identity, inventoryHash, candidateHash, archiveHash,
                     authority,
-                    coverageStatus, observedCoverage, csvStatus, csvFindings, jarStatus, jarContents,
-                    sourceStatus, sourceNodes);
+                    coverageStatus, observedCoverage, jsonGapStatus, jsonGapFindings,
+                    csvStatus, csvFindings, jarStatus, jarContents,
+                    sourceStatus, sourceNodes, sourceNodesAfter);
             if (json) {
                 spec.commandLine().getOut().println(new com.fasterxml.jackson.databind.ObjectMapper()
                         .writeValueAsString(report));
@@ -276,7 +353,10 @@ public final class AssessCommand implements Callable<Integer> {
                 output.println("Selected candidate SHA-256: " + candidateHash);
                 if (!archiveHash.isEmpty()) { output.println("Archive SHA-256: " + archiveHash); }
                 output.println("Source authority: " + authority);
+                findings.forEach(finding -> output.println("Finding: " + finding));
                 output.println("Coverage: " + coverageStatus);
+                output.println("JSON gap review: " + jsonGapStatus);
+                jsonGapFindings.forEach(finding -> output.println("JSON review: " + finding));
                 observedCoverage.forEach(output::println);
                 output.println("CSV audit: " + csvStatus);
                 csvFindings.forEach(output::println);

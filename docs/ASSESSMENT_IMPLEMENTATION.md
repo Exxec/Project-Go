@@ -1,6 +1,23 @@
 # Assessment implementation checkpoint — 2026-09-13
 
-Parent plan: NON_VALIDATION_COMPLETION.md. P2/P4 are not complete.
+Parent plan: NON_VALIDATION_COMPLETION.md. P2 implementation is complete; P4
+remains open.
+
+## Finding-severity completion - 2026-09-19
+
+Assessment reports now carry deterministic `SUPPORTED`, `REVIEW`, `MANUAL`, and
+`BLOCKING` findings in JSON and human output. Missing or ambiguous roots and
+invalid selected metadata block assessment. Nested wrapper selection is reported
+separately as review rather than being confused with metadata validity. Bytecode
+without observed source, save-state migration, internal API use, dependency
+ownership and architecture redesign remain explicit escalation findings.
+
+Together with the existing directory/ZIP inventory, portable hashes, selected
+root, metadata/dependency parsing, JAR payload inventory, source-authority
+disposition and competing-input comparison, this closes the P2 implementation
+boundary. `ASSESSMENT_ONLY` remains mandatory: the report cannot declare revival,
+runtime behavior, persistence safety, historical authority, or redistribution
+permission. P3/P4 coverage and package gates remain independent.
 
 ## Archive-embedded JAR payload inventory - 2026-09-14
 
@@ -59,22 +76,23 @@ BUILD SUCCESSFUL in 13s. Local reports: ssmt-scanner/build/test-results/test and
 ssmt-scanner/build/reports. Current work is uncommitted on e32f1f6; no release
 contains this foundation yet. Re-run full checks after integration.
 
-## Next implementation
-
-### JAR payload inventory tranche
+## JAR payload inventory tranche
 
 `ssmt assess DIRECTORY --jar-inventory --json` inventories every JAR beneath the
 uniquely selected mod root, without extracting files or defining/loading classes.
 JarContents reports portable JAR path, expected-bound exact container SHA-256,
-sorted entry path/size/hash/category and sourceJarCorrespondence NOT_ESTABLISHED.
-Class entries are CLASS_ENTRY_UNVERIFIED, source entries BUNDLED_SOURCE and other
-payloads RESOURCE. Same filenames do not prove source corresponds to bytecode;
+sorted entry path/size/hash/category, an explicit localization handling status and
+reason, and sourceJarCorrespondence NOT_ESTABLISHED. Class entries are
+CLASS_ENTRY_UNVERIFIED, source entries BUNDLED_SOURCE and other payloads RESOURCE.
+Inventory alone leaves handling `NOT_ASSESSED`; directory `--coverage` maps each
+class's internal name to exact allowlisted extracted keys and reports selected counts,
+while source/resource entries remain explicitly unsupported. Same filenames do not prove source corresponds to bytecode;
 bundled .java is not automatically authoritative. Payload streams are subject to
 ArchiveInventory's per-container path/collision/10,000-entry/1-GiB safeguards.
-After inspection the complete directory inventory must equal the initial one.
-ZIP-embedded JAR inventory currently requires future stream support; the option
-rejects outer ZIP input rather than extracting it silently. No global multi-JAR
-budget/cancellation or bytecode semantic assurance is claimed yet.
+After inspection the complete directory or outer-ZIP inventory must equal the
+initial one. ZIP-embedded JARs are inspected through bounded streams without
+extracting either container. No global multi-JAR budget/cancellation or bytecode
+semantic assurance is claimed yet.
 
 Two scanner regressions cover class/source/resource classification, repeatable
 read-only payloads with deliberately invalid executable bytes, expected-hash

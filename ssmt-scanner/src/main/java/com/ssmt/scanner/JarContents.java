@@ -12,8 +12,9 @@ public record JarContents(String path, String containerSha256, List<Entry> entri
         String sourceJarCorrespondence) {
     public JarContents { entries = List.copyOf(entries); }
 
-    /** Payload bytes and their category, without class definition or execution. */
-    public record Entry(String path, long bytes, String sha256, String category) { }
+    /** Payload bytes, category, and explicit localization handling disposition. */
+    public record Entry(String path, long bytes, String sha256, String category,
+            String handlingStatus, String reason) { }
 
     /** Reads an explicitly inventoried mod-relative JAR, bound to its expected hash. */
     public static JarContents inspect(Path modRoot, Path relative, String expectedHash) throws IOException {
@@ -27,8 +28,7 @@ public record JarContents(String path, String containerSha256, List<Entry> entri
         if (!actualHash.equals(expectedHash)) {
             throw new IOException("JAR bytes changed after candidate inventory");
         }
-        List<Entry> entries = payloads.stream().map(entry -> new Entry(entry.path(), entry.bytes(),
-                entry.sha256(), category(entry.path()))).toList();
+        List<Entry> entries = payloads.stream().map(JarContents::entry).toList();
         return new JarContents(relative.toString().replace('\\', '/'), actualHash, entries, "NOT_ESTABLISHED");
     }
 
@@ -61,8 +61,7 @@ public record JarContents(String path, String containerSha256, List<Entry> entri
         if (!actualHash.equals(expectedHash)) {
             throw new IOException("Embedded JAR bytes changed during payload inventory");
         }
-        List<Entry> entries = payloads.stream().map(entry -> new Entry(entry.path(), entry.bytes(),
-                entry.sha256(), category(entry.path()))).toList();
+        List<Entry> entries = payloads.stream().map(JarContents::entry).toList();
         return new JarContents(path, actualHash, entries, "NOT_ESTABLISHED");
     }
 
@@ -79,5 +78,11 @@ public record JarContents(String path, String containerSha256, List<Entry> entri
         if (lower.endsWith(".class")) { return "CLASS_ENTRY_UNVERIFIED"; }
         if (lower.endsWith(".java")) { return "BUNDLED_SOURCE"; }
         return "RESOURCE";
+    }
+
+    private static Entry entry(ArchiveInventory.Entry entry) {
+        String category = category(entry.path());
+        return new Entry(entry.path(), entry.bytes(), entry.sha256(), category,
+                "NOT_ASSESSED", "RUN_DIRECTORY_COVERAGE_FOR_ENTRY_HANDLING");
     }
 }

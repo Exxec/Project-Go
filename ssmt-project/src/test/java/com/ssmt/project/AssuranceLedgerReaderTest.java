@@ -15,7 +15,16 @@ class AssuranceLedgerReaderTest {
 
     private Path ledger(String evidencePath) throws Exception {
         Path evidence = root.resolve("result.log");
-        Files.writeString(evidence, "recorded evidence, not semantic proof");
+        Path input = Files.writeString(root.resolve("source.zip"), "source input");
+        Path output = Files.writeString(root.resolve("output.jar"), "compiled output");
+        var verified = BuildEvidenceReader.AuthorityDisposition.VERIFIED;
+        var profile = new BuildEvidenceReader.Profile(1, HASH, "jdk/bin/java", "25",
+                List.of("gradlew.bat", "build", "--offline"), ".", 0,
+                List.of(reference(input)), List.of(), List.of(reference(output)),
+                List.of(new BuildEvidenceReader.Authority("SOURCE", verified, "reviewed"),
+                        new BuildEvidenceReader.Authority("COMPILED_JAR", verified, "recorded output"),
+                        new BuildEvidenceReader.Authority("LOADER_PROVIDER", verified, "reviewed")));
+        new com.fasterxml.jackson.databind.ObjectMapper().writeValue(evidence.toFile(), profile);
         String evidenceHash = com.ssmt.scanner.InventoryFingerprint.archive(evidence);
         var results = java.util.Arrays.stream(AssuranceSummary.Gate.values())
                 .map(gate -> new AssuranceSummary.Result(gate, AssuranceSummary.Disposition.PASS,
@@ -25,6 +34,11 @@ class AssuranceLedgerReaderTest {
         Path file = root.resolve("ledger.json");
         new com.fasterxml.jackson.databind.ObjectMapper().writeValue(file.toFile(), ledger);
         return file;
+    }
+
+    private BuildEvidenceReader.FileReference reference(Path file) throws Exception {
+        return new BuildEvidenceReader.FileReference(root.relativize(file).toString().replace('\\', '/'),
+                com.ssmt.scanner.InventoryFingerprint.archive(file));
     }
 
     @Test void verifiesReferencedBytesAndCandidateWithoutMutatingLedger() throws Exception {
@@ -63,5 +77,20 @@ class AssuranceLedgerReaderTest {
         assertThatThrownBy(() -> new AssuranceLedgerReader().read(file, HASH)).isInstanceOf(java.io.IOException.class);
         Files.writeString(file, " ".repeat(1024 * 1024 + 1));
         assertThatThrownBy(() -> new AssuranceLedgerReader().read(file, HASH)).hasMessageContaining("exceeds 1 MiB");
+    }
+
+    @Test void rejectsGenericLogAsCompilationEvidence() throws Exception {
+        Path evidence = Files.writeString(root.resolve("generic.log"), "compile succeeded");
+        String evidenceHash = com.ssmt.scanner.InventoryFingerprint.archive(evidence);
+        var results = java.util.Arrays.stream(AssuranceSummary.Gate.values())
+                .map(gate -> new AssuranceSummary.Result(gate, AssuranceSummary.Disposition.PASS,
+                        HASH, gate.name(), "generic.log", "")).toList();
+        var ledger = new AssuranceLedgerReader.Ledger(1, HASH, results,
+                List.of(new AssuranceLedgerReader.Reference("generic.log", evidenceHash)));
+        Path file = root.resolve("generic-ledger.json");
+        new com.fasterxml.jackson.databind.ObjectMapper().writeValue(file.toFile(), ledger);
+
+        assertThatThrownBy(() -> new AssuranceLedgerReader().read(file, HASH))
+                .isInstanceOf(java.io.IOException.class);
     }
 }

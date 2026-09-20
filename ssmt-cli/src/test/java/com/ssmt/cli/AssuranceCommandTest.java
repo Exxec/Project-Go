@@ -54,4 +54,28 @@ class AssuranceCommandTest {
                 .isZero();
         assertThat(output.toString()).contains("candidateSha256", "REPLACE_WITH_EXACT_BUILD");
     }
+
+    @Test void buildTemplateBindsToCandidateAndKeepsAuthorityUnderReview() throws Exception {
+        Path candidate = Files.createDirectory(root.resolve("build-candidate"));
+        Files.writeString(candidate.resolve("mod_info.json"), "{\"id\":\"candidate\"}");
+        StringWriter output = new StringWriter();
+        var command = new CommandLine(new Main());
+        command.setOut(new PrintWriter(output));
+        assertThat(command.execute("build-evidence", "--candidate", candidate.toString(), "--template"))
+                .isZero();
+        assertThat(output.toString()).contains("candidateSha256", "REPLACE_WITH_EXACT_JDK_VERSION",
+                "REVIEW_REQUIRED", "LOADER_PROVIDER");
+    }
+
+    @Test void feedbackTemplateIsCandidateBoundAndReviewPending() throws Exception {
+        Path candidate = Files.createDirectory(root.resolve("feedback-candidate"));
+        Files.writeString(candidate.resolve("mod_info.json"), "{\"id\":\"candidate\"}");
+        StringWriter output = new StringWriter();
+        var command = new CommandLine(new Main());
+        command.setOut(new PrintWriter(output));
+        assertThat(command.execute("attempt-feedback", "--candidate", candidate.toString(), "--template"))
+                .isZero();
+        assertThat(output.toString()).contains("candidateSha256", "REPLACE_WITH_ATTEMPT_ID",
+                "\"reviewComplete\" : false");
+    }
 }

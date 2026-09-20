@@ -97,6 +97,13 @@ public final class AssuranceLedgerReader {
                 throw new IOException("Evidence hash mismatch: " + reference.path());
             }
         }
+        AssuranceSummary.Result build = summary.results().stream()
+                .filter(result -> result.gate() == AssuranceSummary.Gate.BUILD)
+                .findFirst().orElseThrow();
+        if (build.disposition() == AssuranceSummary.Disposition.PASS
+                || build.disposition() == AssuranceSummary.Disposition.FAIL) {
+            new BuildEvidenceReader().read(root.resolve(build.evidence()).normalize(), expectedCandidateSha256);
+        }
         return summary;
     }
 
