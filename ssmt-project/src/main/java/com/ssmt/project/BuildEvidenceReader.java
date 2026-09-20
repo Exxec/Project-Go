@@ -152,9 +152,8 @@ public final class BuildEvidenceReader {
         for (Path current = file; current != null; current = current.getParent()) {
             if (Files.isSymbolicLink(current)) { throw new IOException("Linked build evidence paths require review"); }
         }
-        if (!Files.isRegularFile(file, java.nio.file.LinkOption.NOFOLLOW_LINKS)
-                || !file.toRealPath().equals(file)) {
-            throw new IOException("Build evidence must use regular canonical files");
+        if (!Files.isRegularFile(file, java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
+            throw new IOException("Build evidence must use regular files");
         }
     }
 

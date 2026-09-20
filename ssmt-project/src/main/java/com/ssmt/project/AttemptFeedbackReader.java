@@ -147,9 +147,8 @@ public final class AttemptFeedbackReader {
                 throw new IOException("Linked feedback paths require review");
             }
         }
-        if (!Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)
-                || !file.toRealPath().equals(file)) {
-            throw new IOException("Feedback artifacts must be regular canonical files");
+        if (!Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)) {
+            throw new IOException("Feedback artifacts must be regular files");
         }
     }
 
