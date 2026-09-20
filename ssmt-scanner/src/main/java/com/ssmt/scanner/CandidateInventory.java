@@ -22,11 +22,14 @@ public final class CandidateInventory {
 
     /** Captures every regular file beneath a directory, rejecting links and races. */
     public List<Entry> capture(Path candidate) throws IOException {
-        Path root = candidate.toAbsolutePath().normalize();
-        rejectLinks(root);
-        if (!Files.isDirectory(root, LinkOption.NOFOLLOW_LINKS)) {
-            throw new IOException("Candidate must be a directory: " + root);
+        Path requestedRoot = candidate.toAbsolutePath().normalize();
+        rejectSymbolicComponents(requestedRoot);
+        if (!Files.isDirectory(requestedRoot, LinkOption.NOFOLLOW_LINKS)) {
+            throw new IOException("Candidate must be a directory: " + requestedRoot);
         }
+        // Normalize equivalent Windows spellings once; linked descendants remain forbidden.
+        Path root = requestedRoot.toRealPath();
+        rejectLinks(root);
         List<Entry> entries = new ArrayList<>();
         try (var paths = Files.walk(root)) {
             var iterator = paths.iterator();
@@ -59,13 +62,17 @@ public final class CandidateInventory {
     }
 
     private static void rejectLinks(Path path) throws IOException {
+        rejectSymbolicComponents(path);
+        if (!path.toRealPath().equals(path.toAbsolutePath().normalize())) {
+            throw new IOException("Aliased candidate paths require explicit review: " + path);
+        }
+    }
+
+    private static void rejectSymbolicComponents(Path path) throws IOException {
         for (Path current = path; current != null; current = current.getParent()) {
             if (Files.isSymbolicLink(current)) {
                 throw new IOException("Linked candidate paths are not supported: " + current);
             }
-        }
-        if (!path.toRealPath().equals(path.toAbsolutePath().normalize())) {
-            throw new IOException("Aliased candidate paths require explicit review: " + path);
         }
     }
 
