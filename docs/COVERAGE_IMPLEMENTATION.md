@@ -54,6 +54,12 @@ results; actual player visibility and bytecode behavior remain unverified.
 
 The Nightcross ZIP remains SHA-256
 `a6baabc3c935c99cf881312f738fa044bc7b8b6fed6fbf9ed569e77e3fe2b65b`.
+The 2026-09-24 read-only comparison found that its nested
+`jars/nightcross.jar` matches the separate original mod directory byte-for-byte
+(SHA-256 `31e7706c6719cf1304bb3aea3e5246242224560ea4c5f6d8c356afe3ed97f6b4`).
+The prior translated output has a different JAR. This locates the observed CRC
+defect in both supplied source copies; it does not establish historical
+authority or approve replacing the JAR.
 Basic read-only assessment selects `Nightcross` and inventories 2,374 files.
 `--jar-inventory --coverage --json` now returns a parseable partial assessment
 with exit code 1, `INCOMPLETE_JAR_INTEGRITY`, `NOT_ASSESSED_INVALID_JAR`, and a

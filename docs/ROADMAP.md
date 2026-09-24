@@ -232,8 +232,22 @@ release claim.
   persistence, rights, and later-release gates remain open where marked below.
 - A Nightcross archive-assessment feedback packet classifies the CRC mismatch
   as candidate-specific and the former report-loss failure as a detector gap.
-  Six evidence/fixture/change references are hash-bound; `attempt-feedback`
-  verifies the record as `REVIEW_PENDING`, not ready for the next candidate.
+  Six evidence/fixture/change references are hash-bound. Its initial status
+  was `REVIEW_PENDING`; the 2026-09-24 review below verifies it as
+  `READY_FOR_NEXT_CANDIDATE` without clearing Nightcross's integrity gate.
+
+## Offline gate checkpoint - 2026-09-24
+
+- The Nightcross JAR inside the source ZIP matches the separate original mod
+  directory byte-for-byte (SHA-256
+  `31e7706c6719cf1304bb3aea3e5246242224560ea4c5f6d8c356afe3ed97f6b4`).
+  The CRC defect was present in both supplied copies. Historical authority and
+  a safe replacement or repair remain unverified.
+- The two recorded archive-assessment surprises were reviewed. The hash-bound
+  local packet now passes `attempt-feedback` as `READY_FOR_NEXT_CANDIDATE`;
+  this only closes feedback for that assessment attempt. P3 Nightcross coverage,
+  a current translated candidate, final package audit, game scenarios, rights,
+  and release finalization remain open. See `ROADMAP_PHASE_STATUS_2026-09-23.md`.
 
 ## P0 — restore trustworthy build and release evidence
 
@@ -451,8 +465,9 @@ another gate.
   tool change before starting the next candidate.
   `ssmt attempt-feedback` now enforces these classifications and hash-bound evidence,
   fixture, and change artifacts for each recorded surprise. The Nightcross
-  archive-assessment packet records two surprises but remains `REVIEW_PENDING`;
-  real-attempt review remains a procedural gate.
+  archive-assessment packet records two surprises and was reviewed on
+  2026-09-24 as `READY_FOR_NEXT_CANDIDATE`. Archive that local packet with
+  future candidate evidence; continue to review each later attempt separately.
 - [x] Never move an assessment copy to a completed state while a manual,
   bytecode-only, authority, persistence, runtime, or rights gate remains open.
 

@@ -16,12 +16,46 @@ The local tag resolves to `8e9e55f6f61e9861ba69cd22325142d2b1bbb36b`.
 | P0 release | Historical `v0.8.0-rc.1` publication verified by `RELEASE_0.8.0_RC1_VERIFICATION.md`. Later main commits are unreleased. | For the next version: exact-commit/tag CI, rebuilt native assets, downloaded hashes, embedded identity, and release record. |
 | P1 simple workflow | Shared implementation complete. Packaged CLI and Auto synthetic ZIP-to-output acceptance passed. Native GUI picker and fresh-profile file drag/drop each completed ZIP-to-output; export cancellation and invalid-response preservation passed. | Repeat native acceptance against the exact source and assets of a future release; this development-image pass is local P1 evidence only. |
 | P2 assessment | Read-only deterministic tooling complete at assessment boundary. | Run per candidate and review authority/escalation findings; do not infer revival. |
-| P3 coverage | Inventories, advisory gaps, opt-in schemas, preservation, and read-only ZIP coverage implemented. Standard CSV selection-gap findings now appear in directory and ZIP `assess --coverage` reports, including later-row text. Nightcross nested JAR integrity blocks its coverage run. | Review Nightcross JAR authority/integrity and obtain human acceptance of any new ecosystem format before fixture-first implementation. |
+| P3 coverage | Inventories, advisory gaps, opt-in schemas, preservation, and read-only ZIP coverage implemented. Standard CSV selection-gap findings now appear in directory and ZIP `assess --coverage` reports, including later-row text. Nightcross nested JAR integrity blocks its coverage run; the archived JAR bytes match the separate original directory. | Obtain an authoritative replacement or reviewed repair for the invalid Nightcross JAR, and human acceptance of any new ecosystem format before fixture-first implementation. |
 | P4 package audit | Source, clone, ZIP and build-evidence tooling implemented. | Run audits on the final candidate and release bytes. |
 | P5 runtime | Capture and separate gates implemented. | Execute real boot, campaign, combat, save/reload and upgrade scenarios as applicable. |
-| P6 completion | Evidence-derived status, feedback, and finalization tooling implemented. The Nightcross archive-assessment feedback packet is hash-bound and `REVIEW_PENDING`. | Review the classified surprises, then finalize only against actual candidate and release bytes after manual and rights gates. |
+| P6 completion | Evidence-derived status, feedback, and finalization tooling implemented. The two classified Nightcross archive-assessment surprises were reviewed; the hash-bound local packet now verifies as `READY_FOR_NEXT_CANDIDATE`. | Archive feedback with a future candidate record, then finalize only against actual candidate and release bytes after manual and rights gates. |
 
 ## Local validation
+
+### Offline candidate gate review - 2026-09-24
+
+The read-only Nightcross integrity check compared the nested
+`Nightcross/jars/nightcross.jar` from `.local/inputs/nightcross.zip` with the
+separate original mod directory. Both JARs are SHA-256
+`31e7706c6719cf1304bb3aea3e5246242224560ea4c5f6d8c356afe3ed97f6b4`
+(1,119,023 bytes). The containing ZIP remained SHA-256
+`a6baabc3c935c99cf881312f738fa044bc7b8b6fed6fbf9ed569e77e3fe2b65b`.
+The prior translated output's JAR is different
+(`5b6dbedb98eeba08ef876415c1057c6985de94b996c17f4847d186a55f0ff6ca`).
+This establishes that this ZIP copy did not introduce the observed CRC defect;
+it does not authenticate the original JAR, validate its entries, or authorize
+substituting the older translated output. The current partial assessment still
+blocks on `.idea/.gitignore` CRC mismatch and claims no Nightcross coverage.
+
+The two surprises in the ignored
+`.local/acceptance/nightcross-feedback-20260923/` packet were reviewed against
+the hash-bound evidence, regression fixtures, and source-change snapshots.
+The packaged `attempt-feedback` verifier returned exit 0 and
+`READY_FOR_NEXT_CANDIDATE` for the same 2,374-file selected-root fingerprint
+`4f5552b3a6b1aec13ec15046d99337975f5cade6a05447a34fe3a8598f19d655`.
+The reviewed packet is SHA-256
+`9d23baed71123a816be42bcf3aa47b5001195852f3b8eb69edd092c2eb392cea`.
+Its local review permits another independent candidate assessment, not
+Nightcross translation completion or release finalization. The packet remains
+ignored, disposable local evidence until archived with a future candidate.
+
+No further pre-live phase can be closed for Nightcross from current inputs:
+the current export has 12,918 selected entries while the available response
+covers 12,745; no current translated final candidate or matching final ZIP
+exists for P4. P3 requires JAR authority and format acceptance, and P5 requires
+actual game scenarios. P6 finalization requires the resulting candidate and
+release bytes, live-test and persistence dispositions, and rights review.
 
 The next P3 gap tranche adds read-only standard CSV selection-gap findings to
 directory and ZIP `assess --coverage` reports. A recognized column whose first
@@ -214,11 +248,11 @@ to two classified surprises: the candidate-specific JAR CRC mismatch and the
 detector gap that previously lost the candidate report on requested JAR
 inventory. It includes six distinct SHA-256 references to the observed
 reports, repository-owned regression fixtures, and source changes. The
-packaged `attempt-feedback` verifier checked it with expected exit 1 and
-status `REVIEW_PENDING`. The source ZIP's selected-root hash and the old
-extraction cache's 2,374-file tree hash match. This does not establish
-historical authority, semantic review completion, or readiness for another
-candidate; the local packet is disposable until reviewed and archived.
+packaged `attempt-feedback` verifier initially checked it with expected exit
+1 and status `REVIEW_PENDING`. The source ZIP's selected-root hash and the old
+extraction cache's 2,374-file tree hash match. The 2026-09-24 review above
+changed the local packet to `READY_FOR_NEXT_CANDIDATE`; it remains disposable
+until archived and does not establish Nightcross authority or completion.
 
 ## Resume
 
