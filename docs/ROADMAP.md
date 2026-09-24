@@ -369,7 +369,10 @@ COVERAGE_IMPLEMENTATION.md; P3 is not closed.
   Recognized standard CSVs now report non-ASCII text in unselected columns as
   review-only findings, including an explicit unavailable status for unsafe,
   oversized, unreadable, malformed, or ambiguous-header inputs. This does not
-  infer visibility or authorize schema expansion.
+  infer visibility or authorize schema expansion. `assess --coverage` now
+  includes these findings for directories and ZIPs, including text first seen
+  in a later CSV row; the samples and reads are bounded, and JSON/CSV gap paths
+  in the assessment report are mod-relative rather than ZIP backing URIs.
 - [x] Require human confirmation of player visibility and stable identity before
   accepting a generated custom schema.
 - [ ] For each accepted ecosystem format, add a synthetic failing fixture first,

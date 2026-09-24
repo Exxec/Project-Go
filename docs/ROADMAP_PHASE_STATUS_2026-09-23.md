@@ -16,12 +16,28 @@ The local tag resolves to `8e9e55f6f61e9861ba69cd22325142d2b1bbb36b`.
 | P0 release | Historical `v0.8.0-rc.1` publication verified by `RELEASE_0.8.0_RC1_VERIFICATION.md`. Later main commits are unreleased. | For the next version: exact-commit/tag CI, rebuilt native assets, downloaded hashes, embedded identity, and release record. |
 | P1 simple workflow | Shared implementation complete. Packaged CLI and Auto synthetic ZIP-to-output acceptance passed. Native GUI picker and fresh-profile file drag/drop each completed ZIP-to-output; export cancellation and invalid-response preservation passed. | Repeat native acceptance against the exact source and assets of a future release; this development-image pass is local P1 evidence only. |
 | P2 assessment | Read-only deterministic tooling complete at assessment boundary. | Run per candidate and review authority/escalation findings; do not infer revival. |
-| P3 coverage | Inventories, advisory gaps, opt-in schemas, preservation, and read-only ZIP coverage implemented. Nightcross nested JAR integrity blocks its coverage run. | Review Nightcross JAR authority/integrity and obtain human acceptance of any new ecosystem format before fixture-first implementation. |
+| P3 coverage | Inventories, advisory gaps, opt-in schemas, preservation, and read-only ZIP coverage implemented. Standard CSV selection-gap findings now appear in directory and ZIP `assess --coverage` reports, including later-row text. Nightcross nested JAR integrity blocks its coverage run. | Review Nightcross JAR authority/integrity and obtain human acceptance of any new ecosystem format before fixture-first implementation. |
 | P4 package audit | Source, clone, ZIP and build-evidence tooling implemented. | Run audits on the final candidate and release bytes. |
 | P5 runtime | Capture and separate gates implemented. | Execute real boot, campaign, combat, save/reload and upgrade scenarios as applicable. |
 | P6 completion | Evidence-derived status, feedback, and finalization tooling implemented. The Nightcross archive-assessment feedback packet is hash-bound and `REVIEW_PENDING`. | Review the classified surprises, then finalize only against actual candidate and release bytes after manual and rights gates. |
 
 ## Local validation
+
+The next P3 gap tranche adds read-only standard CSV selection-gap findings to
+directory and ZIP `assess --coverage` reports. A recognized column whose first
+row is ASCII but a later row contains non-ASCII text now receives a review
+finding; the prior detector skipped it. Reads and samples are bounded, and a
+failed extraction claims no CSV gap result. ZIP-backed JSON and CSV gap paths
+are now serialized as mod-relative strings, not absolute `jar:file:` URIs.
+Focused extractor and CLI tests plus Checkstyle passed with all 26 tasks
+executed. An initially absent profile full check and CLI/GUI/Auto distribution
+rebuild passed 578 tests in 131 suites, zero failures/errors/skips, and all
+102 tasks executed; see `.local/checks/csv-gap-portable-full.log`. The rebuilt
+packaged CLI reported a later-row `groupTag` sample `技术` at
+`data/weapons/weapon_data.csv` from a nested-root ZIP. The fixture remained
+SHA-256 `001122506b3c47071a2ed448df8b40aae0fd27b3747288d5ce4099d0f81d740a`
+and no wrapper tree was extracted. This is advisory coverage, not approval to
+translate the column or a real-candidate/release result.
 
 Before committing this checkpoint, an initially absent `LOCALAPPDATA` profile
 and offline uncached full `check` plus CLI/GUI/Auto `installDist` rebuild

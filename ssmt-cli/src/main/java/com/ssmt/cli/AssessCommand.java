@@ -49,6 +49,14 @@ public final class AssessCommand implements Callable<Integer> {
     /** Portable observed handling; counts never imply exhaustive localization. */
     public record Coverage(String path, String handler, String status, int strings, String reason) { }
 
+    /** Review-only JSON gap with a portable mod-relative source path. */
+    public record JsonGapFinding(String relativeSourceFile, String status,
+            String pointer, String sample) { }
+
+    /** Review-only CSV gap with a portable mod-relative source path. */
+    public record CsvGapFinding(String relativeSourceFile, String status,
+            String column, String sample) { }
+
     /** Explicit provenance limits for this one supplied candidate; never a trust claim. */
     public record SourceAuthority(String origin, String archiveCoverage, String selectedVariant,
             String sourceJarCorrespondence, String competingInputs) { }
@@ -65,7 +73,8 @@ public final class AssessCommand implements Callable<Integer> {
             String inventorySha256, String candidateSha256, String archiveSha256,
             SourceAuthority sourceAuthority,
             String coverageStatus, List<Coverage> extractionCoverage,
-            String jsonGapStatus, List<com.ssmt.extractor.StandardJsonGapAuditor.Finding> jsonGapFindings,
+            String jsonGapStatus, List<JsonGapFinding> jsonGapFindings,
+            String csvGapStatus, List<CsvGapFinding> csvGapFindings,
             String csvAuditStatus, List<com.ssmt.extractor.CsvStructureAuditor.Finding> csvFindings,
             String jarInventoryStatus, List<com.ssmt.scanner.JarContents> jarContents,
             String sourceManifestStatus, List<com.ssmt.scanner.SourceTreeManifest.Node> sourceNodes,
@@ -77,6 +86,7 @@ public final class AssessCommand implements Callable<Integer> {
             trustLimits = List.copyOf(trustLimits);
             extractionCoverage = List.copyOf(extractionCoverage);
             jsonGapFindings = List.copyOf(jsonGapFindings);
+            csvGapFindings = List.copyOf(csvGapFindings);
             csvFindings = List.copyOf(csvFindings);
             jarContents = List.copyOf(jarContents);
             sourceNodes = List.copyOf(sourceNodes);
@@ -224,9 +234,11 @@ public final class AssessCommand implements Callable<Integer> {
                 }
             }
             List<Coverage> observedCoverage = List.of();
-            List<com.ssmt.extractor.StandardJsonGapAuditor.Finding> jsonGapFindings = List.of();
+            List<JsonGapFinding> jsonGapFindings = List.of();
+            List<CsvGapFinding> csvGapFindings = List.of();
             List<Finding> coverageFindings = new java.util.ArrayList<>();
             String jsonGapStatus = "NOT_ASSESSED";
+            String csvGapStatus = "NOT_ASSESSED";
             String coverageStatus = "NOT_ASSESSED";
             if (coverage) {
                 if (!jarFindings.isEmpty()) {
@@ -250,7 +262,17 @@ public final class AssessCommand implements Callable<Integer> {
                                 file.sourceFile().toString().replace('\\', '/'), file.handler(),
                                 file.status(), file.extractedStrings(), file.reason())).toList();
                         jsonGapFindings = new com.ssmt.extractor.StandardJsonGapAuditor()
-                                .audit(selectedRoot, declared.id(), extracted);
+                                .audit(selectedRoot, declared.id(), extracted).stream()
+                                .map(finding -> new JsonGapFinding(
+                                        portableGapPath(finding.relativeSourceFile()),
+                                        finding.status(), finding.pointer(), finding.sample()))
+                                .toList();
+                        csvGapFindings = new com.ssmt.extractor.StandardCsvGapAuditor()
+                                .audit(selectedRoot, extracted).stream()
+                                .map(finding -> new CsvGapFinding(
+                                        portableGapPath(finding.relativeSourceFile()),
+                                        finding.status(), finding.column(), finding.sample()))
+                                .toList();
                         var entryCoverage = new com.ssmt.extractor.JarEntryCoverage();
                         jarContents = jarContents.stream().map(contents -> {
                             try {
@@ -282,6 +304,7 @@ public final class AssessCommand implements Callable<Integer> {
                         }
                         coverageStatus = "OBSERVED_STANDARD_EXTRACTION";
                         jsonGapStatus = "OBSERVED_REVIEW_ONLY";
+                        csvGapStatus = "OBSERVED_REVIEW_ONLY";
                     } catch (com.ssmt.core.exception.SsmtParseException exception) {
                         boolean unchanged = kind.equals("DIRECTORY")
                                 ? entries.equals(new CandidateInventory().capture(candidate))
@@ -308,6 +331,7 @@ public final class AssessCommand implements Callable<Integer> {
                                 location + ": " + reason));
                         observedCoverage = List.of();
                         jsonGapFindings = List.of();
+                        csvGapFindings = List.of();
                         coverageStatus = "INCOMPLETE_SOURCE_PARSE";
                     } finally {
                         if (archiveFs != null) { archiveFs.close(); }
@@ -396,6 +420,7 @@ public final class AssessCommand implements Callable<Integer> {
                     validity, declared, identity, inventoryHash, candidateHash, archiveHash,
                     authority,
                     coverageStatus, observedCoverage, jsonGapStatus, jsonGapFindings,
+                    csvGapStatus, csvGapFindings,
                     csvStatus, csvFindings, jarStatus, jarContents,
                     sourceStatus, sourceNodes, sourceNodesAfter);
             if (json) {
@@ -416,6 +441,8 @@ public final class AssessCommand implements Callable<Integer> {
                 output.println("Coverage: " + coverageStatus);
                 output.println("JSON gap review: " + jsonGapStatus);
                 jsonGapFindings.forEach(finding -> output.println("JSON review: " + finding));
+                output.println("CSV gap review: " + csvGapStatus);
+                csvGapFindings.forEach(finding -> output.println("CSV gap: " + finding));
                 observedCoverage.forEach(output::println);
                 output.println("CSV audit: " + csvStatus);
                 csvFindings.forEach(output::println);
@@ -519,6 +546,10 @@ public final class AssessCommand implements Callable<Integer> {
         } catch (java.security.NoSuchAlgorithmException exception) {
             throw new IllegalStateException("SHA-256 unavailable", exception);
         }
+    }
+
+    private static String portableGapPath(Path path) {
+        return path.toString().replace('\\', '/');
     }
 
     private static boolean isMetadata(String path) {

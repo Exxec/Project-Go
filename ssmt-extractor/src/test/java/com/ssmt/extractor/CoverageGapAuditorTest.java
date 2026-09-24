@@ -35,6 +35,25 @@ class CoverageGapAuditorTest {
     }
 
     @Test
+    void boundsAdvisorySamplesAndDoesNotClaimMissingCsvWasReviewed(@TempDir Path modRoot)
+            throws Exception {
+        Path present = Path.of("data/weapons/weapon_data.csv");
+        Path missing = Path.of("data/hulls/ship_data.csv");
+        write(modRoot.resolve(present),
+                "id,name,groupTag\nw0,First,technical\nw1,Weapon,"
+                        + "\u6280".repeat(200) + "\n");
+        ExtractionReport report = new ExtractionReport(List.of(), List.of(), List.of(
+                new FileCoverage(present, "standard", "EXTRACTED", 1, "SELECTED_STRINGS_ONLY"),
+                new FileCoverage(missing, "standard", "EXTRACTED", 1, "SELECTED_STRINGS_ONLY")));
+
+        var findings = new StandardCsvGapAuditor().audit(modRoot, report);
+
+        assertThat(findings).extracting(StandardCsvGapAuditor.Finding::status)
+                .containsExactly("UNAVAILABLE_UNSAFE_PATH", "UNSELECTED_COLUMN_WITH_NON_ASCII_TEXT");
+        assertThat(findings.get(1).sample()).hasSize(160);
+    }
+
+    @Test
     void suggestsAsciiTextWithoutIncludingTechnicalColumns(@TempDir Path modRoot) throws Exception {
         Path relative = Path.of("data/custom/augments.csv");
         write(modRoot.resolve(relative),

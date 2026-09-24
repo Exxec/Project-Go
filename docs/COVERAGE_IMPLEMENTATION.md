@@ -2,6 +2,36 @@
 
 Parent plan: NON_VALIDATION_COMPLETION.md. P3 is not complete.
 
+## Standard CSV selection-gap assessment - 2026-09-23
+
+`ssmt assess INPUT --coverage --json` now includes `csvGapStatus` and
+`csvGapFindings` for directory and ZIP candidates. The existing standard CSV
+auditor reports non-ASCII text in columns outside the selected schema, using
+mod-relative paths. These are review findings, not evidence of player
+visibility or authorization to translate technical columns. The independent
+`--csv-audit` structure review was already available for ZIP inputs.
+
+The auditor now examines later rows when earlier cells in the same column are
+ASCII; it previously skipped the column after the first row. Reads stop at
+16 MiB plus one byte, unsafe or missing paths receive an unavailable finding,
+and samples are capped at 160 characters. A failed standard extraction keeps
+`csvGapStatus=NOT_ASSESSED` and publishes no CSV gap findings. Repository
+regressions cover later-row text in directory and nested-root ZIP candidates,
+source immutability, bounded samples, and unavailable inputs. No custom schema
+was accepted.
+
+The assessment serializes CSV and JSON gap source paths as explicit
+mod-relative strings; Java's default serialization of ZIP-backed `Path`
+objects had exposed absolute `jar:file:` URIs. The rebuilt packaged CLI
+reported `groupTag` with sample `技术` at
+`data/weapons/weapon_data.csv` from a nested-root ZIP whose first data row was
+ASCII. Its SHA-256 stayed
+`001122506b3c47071a2ed448df8b40aae0fd27b3747288d5ce4099d0f81d740a`;
+no wrapper directory was extracted. A fresh-profile offline full check and
+CLI/GUI/Auto distribution rebuild passed 578 tests in 131 suites, with zero
+failures/errors/skips and all 102 tasks executed. This is local development
+evidence, not an accepted new schema or release result.
+
 ## Read-only ZIP coverage checkpoint - 2026-09-23
 
 `ssmt assess ARCHIVE.zip --coverage --jar-inventory --json` now mounts an
@@ -150,7 +180,8 @@ on separate malformed/extra-column/duplicate/blank fixtures and inspect REVIEW
 codes and source immutability. Combining with --coverage still requires the actual
 extraction to parse successfully; coverage parse failure is not hidden by advisory
 success. Unknown-schema IDENTITY_NOT_ASSESSED requires human confirmation, not a
-schema approval. ZIP CSV advisory support and gap visibility remain open.
+schema approval. ZIP structure review was implemented in the 2026-09-14
+checkpoint; the later standard CSV selection-gap assessment is recorded above.
 
 Format-preserving reinjection now covers whole-file encoding/BOM and byte-identical
 non-target JAR resources in addition to JSON/CSV token preservation. The continuing

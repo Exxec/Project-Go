@@ -99,6 +99,9 @@ class AssessCommandTest {
         Path hulls = Files.createDirectories(directory.resolve("data/hulls"));
         Files.writeString(hulls.resolve("review.ship"),
                 "{hullName:'Visible',spriteName:'technical.png'}");
+        Path weapons = Files.createDirectories(directory.resolve("data/weapons"));
+        Files.writeString(weapons.resolve("weapon_data.csv"),
+                "id,name,groupTag\nw0,First,technical\nw1,Weapon,\u6280\u672F\n");
         Files.writeString(directory.resolve("unsupported.xyz"), "Review me");
         var before = new com.ssmt.scanner.CandidateInventory().capture(directory);
         var command = new CommandLine(new Main());
@@ -107,7 +110,14 @@ class AssessCommandTest {
         assertThat(command.execute("assess", directory.toString(), "--coverage", "--json")).isZero();
         assertThat(output.toString()).contains("OBSERVED_STANDARD_EXTRACTION", "UNSUPPORTED",
                 "\"strings\":1", "\"path\":\"data/strings/strings.json\"",
-                "OBSERVED_REVIEW_ONLY", "json:/spriteName", "UNSELECTED_TEXT_REVIEW");
+                "OBSERVED_REVIEW_ONLY", "json:/spriteName", "UNSELECTED_TEXT_REVIEW",
+                "\"csvGapStatus\":\"OBSERVED_REVIEW_ONLY\"",
+                "UNSELECTED_COLUMN_WITH_NON_ASCII_TEXT", "groupTag");
+        var report = new com.fasterxml.jackson.databind.ObjectMapper().readTree(output.toString());
+        assertThat(report.path("jsonGapFindings").get(0).path("relativeSourceFile").asText())
+                .isEqualTo("data/hulls/review.ship");
+        assertThat(report.path("csvGapFindings").get(0).path("relativeSourceFile").asText())
+                .isEqualTo("data/weapons/weapon_data.csv");
         assertThat(new com.ssmt.scanner.CandidateInventory().capture(directory)).isEqualTo(before);
     }
 
@@ -128,6 +138,8 @@ class AssessCommandTest {
                 .isEqualTo("INCOMPLETE_SOURCE_PARSE");
         assertThat(directoryReport.path("extractionCoverage")).isEmpty();
         assertThat(directoryReport.path("jsonGapStatus").asText()).isEqualTo("NOT_ASSESSED");
+        assertThat(directoryReport.path("csvGapStatus").asText()).isEqualTo("NOT_ASSESSED");
+        assertThat(directoryReport.path("csvGapFindings")).isEmpty();
         assertThat(directoryReport.path("findings").toString())
                 .contains("COVERAGE_SOURCE_PARSE_FAILED", "data/strings/strings.json");
         assertThat(new com.ssmt.scanner.CandidateInventory().capture(directory))
@@ -155,6 +167,8 @@ class AssessCommandTest {
         assertThat(archiveReport.path("coverageStatus").asText())
                 .isEqualTo("INCOMPLETE_SOURCE_PARSE");
         assertThat(archiveReport.path("extractionCoverage")).isEmpty();
+        assertThat(archiveReport.path("csvGapStatus").asText()).isEqualTo("NOT_ASSESSED");
+        assertThat(archiveReport.path("csvGapFindings")).isEmpty();
         assertThat(archiveReport.path("findings").toString())
                 .contains("COVERAGE_SOURCE_PARSE_FAILED", "data/strings/strings.json");
         assertThat(archiveOutput.toString()).doesNotContain(archive.toString());
@@ -189,6 +203,10 @@ class AssessCommandTest {
             output.write("{hullName:'Visible',spriteName:'technical.png'}"
                     .getBytes(java.nio.charset.StandardCharsets.UTF_8));
             output.closeEntry();
+            output.putNextEntry(new java.util.zip.ZipEntry("wrapper/data/weapons/weapon_data.csv"));
+            output.write("id,name,groupTag\nw0,First,technical\nw1,Weapon,\u6280\u672F\n"
+                    .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            output.closeEntry();
             output.putNextEntry(new java.util.zip.ZipEntry("wrapper/unsupported.xyz"));
             output.write("Review me".getBytes(java.nio.charset.StandardCharsets.UTF_8));
             output.closeEntry();
@@ -206,11 +224,19 @@ class AssessCommandTest {
 
         var report = new com.fasterxml.jackson.databind.ObjectMapper().readTree(output.toString());
         assertThat(report.path("coverageStatus").asText()).isEqualTo("OBSERVED_STANDARD_EXTRACTION");
-        assertThat(report.path("extractionCoverage").size()).isEqualTo(5);
+        assertThat(report.path("extractionCoverage").size()).isEqualTo(6);
         assertThat(report.path("extractionCoverage").toString()).contains(
                 "\"path\":\"data/strings/strings.json\"", "\"strings\":1",
                 "\"path\":\"unsupported.xyz\"", "NO_EXTRACTOR_MATCH");
         assertThat(report.path("jsonGapFindings").toString()).contains("UNSELECTED_TEXT_REVIEW");
+        assertThat(report.path("csvGapStatus").asText()).isEqualTo("OBSERVED_REVIEW_ONLY");
+        assertThat(report.path("csvGapFindings").toString()).contains(
+                "UNSELECTED_COLUMN_WITH_NON_ASCII_TEXT", "weapon_data.csv", "groupTag");
+        assertThat(report.path("jsonGapFindings").get(0).path("relativeSourceFile").asText())
+                .isEqualTo("data/hulls/review.ship");
+        assertThat(report.path("csvGapFindings").get(0).path("relativeSourceFile").asText())
+                .isEqualTo("data/weapons/weapon_data.csv");
+        assertThat(output.toString()).doesNotContain("jar:file:");
         assertThat(report.path("jarContents").toString()).contains("notes.txt",
                 "NO_STANDARD_ARCHIVE_ENTRY_EXTRACTOR", "AssessCommandTest.class",
                 "ALLOWLISTED_CLASS_STRINGS_SELECTED");

@@ -10,6 +10,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -67,12 +68,17 @@ public final class StandardCsvGapAuditor {
     private static void inspect(
             Path root, Path relative, CsvExtractionSpec spec, List<Finding> findings) {
         Path file = root.resolve(relative).normalize();
-        if (relative.isAbsolute() || !file.startsWith(root)) {
+        if (relative.isAbsolute() || !file.startsWith(root)
+                || !Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)
+                || hasSymbolicComponent(root, file)) {
             findings.add(unavailable(relative, "UNAVAILABLE_UNSAFE_PATH"));
             return;
         }
         try {
-            byte[] bytes = Files.readAllBytes(file);
+            byte[] bytes;
+            try (var input = Files.newInputStream(file)) {
+                bytes = input.readNBytes(MAX_INPUT_BYTES + 1);
+            }
             if (bytes.length > MAX_INPUT_BYTES) {
                 findings.add(unavailable(relative, "UNAVAILABLE_INPUT_LIMIT"));
                 return;
@@ -81,6 +87,14 @@ public final class StandardCsvGapAuditor {
         } catch (IOException exception) {
             findings.add(unavailable(relative, "UNAVAILABLE_READ_OR_ENCODING"));
         }
+    }
+
+    private static boolean hasSymbolicComponent(Path root, Path file) {
+        for (Path current = file; current != null; current = current.getParent()) {
+            if (Files.isSymbolicLink(current)) { return true; }
+            if (current.equals(root)) { return false; }
+        }
+        return true;
     }
 
     private static void inspectText(
@@ -98,17 +112,19 @@ public final class StandardCsvGapAuditor {
             for (CSVRecord record : parser) {
                 for (int index = 0; index < headers.size() && index < record.size(); index++) {
                     String column = headers.get(index);
-                    if (column.isBlank() || selected.contains(column) || !reportedColumns.add(index)) {
+                    if (column.isBlank() || selected.contains(column)
+                            || reportedColumns.contains(index)) {
                         continue;
                     }
                     String value = record.get(index);
                     if (NON_ASCII.matcher(value).find()) {
+                        reportedColumns.add(index);
                         findings.add(new Finding(relative,
                                 "UNSELECTED_COLUMN_WITH_NON_ASCII_TEXT", column, sample(value)));
                     }
                 }
             }
-        } catch (IOException | IllegalArgumentException exception) {
+        } catch (IOException | java.io.UncheckedIOException | IllegalArgumentException exception) {
             findings.add(unavailable(relative, "UNAVAILABLE_MALFORMED_CSV"));
         }
     }
@@ -141,7 +157,8 @@ public final class StandardCsvGapAuditor {
     }
 
     private static String sample(String value) {
-        return value.replace('\n', ' ').replace('\r', ' ').strip();
+        String compact = value.replace('\n', ' ').replace('\r', ' ').strip();
+        return compact.length() <= 160 ? compact : compact.substring(0, 160);
     }
 
     private static String normalized(Path path) {
