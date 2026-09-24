@@ -111,6 +111,113 @@ class AssessCommandTest {
         assertThat(new com.ssmt.scanner.CandidateInventory().capture(directory)).isEqualTo(before);
     }
 
+    @Test void malformedSelectedJsonProducesPartialCoverageReportsWithoutSourceMutation() throws Exception {
+        Files.writeString(directory.resolve("mod_info.json"), "{\"id\":\"bad-json\"}");
+        Path strings = Files.createDirectories(directory.resolve("data/strings"));
+        Files.writeString(strings.resolve("strings.json"), "{\"hello\":");
+        var beforeDirectory = new com.ssmt.scanner.CandidateInventory().capture(directory);
+        var command = new CommandLine(new Main());
+        StringWriter directoryOutput = new StringWriter();
+        command.setOut(new PrintWriter(directoryOutput));
+
+        assertThat(command.execute("assess", directory.toString(), "--coverage", "--json"))
+                .isEqualTo(1);
+        var directoryReport = new com.fasterxml.jackson.databind.ObjectMapper()
+                .readTree(directoryOutput.toString());
+        assertThat(directoryReport.path("coverageStatus").asText())
+                .isEqualTo("INCOMPLETE_SOURCE_PARSE");
+        assertThat(directoryReport.path("extractionCoverage")).isEmpty();
+        assertThat(directoryReport.path("jsonGapStatus").asText()).isEqualTo("NOT_ASSESSED");
+        assertThat(directoryReport.path("findings").toString())
+                .contains("COVERAGE_SOURCE_PARSE_FAILED", "data/strings/strings.json");
+        assertThat(new com.ssmt.scanner.CandidateInventory().capture(directory))
+                .isEqualTo(beforeDirectory);
+
+        Path archive = directory.resolve("candidate.zip");
+        try (var output = new java.util.zip.ZipOutputStream(Files.newOutputStream(archive))) {
+            output.putNextEntry(new java.util.zip.ZipEntry("wrapper/mod_info.json"));
+            output.write(Files.readAllBytes(directory.resolve("mod_info.json")));
+            output.closeEntry();
+            output.putNextEntry(new java.util.zip.ZipEntry("wrapper/data/strings/strings.json"));
+            output.write(Files.readAllBytes(strings.resolve("strings.json")));
+            output.closeEntry();
+        }
+        byte[] beforeArchive = Files.readAllBytes(archive);
+        StringWriter archiveOutput = new StringWriter();
+        StringWriter archiveError = new StringWriter();
+        command.setOut(new PrintWriter(archiveOutput));
+        command.setErr(new PrintWriter(archiveError));
+        assertThat(command.execute("assess", archive.toString(), "--coverage", "--json"))
+                .isEqualTo(1);
+        assertThat(archiveOutput.toString()).withFailMessage("%s", archiveError).isNotBlank();
+        var archiveReport = new com.fasterxml.jackson.databind.ObjectMapper()
+                .readTree(archiveOutput.toString());
+        assertThat(archiveReport.path("coverageStatus").asText())
+                .isEqualTo("INCOMPLETE_SOURCE_PARSE");
+        assertThat(archiveReport.path("extractionCoverage")).isEmpty();
+        assertThat(archiveReport.path("findings").toString())
+                .contains("COVERAGE_SOURCE_PARSE_FAILED", "data/strings/strings.json");
+        assertThat(archiveOutput.toString()).doesNotContain(archive.toString());
+        assertThat(Files.readAllBytes(archive)).isEqualTo(beforeArchive);
+        assertThat(directory.resolve("wrapper")).doesNotExist();
+    }
+
+    @Test void archiveCoverageUsesStandardHandlersWithoutExtractingToDisk() throws Exception {
+        Path jar = directory.resolve("payload.jar");
+        try (var output = new java.util.zip.ZipOutputStream(Files.newOutputStream(jar))) {
+            output.putNextEntry(new java.util.zip.ZipEntry("notes.txt"));
+            output.write("Technical resource".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            output.closeEntry();
+            output.putNextEntry(new java.util.zip.ZipEntry("com/ssmt/cli/AssessCommandTest.class"));
+            try (var input = AssessCommandTest.class.getResourceAsStream("AssessCommandTest.class")) {
+                assertThat(input).isNotNull();
+                input.transferTo(output);
+            }
+            output.closeEntry();
+        }
+        Path archive = directory.resolve("candidate.zip");
+        try (var output = new java.util.zip.ZipOutputStream(Files.newOutputStream(archive))) {
+            output.putNextEntry(new java.util.zip.ZipEntry("wrapper/mod_info.json"));
+            output.write("{\"id\":\"archive-coverage\"}"
+                    .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            output.closeEntry();
+            output.putNextEntry(new java.util.zip.ZipEntry("wrapper/data/strings/strings.json"));
+            output.write("{\"hello\":\"Hello\"}"
+                    .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            output.closeEntry();
+            output.putNextEntry(new java.util.zip.ZipEntry("wrapper/data/hulls/review.ship"));
+            output.write("{hullName:'Visible',spriteName:'technical.png'}"
+                    .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            output.closeEntry();
+            output.putNextEntry(new java.util.zip.ZipEntry("wrapper/unsupported.xyz"));
+            output.write("Review me".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            output.closeEntry();
+            output.putNextEntry(new java.util.zip.ZipEntry("wrapper/jars/payload.jar"));
+            output.write(Files.readAllBytes(jar));
+            output.closeEntry();
+        }
+        byte[] before = Files.readAllBytes(archive);
+        var command = new CommandLine(new Main());
+        StringWriter output = new StringWriter();
+        command.setOut(new PrintWriter(output));
+
+        assertThat(command.execute("assess", archive.toString(), "--coverage",
+                "--jar-inventory", "--json")).isZero();
+
+        var report = new com.fasterxml.jackson.databind.ObjectMapper().readTree(output.toString());
+        assertThat(report.path("coverageStatus").asText()).isEqualTo("OBSERVED_STANDARD_EXTRACTION");
+        assertThat(report.path("extractionCoverage").size()).isEqualTo(5);
+        assertThat(report.path("extractionCoverage").toString()).contains(
+                "\"path\":\"data/strings/strings.json\"", "\"strings\":1",
+                "\"path\":\"unsupported.xyz\"", "NO_EXTRACTOR_MATCH");
+        assertThat(report.path("jsonGapFindings").toString()).contains("UNSELECTED_TEXT_REVIEW");
+        assertThat(report.path("jarContents").toString()).contains("notes.txt",
+                "NO_STANDARD_ARCHIVE_ENTRY_EXTRACTOR", "AssessCommandTest.class",
+                "ALLOWLISTED_CLASS_STRINGS_SELECTED");
+        assertThat(Files.readAllBytes(archive)).isEqualTo(before);
+        assertThat(directory.resolve("wrapper")).doesNotExist();
+    }
+
     @Test void csvReviewDoesNotRequireSuccessfulTranslationExtraction() throws Exception {
         Files.writeString(directory.resolve("mod_info.json"), "{\"id\":\"csv-review\"}");
         Path weapons = Files.createDirectories(directory.resolve("data/weapons"));
@@ -192,6 +299,69 @@ class AssessCommandTest {
 
         assertThat(output.toString()).contains("OBSERVED_PAYLOAD_INVENTORY",
                 "wrapper/jars/embedded.jar", "CLASS_ENTRY_UNVERIFIED", "NOT_ESTABLISHED");
+        assertThat(Files.readAllBytes(archive)).isEqualTo(before);
+        assertThat(directory.resolve("wrapper")).doesNotExist();
+    }
+
+    @Test void corruptNestedJarStillProducesABlockingPartialAssessment() throws Exception {
+        Path jar = directory.resolve("embedded.jar");
+        byte[] payload = "payload".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        var crc = new java.util.zip.CRC32();
+        crc.update(payload);
+        try (var output = new java.util.zip.ZipOutputStream(Files.newOutputStream(jar))) {
+            var entry = new java.util.zip.ZipEntry("notes.txt");
+            entry.setMethod(java.util.zip.ZipEntry.STORED);
+            entry.setSize(payload.length);
+            entry.setCompressedSize(payload.length);
+            entry.setCrc(crc.getValue());
+            output.putNextEntry(entry);
+            output.write(payload);
+            output.closeEntry();
+        }
+        byte[] corruptedJar = Files.readAllBytes(jar);
+        java.util.Arrays.fill(corruptedJar, 14, 18, (byte) 0);
+        Path archive = directory.resolve("candidate.zip");
+        try (var output = new java.util.zip.ZipOutputStream(Files.newOutputStream(archive))) {
+            output.putNextEntry(new java.util.zip.ZipEntry("wrapper/mod_info.json"));
+            output.write("{\"id\":\"bad-jar\"}"
+                    .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            output.closeEntry();
+            output.putNextEntry(new java.util.zip.ZipEntry("wrapper/jars/embedded.jar"));
+            output.write(corruptedJar);
+            output.closeEntry();
+        }
+        byte[] before = Files.readAllBytes(archive);
+        var command = new CommandLine(new Main());
+        StringWriter output = new StringWriter();
+        command.setOut(new PrintWriter(output));
+
+        assertThat(command.execute("assess", archive.toString(), "--jar-inventory",
+                "--coverage", "--json")).isEqualTo(1);
+
+        var report = new com.fasterxml.jackson.databind.ObjectMapper().readTree(output.toString());
+        assertThat(report.path("status").asText()).isEqualTo("ASSESSMENT_ONLY");
+        assertThat(report.path("jarInventoryStatus").asText()).isEqualTo("INCOMPLETE_JAR_INTEGRITY");
+        assertThat(report.path("coverageStatus").asText()).isEqualTo("NOT_ASSESSED_INVALID_JAR");
+        assertThat(report.path("sourceAuthority").path("sourceJarCorrespondence").asText())
+                .isEqualTo("NOT_ESTABLISHED_INCOMPLETE_PAYLOAD_INTEGRITY");
+        assertThat(report.path("findings").toString()).contains("JAR_ENTRY_INTEGRITY_FAILED",
+                "notes.txt", "\"severity\":\"BLOCKING\"");
+
+        StringWriter coverageOnlyOutput = new StringWriter();
+        command.setOut(new PrintWriter(coverageOnlyOutput));
+        assertThat(command.execute("assess", archive.toString(), "--coverage", "--json"))
+                .isEqualTo(1);
+        var coverageOnlyReport = new com.fasterxml.jackson.databind.ObjectMapper()
+                .readTree(coverageOnlyOutput.toString());
+        assertThat(coverageOnlyReport.path("jarInventoryStatus").asText()).isEqualTo("NOT_ASSESSED");
+        assertThat(coverageOnlyReport.path("jarContents")).isEmpty();
+        assertThat(coverageOnlyReport.path("coverageStatus").asText())
+                .isEqualTo("NOT_ASSESSED_INVALID_JAR");
+        assertThat(coverageOnlyReport.path("sourceAuthority")
+                .path("sourceJarCorrespondence").asText())
+                .isEqualTo("NOT_ESTABLISHED_INCOMPLETE_PAYLOAD_INTEGRITY");
+        assertThat(coverageOnlyReport.path("findings").toString())
+                .contains("JAR_ENTRY_INTEGRITY_FAILED", "notes.txt");
         assertThat(Files.readAllBytes(archive)).isEqualTo(before);
         assertThat(directory.resolve("wrapper")).doesNotExist();
     }

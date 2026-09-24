@@ -20,7 +20,7 @@ public final class AssessCommand implements Callable<Integer> {
     private Path candidate;
     @Option(names = "--json", description = "Emit deterministic JSON to stdout.")
     private boolean json;
-    @Option(names = "--coverage", description = "Run read-only standard extraction coverage on a directory.")
+    @Option(names = "--coverage", description = "Run read-only standard extraction coverage on a directory or ZIP.")
     private boolean coverage;
     @Option(names = "--csv-audit", description = "Review CSV structure without requiring extraction to succeed.")
     private boolean csvAudit;
@@ -162,17 +162,31 @@ public final class AssessCommand implements Callable<Integer> {
             }
             com.ssmt.scanner.PackageIdentityAudit.Result identity = null;
             List<com.ssmt.scanner.JarContents> jarContents = new java.util.ArrayList<>();
+            List<Finding> jarFindings = new java.util.ArrayList<>();
             String jarStatus = "NOT_ASSESSED";
-            if (jarInventory) {
+            if (jarInventory || (coverage && kind.equals("ZIP"))) {
                 if (selected) {
                     for (var file : tuples) {
                         if (file.path().startsWith(prefix)
                                 && file.path().toLowerCase(java.util.Locale.ROOT).endsWith(".jar")) {
-                            jarContents.add(kind.equals("DIRECTORY")
-                                    ? com.ssmt.scanner.JarContents.inspect(candidate.resolve(root),
-                                            Path.of(file.path().substring(prefix.length())), file.sha256())
-                                    : com.ssmt.scanner.JarContents.inspectArchiveEntry(candidate,
-                                            Path.of(file.path()), file.sha256()));
+                            try {
+                                var contents = kind.equals("DIRECTORY")
+                                        ? com.ssmt.scanner.JarContents.inspect(candidate.resolve(root),
+                                                Path.of(file.path().substring(prefix.length())), file.sha256())
+                                        : com.ssmt.scanner.JarContents.inspectArchiveEntry(candidate,
+                                                Path.of(file.path()), file.sha256());
+                                if (jarInventory) {
+                                    jarContents.add(contents);
+                                }
+                            } catch (java.io.IOException exception) {
+                                if (exception.getMessage() == null || !exception.getMessage()
+                                        .startsWith("Archive entry failed integrity check: ")) {
+                                    throw exception;
+                                }
+                                jarFindings.add(new Finding("BLOCKING", "JAR_ENTRY_INTEGRITY_FAILED",
+                                        file.path().substring(prefix.length()) + ": "
+                                                + exception.getMessage()));
+                            }
                         }
                     }
                     if (kind.equals("DIRECTORY")) {
@@ -182,7 +196,10 @@ public final class AssessCommand implements Callable<Integer> {
                     } else if (!entries.equals(new ArchiveInventory().capture(candidate))) {
                         throw new java.io.IOException("Archive changed during JAR inventory");
                     }
-                    jarStatus = "OBSERVED_PAYLOAD_INVENTORY";
+                    if (jarInventory) {
+                        jarStatus = jarFindings.isEmpty()
+                                ? "OBSERVED_PAYLOAD_INVENTORY" : "INCOMPLETE_JAR_INTEGRITY";
+                    }
                 }
             }
             List<com.ssmt.extractor.CsvStructureAuditor.Finding> csvFindings = List.of();
@@ -208,31 +225,39 @@ public final class AssessCommand implements Callable<Integer> {
             }
             List<Coverage> observedCoverage = List.of();
             List<com.ssmt.extractor.StandardJsonGapAuditor.Finding> jsonGapFindings = List.of();
+            List<Finding> coverageFindings = new java.util.ArrayList<>();
             String jsonGapStatus = "NOT_ASSESSED";
             String coverageStatus = "NOT_ASSESSED";
             if (coverage) {
-                if (!kind.equals("DIRECTORY")) {
-                    throw new java.io.IOException("--coverage currently requires a directory candidate");
-                }
-                if (declared != null) {
+                if (!jarFindings.isEmpty()) {
+                    coverageStatus = "NOT_ASSESSED_INVALID_JAR";
+                } else if (declared != null) {
+                    java.nio.file.FileSystem archiveFs = null;
                     try {
+                        if (kind.equals("ZIP")) {
+                            archiveFs = java.nio.file.FileSystems.newFileSystem(candidate,
+                                    (ClassLoader) null);
+                        }
+                        Path selectedRoot = archiveFs == null
+                                ? candidate.resolve(root) : archiveFs.getPath("/").resolve(root);
                         var coordinator = new com.ssmt.extractor.ExtractionCoordinator(List.of(
                                 new com.ssmt.extractor.csv.StandardCsvFileExtractor(),
                                 new com.ssmt.extractor.json.StandardJsonFileExtractor(),
                                 new com.ssmt.extractor.bytecode.ClassStringExtractor(),
                                 new com.ssmt.extractor.text.MissionTextExtractor()));
-                        var extracted = coordinator.extractMod(declared.id(), candidate.resolve(root));
+                        var extracted = coordinator.extractMod(declared.id(), selectedRoot);
                         observedCoverage = extracted.fileCoverage().stream().map(file -> new Coverage(
                                 file.sourceFile().toString().replace('\\', '/'), file.handler(),
                                 file.status(), file.extractedStrings(), file.reason())).toList();
                         jsonGapFindings = new com.ssmt.extractor.StandardJsonGapAuditor()
-                                .audit(candidate.resolve(root), declared.id(), extracted);
+                                .audit(selectedRoot, declared.id(), extracted);
                         var entryCoverage = new com.ssmt.extractor.JarEntryCoverage();
-                        Path selectedRoot = candidate.resolve(root);
                         jarContents = jarContents.stream().map(contents -> {
                             try {
-                                var byPath = entryCoverage.audit(selectedRoot.resolve(contents.path()),
-                                                Path.of(contents.path()), extracted).stream()
+                                Path relativeJar = selectedRoot.getFileSystem().getPath(kind.equals("ZIP")
+                                        ? contents.path().substring(prefix.length()) : contents.path());
+                                var byPath = entryCoverage.audit(selectedRoot.resolve(relativeJar),
+                                                relativeJar, extracted).stream()
                                         .collect(java.util.stream.Collectors.toMap(
                                                 com.ssmt.extractor.JarEntryCoverage.Entry::path,
                                                 java.util.function.Function.identity()));
@@ -247,13 +272,45 @@ public final class AssessCommand implements Callable<Integer> {
                                 throw new java.io.UncheckedIOException(new java.io.IOException(exception));
                             }
                         }).toList();
-                        if (!entries.equals(new CandidateInventory().capture(candidate))) {
+                        boolean unchanged = kind.equals("DIRECTORY")
+                                ? entries.equals(new CandidateInventory().capture(candidate))
+                                : entries.equals(new ArchiveInventory().capture(candidate))
+                                        && archiveHash.equals(
+                                                com.ssmt.scanner.InventoryFingerprint.archive(candidate));
+                        if (!unchanged) {
                             throw new java.io.IOException("Candidate changed during coverage extraction");
                         }
                         coverageStatus = "OBSERVED_STANDARD_EXTRACTION";
                         jsonGapStatus = "OBSERVED_REVIEW_ONLY";
                     } catch (com.ssmt.core.exception.SsmtParseException exception) {
-                        throw new java.io.IOException("Coverage extraction failed: " + exception.getMessage(), exception);
+                        boolean unchanged = kind.equals("DIRECTORY")
+                                ? entries.equals(new CandidateInventory().capture(candidate))
+                                : entries.equals(new ArchiveInventory().capture(candidate))
+                                        && archiveHash.equals(
+                                                com.ssmt.scanner.InventoryFingerprint.archive(candidate));
+                        if (!unchanged) {
+                            throw new java.io.IOException("Candidate changed during coverage extraction", exception);
+                        }
+                        Path selectedRoot = archiveFs == null
+                                ? candidate.resolve(root) : archiveFs.getPath("/").resolve(root);
+                        Path source = archiveFs == null
+                                ? exception.sourcePath().normalize()
+                                : archiveFs.getPath(exception.sourcePath().toString()).normalize();
+                        if (!source.startsWith(selectedRoot.normalize())) {
+                            throw new java.io.IOException("Coverage extraction failed: "
+                                    + exception.getMessage(), exception);
+                        }
+                        String relative = selectedRoot.relativize(source).toString().replace('\\', '/');
+                        String reason = exception.diagnosticCode().orElse("PARSE_FAILED");
+                        String location = exception.lineNumber().isPresent()
+                                ? relative + ":" + exception.lineNumber().getAsInt() : relative;
+                        coverageFindings.add(new Finding("BLOCKING", "COVERAGE_SOURCE_PARSE_FAILED",
+                                location + ": " + reason));
+                        observedCoverage = List.of();
+                        jsonGapFindings = List.of();
+                        coverageStatus = "INCOMPLETE_SOURCE_PARSE";
+                    } finally {
+                        if (archiveFs != null) { archiveFs.close(); }
                     }
                 }
             }
@@ -282,9 +339,9 @@ public final class AssessCommand implements Callable<Integer> {
                             ? "HASHED_CONTAINER_AND_ENTRY_INVENTORY"
                             : "NOT_APPLICABLE_DIRECTORY_INPUT",
                     selected ? "UNIQUE_METADATA_ROOT_SELECTED" : "NO_UNIQUE_METADATA_ROOT",
-                    jarInventory
-                            ? "NOT_ESTABLISHED_PAYLOADS_OBSERVED"
-                            : "NOT_ASSESSED",
+                    !jarFindings.isEmpty()
+                            ? "NOT_ESTABLISHED_INCOMPLETE_PAYLOAD_INTEGRITY"
+                            : jarInventory ? "NOT_ESTABLISHED_PAYLOADS_OBSERVED" : "NOT_ASSESSED",
                     competingInputs);
             boolean bytecodePresent = tuples.stream().anyMatch(file -> {
                 String path = file.path().toLowerCase(java.util.Locale.ROOT);
@@ -293,6 +350,8 @@ public final class AssessCommand implements Callable<Integer> {
             boolean sourcePresent = tuples.stream().anyMatch(file ->
                     file.path().toLowerCase(java.util.Locale.ROOT).endsWith(".java"));
             List<Finding> findings = new java.util.ArrayList<>();
+            findings.addAll(jarFindings);
+            findings.addAll(coverageFindings);
             findings.add(new Finding("SUPPORTED", "READ_ONLY_INVENTORY_CAPTURED",
                     "Candidate bytes were inventoried without extraction or mutation"));
             findings.add(selected
@@ -374,7 +433,8 @@ public final class AssessCommand implements Callable<Integer> {
                 report.trustLimits().forEach(output::println);
                 entries.forEach(output::println);
             }
-            return selected && validity.equals("VALID")
+            return selected && validity.equals("VALID") && jarFindings.isEmpty()
+                    && coverageFindings.isEmpty()
                     && (identity == null || identity.identical()) ? 0 : 1;
         } catch (java.io.IOException | java.io.UncheckedIOException exception) {
             spec.commandLine().getErr().println("Assessment failed: " + exception.getMessage());

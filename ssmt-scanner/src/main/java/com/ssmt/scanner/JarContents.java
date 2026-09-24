@@ -54,7 +54,14 @@ public record JarContents(String path, String containerSha256, List<Entry> entri
                 throw new IOException("Embedded JAR disappeared from archive: " + path);
             }
             try (var input = new DigestInputStream(zip.getInputStream(entry), sha256())) {
-                payloads = new ArchiveInventory().capture(input);
+                // ArchiveInventory closes its ZIP stream after the last payload.
+                // Keep the digest stream open so trailing central-directory bytes
+                // are included in the hash of the complete embedded JAR.
+                var retained = new java.io.FilterInputStream(input) {
+                    @Override public void close() { /* input closes with this scope */ }
+                };
+                payloads = new ArchiveInventory().capture(retained);
+                input.transferTo(java.io.OutputStream.nullOutputStream());
                 actualHash = java.util.HexFormat.of().formatHex(input.getMessageDigest().digest());
             }
         }
@@ -83,6 +90,6 @@ public record JarContents(String path, String containerSha256, List<Entry> entri
     private static Entry entry(ArchiveInventory.Entry entry) {
         String category = category(entry.path());
         return new Entry(entry.path(), entry.bytes(), entry.sha256(), category,
-                "NOT_ASSESSED", "RUN_DIRECTORY_COVERAGE_FOR_ENTRY_HANDLING");
+                "NOT_ASSESSED", "RUN_COVERAGE_FOR_ENTRY_HANDLING");
     }
 }

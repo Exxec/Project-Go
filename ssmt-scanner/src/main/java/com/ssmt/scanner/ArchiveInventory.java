@@ -76,13 +76,18 @@ public final class ArchiveInventory {
                 long bytes = 0;
                 byte[] buffer = new byte[8192];
                 int read;
-                while ((read = zip.read(buffer)) != -1) {
-                    total += read;
-                    bytes += read;
-                    if (total > MAX_BYTES) {
-                        throw new IOException("Archive expansion limit exceeded");
+                try {
+                    while ((read = zip.read(buffer)) != -1) {
+                        total += read;
+                        bytes += read;
+                        if (total > MAX_BYTES) {
+                            throw new IOException("Archive expansion limit exceeded");
+                        }
+                        digest.update(buffer, 0, read);
                     }
-                    digest.update(buffer, 0, read);
+                } catch (java.util.zip.ZipException exception) {
+                    throw new IOException("Archive entry failed integrity check: " + name
+                            + ": " + exception.getMessage(), exception);
                 }
                 if (entry.getSize() >= 0 && entry.getSize() != bytes) {
                     throw new IOException("Archive entry size mismatch: " + name);

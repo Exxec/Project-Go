@@ -8,6 +8,7 @@ import com.ssmt.core.plugin.FileExtractor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -16,6 +17,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -102,6 +104,27 @@ public final class ClassStringExtractor implements FileExtractor {
             throws SsmtParseException {
         Path jarFile = request.sourceFile();
         List<ExtractedString> extracted = new ArrayList<>();
+        if (!jarFile.getFileSystem().equals(FileSystems.getDefault())) {
+            try (var zip = new ZipInputStream(Files.newInputStream(jarFile))) {
+                for (ZipEntry entry = zip.getNextEntry(); entry != null; entry = zip.getNextEntry()) {
+                    if (entry.isDirectory()
+                            || !entry.getName().toLowerCase(Locale.ROOT).endsWith(".class")) {
+                        continue;
+                    }
+                    try {
+                        readClass(request, zip, extracted);
+                    } catch (IOException | RuntimeException exception) {
+                        throw new SsmtParseException(
+                                "Malformed class entry in jar: " + entry.getName() + ": "
+                                        + exception.getMessage(), jarFile, exception);
+                    }
+                }
+            } catch (IOException exception) {
+                throw new SsmtParseException(
+                        "Malformed jar file: " + exception.getMessage(), jarFile, exception);
+            }
+            return extracted;
+        }
         try (ZipFile zip = new ZipFile(jarFile.toFile())) {
             List<? extends ZipEntry> classEntries = zip.stream()
                     .filter(entry -> !entry.isDirectory()

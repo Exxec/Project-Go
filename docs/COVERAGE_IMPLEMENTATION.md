@@ -2,6 +2,58 @@
 
 Parent plan: NON_VALIDATION_COMPLETION.md. P3 is not complete.
 
+## Read-only ZIP coverage checkpoint - 2026-09-23
+
+`ssmt assess ARCHIVE.zip --coverage --jar-inventory --json` now mounts an
+already validated ZIP through Java's ZIP filesystem and runs the same four
+standard extractors as directory coverage under the uniquely selected mod
+root. It does not materialize a mod tree. Outer file handling paths remain
+relative to that root; nested JAR entry handling uses the same source-relative
+class keys and reports unsupported resources separately. The command compares
+the complete entry inventory and archive SHA-256 before and after coverage.
+Invalid metadata still leaves coverage `NOT_ASSESSED`.
+
+A repository-owned nested-root ZIP fixture covers selected JSON, unselected
+`.ship` text, unsupported files, a nested JAR resource, and a real `.class`
+entry. It verifies read-only bytes and no extracted wrapper directory. The
+focused CLI/extractor tests and static checks passed. A later fresh-profile
+full check and CLI/GUI/Auto distribution rebuild passed 574 tests with zero
+failures/errors/skips and all 102 tasks executed. The native GUI/Auto
+development bundle and smoke tasks also passed. These are local working-source
+results; actual player visibility and bytecode behavior remain unverified.
+
+The Nightcross ZIP remains SHA-256
+`a6baabc3c935c99cf881312f738fa044bc7b8b6fed6fbf9ed569e77e3fe2b65b`.
+Basic read-only assessment selects `Nightcross` and inventories 2,374 files.
+`--jar-inventory --coverage --json` now returns a parseable partial assessment
+with exit code 1, `INCOMPLETE_JAR_INTEGRITY`, `NOT_ASSESSED_INVALID_JAR`, and a
+`BLOCKING` `JAR_ENTRY_INTEGRITY_FAILED` finding. It names the CRC mismatch in
+`jars/nightcross.jar` entry `.idea/.gitignore` (recorded CRC zero). The scanner
+still refuses to claim Nightcross coverage or package success; repair or
+authority review belongs to a separate candidate copy. A regression also
+proves that embedded-JAR hashing includes bytes after its payload entry list.
+The coverage-only ZIP command now checks nested JAR integrity before extraction
+as well. On this archive, `--coverage --json` exits 1 with the same blocking
+finding and `NOT_ASSESSED_INVALID_JAR`, while `jarInventoryStatus` remains
+`NOT_ASSESSED` and no JAR contents are claimed. The rebuilt packaged CLI report
+was parsed and the source ZIP hash remained unchanged. A focused regression
+covers both command variants.
+Malformed selected JSON in a valid candidate now yields a blocking partial
+assessment for directory and ZIP coverage. `coverageStatus=INCOMPLETE_SOURCE_PARSE`
+names the selected-root-relative source path and stable parse code, with no
+extraction counts or JSON gap review claimed. The command verifies the candidate
+inventory and ZIP hash are unchanged before emitting that report, and exits 1.
+A regression covers both input kinds, unchanged source bytes, and the absence
+of an extracted wrapper tree.
+After this partial-report change, the full fresh-profile check and three
+distribution rebuilds passed 576 tests with zero failures/errors/skips; all
+102 tasks executed. The Windows native GUI/Auto development bundle and image
+smoke tasks passed. A later malformed-selected-JSON regression brought the
+latest full fresh-profile check and CLI/GUI/Auto distribution rebuild to 577
+tests in 131 suites, with zero failures/errors/skips and all 102 tasks
+executed. Native GUI/Auto image smoke tasks passed again. The modified source
+still has no exact-source release artifact.
+
 ## Archive CSV advisory review - 2026-09-14
 
 `ssmt assess ARCHIVE.zip --csv-audit` now reviews CSV entries beneath the
@@ -30,8 +82,9 @@ does not invent observed coverage for manually constructed reports.
 only under the uniquely selected valid mod root and emits portable coverage paths.
 It compares complete candidate inventories before/after extraction and fails on
 observed change. Coverage is optional; missing/invalid metadata retains explicit
-NOT_ASSESSED coverage. ZIP --coverage currently fails with a clear directory-only
-diagnostic rather than silently extracting content or claiming coverage.
+NOT_ASSESSED coverage. At this earlier checkpoint, ZIP --coverage failed with a
+clear directory-only diagnostic rather than silently extracting content or
+claiming coverage; see the 2026-09-23 ZIP checkpoint above.
 No custom schema is approved, no strings are translated, no source bytes written.
 
 This inventory covers every discovered regular file. With directory `--coverage`
@@ -111,8 +164,8 @@ After final distribution rebuild, run assess --coverage on a separate Nightcross
 directory copy; inspect handler names, extracted counts and unsupported/empty
 reasons. Confirm source hashes/metadata remain unchanged and proper mod root was
 selected. Unsupported text is a review queue, not proof it is technical or dead.
-Confirm ordinary assess of the original ZIP remains non-extracting and ZIP
---coverage explains its current limitation. Repeat these scenarios if subsequent
-archive coverage support replaces that limitation. Native/game scenarios remain
+Confirm ordinary assess of the original ZIP remains non-extracting. The
+2026-09-23 ZIP checkpoint above records the later coverage implementation and
+its Nightcross integrity gate. Native/game scenarios remain
 listed in NON_VALIDATION_COMPLETION.md; package/hash scenarios in the assessment
 and package-audit checkpoints. No exhaustive live assurance inferred.

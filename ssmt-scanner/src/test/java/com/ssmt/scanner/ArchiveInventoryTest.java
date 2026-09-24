@@ -53,4 +53,29 @@ class ArchiveInventoryTest {
         assertThatThrownBy(() -> new ArchiveInventory().capture(archive))
                 .isInstanceOf(java.io.IOException.class).hasMessageContaining("colliding");
     }
+
+    @Test void namesTheEntryWithAnInvalidCrcWithoutChangingTheArchive() throws Exception {
+        Path archive = directory.resolve("bad-crc.zip");
+        byte[] content = "content".getBytes(StandardCharsets.UTF_8);
+        var crc = new java.util.zip.CRC32();
+        crc.update(content);
+        try (var output = new ZipOutputStream(Files.newOutputStream(archive))) {
+            var entry = new ZipEntry("payload.txt");
+            entry.setMethod(ZipEntry.STORED);
+            entry.setSize(content.length);
+            entry.setCompressedSize(content.length);
+            entry.setCrc(crc.getValue());
+            output.putNextEntry(entry);
+            output.write(content);
+            output.closeEntry();
+        }
+        byte[] corrupted = Files.readAllBytes(archive);
+        java.util.Arrays.fill(corrupted, 14, 18, (byte) 0);
+        Files.write(archive, corrupted);
+
+        assertThatThrownBy(() -> new ArchiveInventory().capture(archive))
+                .isInstanceOf(java.io.IOException.class)
+                .hasMessageContaining("payload.txt").hasMessageContaining("CRC");
+        assertThat(Files.readAllBytes(archive)).isEqualTo(corrupted);
+    }
 }

@@ -189,6 +189,52 @@ release claim.
   passed `--smoke-test`. This is working-source evidence, not exact-commit CI or
   release evidence.
 
+## Phase execution checkpoint - 2026-09-23
+
+- The published `v0.8.0-rc.1` release and its exact-source CI, checksums,
+  downloaded assets, and embedded versions satisfy P0's historical new-version
+  publication items. See `RELEASE_0.8.0_RC1_VERIFICATION.md`. This does not
+  publish later commits on `main` or promote the pre-release.
+- At `1e084c03c31d5616cde333861621fff8999f2227`, a fresh-profile, offline,
+  uncached full check and CLI/GUI/Auto distribution rebuild passed 572 tests,
+  zero failures/errors/skips, and all 102 Gradle tasks. The three rebuilt app JAR
+  manifests report that commit and `0.8.0-rc.1`; they are local development
+  packages, not assets from the published RC1 tag.
+- Packaged CLI and Auto each accepted a nested-root synthetic ZIP, imported a
+  response under an arbitrary filename, and published one translated folder.
+  The source ZIP stayed hash-identical and source text stayed unchanged. The GUI
+  launcher passed `--smoke-test`; its real Windows ZIP picker later loaded the
+  same fixture and showed a ready project from an initially absent profile.
+  At this initial checkpoint, GUI export/import/install and actual drop
+  interaction remained open; the later P1 evidence below closes them locally.
+- A real Nightcross ZIP copy remained SHA-256
+  `a6baabc3c935c99cf881312f738fa044bc7b8b6fed6fbf9ed569e77e3fe2b65b`.
+  Current CLI export selected 12,918 entries, while the saved response belongs
+  to an older 12,745-entry export. No stale response was imported or real-mod
+  output published in this checkpoint.
+- Read-only `assess --coverage` now works on uniquely rooted ZIPs via a ZIP
+  filesystem without materializing a mod tree. The synthetic ZIP fixture
+  covers standard extraction, JSON review gaps, and nested JAR entry handling.
+  Nightcross basic assessment still inventories 2,374 files, but its
+  `jars/nightcross.jar` has a CRC mismatch at `.idea/.gitignore`; ZIP
+  coverage stops without changing the source. Requested JAR inventory now
+  emits a partial JSON assessment, `BLOCKING` integrity finding, and nonzero
+  exit rather than losing the candidate report. Coverage-only ZIP assessment
+  now reports the same integrity finding without claiming a JAR inventory.
+  Malformed selected JSON now produces a blocking partial coverage report for
+  directory and ZIP inputs, with a portable path and no claimed extraction.
+  The latest fresh-profile full
+  check and distributions passed 577 tests with all 102 tasks executed; the
+  native development bundle and smoke tasks passed. These are local working
+  source checks, not release evidence. See `COVERAGE_IMPLEMENTATION.md`.
+- `ROADMAP_PHASE_STATUS_2026-09-23.md` records commands, trust limits, and
+  resume actions for P0-P6. Candidate-specific, interactive, runtime,
+  persistence, rights, and later-release gates remain open where marked below.
+- A Nightcross archive-assessment feedback packet classifies the CRC mismatch
+  as candidate-specific and the former report-loss failure as a detector gap.
+  Six evidence/fixture/change references are hash-bound; `attempt-feedback`
+  verifies the record as `REVIEW_PENDING`, not ready for the next candidate.
+
 ## P0 — restore trustworthy build and release evidence
 
 - [x] Make translation-memory creation safely create its normalized parent
@@ -202,11 +248,13 @@ release claim.
   pushed implementation commit.
 - [x] Avoid redundant branch-and-tag build runs when the release workflow already
   performs the tag checks; keep pull-request and branch verification intact.
-- [ ] Publish a new version rather than moving the existing `v0.7.0` tag. Require
+- [x] Publish a new version rather than moving the existing `v0.7.0` tag. Require
   exact commit/tag/version agreement, green tag CI, launcher and executable smoke
   tests, SBOM/checksums, and a GitHub Release whose assets match those checksums.
-- [ ] Update release documentation only after the observable remote evidence is
-  complete.
+  Met for the historical `v0.8.0-rc.1` release only; later `main` changes are
+  unreleased.
+- [x] Update release documentation only after the observable remote evidence is
+  complete. The RC1 receipt records exact-tag CI and downloaded-asset hashes.
 
 Exit criteria: a fresh user profile passes the full suite on both supported CI
 systems, and a new release can be traced from source commit to tag, workflow,
@@ -245,7 +293,7 @@ adding more normal-path controls.
 - [x] Make GUI, Auto, and simple CLI exercise the same workflow service and
   state-transition contract. Auto retains catalog and response-discovery
   adapters around the shared project-module service.
-- [ ] Run the native clean-profile ZIP-to-output acceptance path through GUI,
+- [x] Run the native clean-profile ZIP-to-output acceptance path through GUI,
   Auto, and simple CLI on the supported packaged applications. Automated shared
   service/state-machine and isolated Auto round-trip coverage do not replace this
   exit test.
@@ -261,8 +309,13 @@ response, publishes one translated folder, preserves the archive hash, and expos
 no project, backup, or report sibling. Destination persistence and hash-bound
 cleanup/recovery have isolated regression coverage. GUI, Auto, and simple CLI now
 converge on the shared workflow service and state-transition contract. Explicit
-GUI/CLI legacy adoption is implemented; native acceptance validation remains
-deferred.
+GUI/CLI legacy adoption is implemented. Packaged native Windows GUI runs on
+2026-09-23 completed both picker intake and a fresh-profile file drag from ZIP
+through request export, renamed-response import, and one translated-folder
+install with unchanged source hash. A cancelled export and rejected invalid
+response preserved the prior output. This closes local synthetic P1 acceptance;
+exact-source release acceptance and real-mod runtime gates remain separate.
+See `ROADMAP_PHASE_STATUS_2026-09-23.md`.
 
 ## P2 — evidence-first revival assessment
 
@@ -394,8 +447,9 @@ another gate.
   gap, workflow gap, or documentation gap. Add the smallest reusable fixture and
   tool change before starting the next candidate.
   `ssmt attempt-feedback` now enforces these classifications and hash-bound evidence,
-  fixture, and change artifacts for each recorded surprise. Real-attempt review
-  remains a procedural gate.
+  fixture, and change artifacts for each recorded surprise. The Nightcross
+  archive-assessment packet records two surprises but remains `REVIEW_PENDING`;
+  real-attempt review remains a procedural gate.
 - [x] Never move an assessment copy to a completed state while a manual,
   bytecode-only, authority, persistence, runtime, or rights gate remains open.
 

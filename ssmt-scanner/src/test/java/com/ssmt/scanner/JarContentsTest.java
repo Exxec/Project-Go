@@ -36,7 +36,7 @@ class JarContentsTest {
         assertThat(report.entries()).extracting(JarContents.Entry::handlingStatus)
                 .containsOnly("NOT_ASSESSED");
         assertThat(report.entries()).extracting(JarContents.Entry::reason)
-                .containsOnly("RUN_DIRECTORY_COVERAGE_FOR_ENTRY_HANDLING");
+                .containsOnly("RUN_COVERAGE_FOR_ENTRY_HANDLING");
         assertThat(report).isEqualTo(JarContents.inspect(root, relative, hash));
         assertThat(Files.readAllBytes(root.resolve(relative))).isEqualTo(before);
     }
@@ -47,5 +47,28 @@ class JarContentsTest {
                 .hasMessageContaining("changed after");
         assertThatThrownBy(() -> JarContents.inspect(root, Path.of("../outside.jar"), "a".repeat(64)))
                 .hasMessageContaining("beneath");
+    }
+
+    @Test void embeddedJarHashIncludesBytesAfterItsEntryList() throws Exception {
+        Path relative = jar();
+        byte[] original = Files.readAllBytes(root.resolve(relative));
+        byte[] complete = java.util.Arrays.copyOf(original, original.length + 7);
+        System.arraycopy("trailer".getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                0, complete, original.length, 7);
+        Path outer = root.resolve("candidate.zip");
+        try (var output = new ZipOutputStream(Files.newOutputStream(outer))) {
+            output.putNextEntry(new ZipEntry("mod.jar"));
+            output.write(complete);
+            output.closeEntry();
+        }
+        String expected = java.util.HexFormat.of().formatHex(
+                java.security.MessageDigest.getInstance("SHA-256").digest(complete));
+        byte[] before = Files.readAllBytes(outer);
+
+        var report = JarContents.inspectArchiveEntry(outer, relative, expected);
+
+        assertThat(report.containerSha256()).isEqualTo(expected);
+        assertThat(report.entries()).hasSize(3);
+        assertThat(Files.readAllBytes(outer)).isEqualTo(before);
     }
 }

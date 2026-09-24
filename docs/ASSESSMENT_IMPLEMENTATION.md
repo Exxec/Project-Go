@@ -94,6 +94,9 @@ initial one. ZIP-embedded JARs are inspected through bounded streams without
 extracting either container. No global multi-JAR budget/cancellation or bytecode
 semantic assurance is claimed yet.
 
+As of 2026-09-23, ZIP `--coverage` also reports these dispositions using a
+read-only ZIP filesystem; corrupt nested entry integrity stops coverage.
+
 Two scanner regressions cover class/source/resource classification, repeatable
 read-only payloads with deliberately invalid executable bytes, expected-hash
 binding and escaping path refusal. CLI regression confirms inventory succeeds
