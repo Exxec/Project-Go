@@ -477,6 +477,7 @@ an earlier package.
 
 ## Protocol for future revival attempts
 
+
 1. Preserve the original archive/tree and create a byte-preserving assessment
    copy. Record hashes before analysis.
 2. Establish which artifact is authoritative. Record incomplete archives,
@@ -494,3 +495,12 @@ an earlier package.
    dependency declarations, and rights. Generate status from those results.
 8. Publish only from a green exact commit/tag workflow; verify the remote release
    and downloaded asset hashes before calling the attempt complete.
+
+## Sister repository interoperability (proposed 2026-09-27)
+
+Design and acceptance gates: [SISTER_REPO_INTEROPERABILITY_DESIGN.md](SISTER_REPO_INTEROPERABILITY_DESIGN.md). These are future work, separate from the open P1-P6 validation gates.
+
+1. [ ] Export a versioned localization coverage manifest for BridgeForge with exact source hash, file-level coverage/skip reasons, and partial-integrity status; use neutral fixtures and never infer complete coverage from absent entries.
+2. [ ] Map existing release checks to a source-to-published-asset evidence contract; add only missing fields and keep packaged native, live, rights, and publication gates separate.
+
+**Implementation checkpoint 2026-09-27:** `ssmt assess --coverage --coverage-manifest FILE` writes versioned, text-free coverage evidence outside the candidate. Its per-file handling and aggregate supported/skipped-file and extracted-string counts are observed; total supported strings remain unknown. `ssmt release-chain --source-record FILE --archive FILE [--downloaded-asset FILE]` reports source-record, package, and optional asset hashes with independent unknown gates. The release workflow now generates chain reports for distribution ZIPs and compares downloaded published assets byte-for-byte after upload. CLI tests cover overwrite refusal and mismatched assets. A hosted workflow run, native interactive testing, and rights evidence remain open; both items stay unchecked.

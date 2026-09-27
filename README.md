@@ -1,5 +1,7 @@
 # Project Go
 
+Sister-tool evidence is available through `ssmt assess MOD --coverage --coverage-manifest FILE` (versioned, text-free coverage output outside the mod) and `ssmt release-chain --source-record FILE --archive FILE [--downloaded-asset FILE]` (source record, archive hash, and optional asset byte comparison). These commands preserve the source and leave native, live, rights, and remote-publication conclusions unknown without separate evidence.
+
 Project Go is an offline-first Java tool for analyzing and localizing Starsector
 mods without modifying their source directories. The long-term pipeline scans
 mods, extracts localizable content, validates translations, and makes a

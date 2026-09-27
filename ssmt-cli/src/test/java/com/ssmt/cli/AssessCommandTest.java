@@ -13,6 +13,29 @@ import picocli.CommandLine;
 class AssessCommandTest {
     @TempDir Path directory;
 
+    @Test void coverageManifestBindsSelectedRootAndDoesNotOverwrite() throws Exception {
+        Path candidate = Files.createDirectory(directory.resolve("candidate"));
+        Files.writeString(candidate.resolve("mod_info.json"), "{\"id\":\"sample\"}");
+        Path strings = Files.createDirectories(candidate.resolve("data/strings"));
+        Files.writeString(strings.resolve("strings.json"), "{\"hello\":\"Hello\"}");
+        Path manifest = directory.resolve("coverage.json");
+        var command = new CommandLine(new Main());
+        assertThat(command.execute("assess", candidate.toString(), "--coverage",
+                "--coverage-manifest", manifest.toString())).isZero();
+        var report = new com.fasterxml.jackson.databind.ObjectMapper().readTree(manifest.toFile());
+        assertThat(report.path("schemaVersion").asText()).isEqualTo("ssmt-localization-coverage-1");
+        assertThat(report.path("candidateSha256").asText()).hasSize(64);
+        assertThat(report.path("coverageStatus").asText()).isEqualTo("OBSERVED_STANDARD_EXTRACTION");
+        assertThat(report.path("totalSupportedStringCount").isNull()).isTrue();
+        assertThat(report.path("supportedFileCount").asInt()).isGreaterThanOrEqualTo(1);
+        byte[] original = Files.readAllBytes(manifest);
+        assertThat(command.execute("assess", candidate.toString(), "--coverage",
+                "--coverage-manifest", manifest.toString())).isEqualTo(1);
+        assertThat(Files.readAllBytes(manifest)).isEqualTo(original);
+        assertThat(command.execute("assess", candidate.toString(), "--coverage-manifest",
+                directory.resolve("other.json").toString())).isEqualTo(1);
+    }
+
     @Test void wrapperSelectionIsRepeatableWithoutClaimingMetadataValidity() throws Exception {
         Path root = Files.createDirectories(directory.resolve("wrapper/mod"));
         Files.writeString(root.resolve("mod_info.json"), "not valid JSON");

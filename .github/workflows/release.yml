@@ -65,6 +65,17 @@ jobs:
             checkReleaseMetadata \
             --no-daemon
 
+      - name: Bind distribution archives to source record
+        shell: bash
+        run: |
+          mkdir -p build/reports/release-chain
+          while IFS= read -r -d '' archive; do
+            ssmt-cli/build/install/ssmt-cli/bin/ssmt-cli release-chain \
+              --source-record build/reports/release-source.txt \
+              --archive "$archive" \
+              > "build/reports/release-chain/$(basename "$archive").json"
+          done < <(find ssmt-cli/build/distributions ssmt-gui/build/distributions ssmt-auto/build/distributions -maxdepth 1 -name '*.zip' -type f -print0)
+
       - name: Upload verification artifacts
         uses: actions/upload-artifact@v5
         with:
@@ -76,6 +87,7 @@ jobs:
             ssmt-gui/build/distributions/*.zip
             ssmt-auto/build/distributions/*.zip
             build/reports/release-source.txt
+            build/reports/release-chain/*.json
           if-no-files-found: error
 
   windows-portable:
@@ -191,3 +203,17 @@ jobs:
             | xargs -0 gh release upload "$TAG" \
                 --repo "$GITHUB_REPOSITORY" \
                 --clobber
+
+      - name: Verify downloaded release asset bytes
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/published-assets"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir "$RUNNER_TEMP/published-assets"
+          while IFS= read -r -d '' local_asset; do
+            name="$(basename "$local_asset")"
+            cmp "$local_asset" "$RUNNER_TEMP/published-assets/$name"
+            sha256sum "$RUNNER_TEMP/published-assets/$name"
+          done < <(find release-assets -type f -print0)

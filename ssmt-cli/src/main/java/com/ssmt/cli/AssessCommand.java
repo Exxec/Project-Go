@@ -22,6 +22,8 @@ public final class AssessCommand implements Callable<Integer> {
     private boolean json;
     @Option(names = "--coverage", description = "Run read-only standard extraction coverage on a directory or ZIP.")
     private boolean coverage;
+    @Option(names = "--coverage-manifest", description = "Write versioned, text-free coverage evidence outside the candidate; requires --coverage.")
+    private Path coverageManifest;
     @Option(names = "--csv-audit", description = "Review CSV structure without requiring extraction to succeed.")
     private boolean csvAudit;
     @Option(names = "--jar-inventory", description = "Inventory directory JAR entries without loading classes.")
@@ -48,6 +50,18 @@ public final class AssessCommand implements Callable<Integer> {
 
     /** Portable observed handling; counts never imply exhaustive localization. */
     public record Coverage(String path, String handler, String status, int strings, String reason) { }
+
+    /** Portable coverage interchange. Missing/partial extraction is never a zero-gap result. */
+    public record CoverageManifest(String schemaVersion, String inputKind, String selectedRoot,
+            String candidateSha256, String archiveSha256, String coverageStatus,
+            List<Coverage> files, int supportedFileCount, int skippedFileCount,
+            int extractedStringCount, Integer totalSupportedStringCount,
+            int jsonGapCount, int csvGapCount, List<String> limitations) {
+        public CoverageManifest {
+            files = List.copyOf(files);
+            limitations = List.copyOf(limitations);
+        }
+    }
 
     /** Review-only JSON gap with a portable mod-relative source path. */
     public record JsonGapFinding(String relativeSourceFile, String status,
@@ -96,6 +110,24 @@ public final class AssessCommand implements Callable<Integer> {
 
     @Override public Integer call() {
         try {
+            if (coverageManifest != null) {
+                if (!coverage) { throw new java.io.IOException("--coverage-manifest requires --coverage"); }
+                Path input = candidate.toRealPath();
+                Path output = coverageManifest.toAbsolutePath().normalize();
+                if (Files.exists(output)) {
+                    throw new java.io.IOException("Coverage manifest output already exists");
+                }
+                Path outputParent = java.util.Objects.requireNonNull(output.getParent(), "output parent");
+                if (!Files.isDirectory(outputParent)) {
+                    throw new java.io.IOException("Coverage manifest parent directory must already exist");
+                }
+                Path target = outputParent.toRealPath().resolve(
+                        java.util.Objects.requireNonNull(output.getFileName(), "output filename"));
+                if (target.startsWith(input)) {
+                    throw new java.io.IOException("Coverage manifest must be outside the candidate");
+                }
+                coverageManifest = target;
+            }
             List<com.ssmt.scanner.SourceTreeManifest.Node> sourceNodes = List.of();
             List<com.ssmt.scanner.SourceTreeManifest.Node> sourceNodesAfter = List.of();
             if (sourceManifest) {
@@ -423,6 +455,19 @@ public final class AssessCommand implements Callable<Integer> {
                     csvGapStatus, csvGapFindings,
                     csvStatus, csvFindings, jarStatus, jarContents,
                     sourceStatus, sourceNodes, sourceNodesAfter);
+            if (coverageManifest != null) {
+                var manifest = new CoverageManifest("ssmt-localization-coverage-1", kind,
+                        selected ? root : "", candidateHash, archiveHash, coverageStatus,
+                        observedCoverage,
+                        (int) observedCoverage.stream().filter(item -> !item.status().equals("UNSUPPORTED")).count(),
+                        (int) observedCoverage.stream().filter(item -> item.status().equals("UNSUPPORTED")).count(),
+                        observedCoverage.stream().mapToInt(Coverage::strings).sum(), null,
+                        jsonGapFindings.size(), csvGapFindings.size(),
+                        report.trustLimits());
+                Files.writeString(coverageManifest, new com.fasterxml.jackson.databind.ObjectMapper()
+                                .writerWithDefaultPrettyPrinter().writeValueAsString(manifest),
+                        java.nio.file.StandardOpenOption.CREATE_NEW);
+            }
             if (json) {
                 spec.commandLine().getOut().println(new com.fasterxml.jackson.databind.ObjectMapper()
                         .writeValueAsString(report));

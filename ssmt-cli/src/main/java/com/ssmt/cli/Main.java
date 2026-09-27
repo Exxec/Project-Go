@@ -22,6 +22,7 @@ import picocli.CommandLine.IVersionProvider;
             BuildEvidenceCommand.class,
             AttemptFeedbackCommand.class,
             FinalizeEvidenceCommand.class,
+            ReleaseChainCommand.class,
             ExtractCommand.class,
             ValidateCommand.class,
             TranslationMemoryCommand.class,
