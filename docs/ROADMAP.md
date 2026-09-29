@@ -496,6 +496,49 @@ an earlier package.
 8. Publish only from a green exact commit/tag workflow; verify the remote release
    and downloaded asset hashes before calling the attempt complete.
 
+## P7 — adopt BridgeForge's translation method (proposed 2026-09-29)
+
+Owner request: one translated mod, with its language replaced in place, using BridgeForge's method
+(`bridgeforge/translation.py` is the reference). Design, evidence and the interchange contract are in
+[BRIDGEFORGE_METHOD_CONVERSION.md](BRIDGEFORGE_METHOD_CONVERSION.md). Measured on FlowerGod 1.1.9 (2026-09-29):
+Project Go skipped 5 of the 101 files where BridgeForge found Chinese text, 108 of its 1,296 entries.
+
+1. [ ] Import and export BridgeForge's translation document (schema v1: `entries[id,file,kind,context,source,
+   translation]`, `glossary`, `file_hashes`). Exit: a document exported by either tool imports into the other, and
+   applying it gives identical bytes on the shared conformance fixtures.
+2. [ ] Lenient unit discovery, with no normalisation and no schema gate on text:
+   - CSV raw cell spans, including padded and short rows;
+   - JSON-like tokenizer with comments, single quotes, barewords and object keys as `json-key` units;
+   - loose `.java` literals outside `src/`;
+   - jar `CONSTANT_String` literals;
+   - excluded: `src-decompiled*/`, `build/`, `reports/`, `scratch/`, `disabled_files/`.
+
+   Exit: zero units that BridgeForge finds and Project Go misses, on the fixture corpus and on FlowerGod
+   (`trapNames.csv`, `reports.csv`, `channels.json`, `FG_shipblackList.csv`, `mod_info.json`). Differences in
+   either direction are recorded with a reason.
+3. [ ] Span-exact apply, with `--out DIR` or `--in-place` on a working copy the user designates. Re-verify CSV row
+   shape, JSON-like parse and class-file parse, and refuse on a source-hash mismatch. The input mod is never
+   edited. Exit: FlowerGod's document applied in place matches BridgeForge's result byte for byte.
+4. [ ] Jar constant-pool rewrite parity (mUTF-8; referenced literals only), plus aligned-reference prefill (at least
+   90% class-layout match) and zh/en translator-record prefill. Exit: the Nightcross record fixture prefills the
+   same entries in both tools.
+5. [ ] Placeholder parity:
+   - `%` conversions without the space flag;
+   - ASCII `$variables`, dotted only before a name;
+   - ``;
+   - `%%` treated as literal (a full-width `％` becomes `%%` in `hull_mods.csv`).
+
+   Also leftover-CJK check parity, including jar strings. Exit: the BridgeForge placeholder fixtures pass unchanged.
+6. [ ] Launcher paths: quote `JAVA_HOME` and `APP_HOME` in `ssmt-cli.bat` (it fails when `JAVA_HOME` contains a
+   space, 2026-09-29), and accept non-ASCII mod paths (`?` substitution, 2026-09-13). Exit: CLI tests from a
+   spaced `JAVA_HOME` and a CJK path.
+7. [ ] Retire the duplicated extraction path: after items 2 to 5 pass, schema catalogs become advisory metadata
+   only. GUI, Auto and TM are unchanged. Exit: the full suite, source-immutability checks and packaged GUI/Auto/CLI
+   acceptance all pass.
+
+Shared fixtures: `fixtures/translation-conformance/` with a `VERSION` file, copied into both repositories. A method
+change lands in both, each with a fixture that fails first.
+
 ## Sister repository interoperability (proposed 2026-09-27)
 
 Design and acceptance gates: [SISTER_REPO_INTEROPERABILITY_DESIGN.md](SISTER_REPO_INTEROPERABILITY_DESIGN.md). These are future work, separate from the open P1-P6 validation gates.
