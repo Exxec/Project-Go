@@ -554,3 +554,18 @@ Design and acceptance gates: [SISTER_REPO_INTEROPERABILITY_DESIGN.md](SISTER_REP
 2. [ ] Map existing release checks to a source-to-published-asset evidence contract; add only missing fields and keep packaged native, live, rights, and publication gates separate.
 
 **Implementation checkpoint 2026-09-27:** `ssmt assess --coverage --coverage-manifest FILE` writes versioned, text-free coverage evidence outside the candidate. Its per-file handling and aggregate supported/skipped-file and extracted-string counts are observed; total supported strings remain unknown. `ssmt release-chain --source-record FILE --archive FILE [--downloaded-asset FILE]` reports source-record, package, and optional asset hashes with independent unknown gates. The release workflow now generates chain reports for distribution ZIPs and compares downloaded published assets byte-for-byte after upload. CLI tests cover overwrite refusal and mismatched assets. A hosted workflow run, native interactive testing, and rights evidence remain open; both items stay unchecked.
+
+## Proposed ideas (2026-10-06, owner asked for per-project ideas; proposed, not approved)
+
+1. [ ] **Cross-check against BridgeForge's extractor.** A repeatable comparison on the same mod, listing files and units one tool
+   finds and the other skips. Benefit: on FlowerGod Project Go missed 108 of 1,296 units across 5 files and on Nightcross 861
+   strings; a routine diff finds such gaps without a manual audit.
+2. [ ] **Leftover-text check on the output.** After a build, scan the translated copy for remaining source-language text and
+   report the files. Benefit: catches skipped keys, CSV columns and jar strings before the mod ships.
+3. [ ] **Tolerant loading.** Accept what Starsector accepts (CSV rows wider or narrower than the header, unquoted JSON tokens)
+   and name the failing file in the error. Benefit: removes the bare "could not create localization project" message and the
+   workaround of extracting each file by hand.
+4. [ ] **Path and launcher robustness.** Handle non-ASCII paths and a `JAVA_HOME` that contains a space in `ssmt-cli.bat`.
+   Benefit: drops the ASCII-copy workaround every caller currently needs.
+5. [ ] **Translate JSON keys where the game shows them.** Cover keys such as `designTypeColors` that the current extractor skips,
+   behind an explicit list of keys known to be displayed. Benefit: closes a coverage gap without translating identifiers.
