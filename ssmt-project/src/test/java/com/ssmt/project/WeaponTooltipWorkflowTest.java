@@ -27,13 +27,13 @@ class WeaponTooltipWorkflowTest {
         Files.write(file, original);
         var workflow = new TranslationWorkflow(root.resolve("workspaces"));
         var session = workflow.loadMod(source);
-        assertThat(session.project().entries()).hasSize(5);
+        assertThat(session.project().entries()).hasSize(7);
         Path response = root.resolve("response.json");
         workflow.exportTranslation(session, response);
         var json = new ObjectMapper();
         var document = json.readTree(response.toFile());
         Map<String, String> translated = Map.of("名称", "Name", "造成 %s 装甲伤害", "Deals %s armor damage",
-                "%s | 装甲", "%s | armor", "可越过友舰", "Can fire over friendly ships", "快速", "Fast");
+                "%s | 装甲", "%s | armor", "可越过友舰", "Can fire over friendly ships", "快速", "Fast", "技术分组", "技术分组", "技术标签", "技术标签");
         for (var entry : document.path("entries")) {
             ((ObjectNode) entry).put("translation", translated.get(entry.path("source").asText()));
         }

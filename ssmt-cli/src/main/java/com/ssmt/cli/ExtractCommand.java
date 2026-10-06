@@ -87,6 +87,14 @@ public final class ExtractCommand implements Callable<Integer> {
         }
         try {
             ModInfo mod = modInfoReader.read(modDirectory);
+            if (suggestCsvSchema.isEmpty()) {
+                var document = new com.ssmt.project.BridgeForgeTranslationService().export(mod.sourceDirectory());
+                if (!document.path("entries").isEmpty()) {
+                    LOG.info("Extraction complete: {} CJK unit(s) using the shared translation method; {} unreadable input(s)",
+                            document.path("entry_count"), document.path("unreadable").size());
+                    return document.path("unreadable").isEmpty() ? 0 : 1;
+                }
+            }
             ExtractionReport report =
                     coordinator.extractMod(mod.id(), mod.sourceDirectory());
             report.skippedFiles().forEach(path ->
@@ -124,7 +132,7 @@ public final class ExtractCommand implements Callable<Integer> {
             return suggestCsvSchema.isPresent()
                     ? writeSuggestions(mod.sourceDirectory(), findings)
                     : 0;
-        } catch (SsmtParseException exception) {
+        } catch (SsmtParseException | com.ssmt.project.ProjectException exception) {
             LOG.error("Extraction failed: {}", exception.getMessage());
             return 1;
         }

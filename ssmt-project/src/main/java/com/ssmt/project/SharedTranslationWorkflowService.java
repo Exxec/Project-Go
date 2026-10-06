@@ -45,7 +45,7 @@ public final class SharedTranslationWorkflowService {
     public Prepared create(Path source, String patchId, String patchName)
             throws ProjectException {
         var attested = sourceIntegrity.runAttested("CREATE_EXTRACTION", source,
-                () -> projects.create(source, patchId, patchName));
+                () -> projects.createUsingBridgeForge(source, patchId, patchName));
         return bind(attested.result(), List.of(attested.attestation()));
     }
 

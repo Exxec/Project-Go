@@ -1,6 +1,7 @@
-# Converting Project Go to BridgeForge's translation method (proposed 2026-09-29)
+# Converting Project Go to BridgeForge's translation method (implemented 2026-10-05)
 
-Status: proposed, owner-requested. Project Go keeps its Java implementation, GUI, Auto mode and translation
+Status: implemented, owner-requested. Validation and remaining native/interactive review items are in
+[P7_IMPLEMENTATION_STATUS.md](P7_IMPLEMENTATION_STATUS.md). Project Go keeps its Java implementation, GUI, Auto mode and translation
 memory. What changes is the method: how units are found, identified, applied and checked. That method follows
 BridgeForge's `bridgeforge/translation.py`, which is the reference implementation. This refines the 2026-09-27
 sister design ("Project Go ... owns its Java extractors"): Project Go still owns the Java code, but its
@@ -50,8 +51,9 @@ behaviour.
    `disabled_files/`, and VCS/IDE folders. BridgeForge added `src-decompiled*` on 2026-09-29 because a decompile
    duplicated 960 of the jar's strings.
 3. **Stable ids and source hashes.**
-   - Ids: `csv:<file>#<row key>~<occurrence>:<column>`, `json:<file>#<path>`, `json-key:...`,
-     `java:<file>#<n>`, `jar:<jar>!<class>#<constant-pool index>`.
+   - Ids: `csv:<file>#<row key>:<column>` (duplicate keys gain an occurrence suffix),
+     `json:<file>@<CJK ordinal>` for both values and keys (`kind` distinguishes them),
+     `java:<file>@<CJK ordinal>`, `jar:<jar>!<class>#<constant-pool index>`.
    - Each file's SHA-256 is recorded, and apply refuses a changed source.
 4. **Placeholder rules.** Carried unchanged:
    - Java format specifiers: real conversions only, with no space flag, so "50% faster" is prose.
@@ -72,7 +74,8 @@ behaviour.
      - `--out DIR` writes a new copy.
      - `--in-place` writes into a working copy the user designates, giving one mod with its language replaced.
 
-     The input mod itself is never edited, which is an existing Project Go rule that stays.
+     Normal GUI/Auto and `--out` workflows leave the input mod untouched. `--in-place`
+     explicitly designates the selected disposable working copy as the output; never select an original.
 7. **Leftover check:** scan the result, including jar string constants, for untranslated CJK (`translate-check`).
 8. **Translation memory:** Project Go's TM stays the store. BridgeForge's `translate-tm` already writes Project
    Go's TM schema.
@@ -109,3 +112,11 @@ Detailed in `ROADMAP.md`, "P7 — adopt BridgeForge's translation method".
 5. **Placeholder and leftover-check parity.**
 6. **Launcher path fixes:** a quoted `JAVA_HOME` and `APP_HOME`, and non-ASCII paths.
 7. **Retire the duplicated paths:** once 2 to 5 pass, the schema-opt-in extraction becomes advisory.
+
+Current-reference note (2026-10-05): CSV source/output preserves UTF-8/BOM or
+GB18030 encoding; Java and JSON span application preserve input line endings.
+New CJK GUI/Auto/CLI projects persist the shared-method snapshot. Older persisted
+projects and non-CJK/assessment extraction retain referenced compatibility paths.
+The Windows CLI uses a packaged UTF-8 argument-file helper. See the status report
+for the native Auto CJK argv limitation; the older historical counts above are
+not current claims about the changed working copies.

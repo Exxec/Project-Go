@@ -19,8 +19,18 @@ public record LocalizationProject(
         String sourceModId,
         String patchId,
         String patchName,
-        List<ProjectEntry> entries) {
+        List<ProjectEntry> entries,
+        com.fasterxml.jackson.databind.node.ObjectNode methodDocument) {
     public static final int CURRENT_SCHEMA_VERSION = 1;
+
+    public LocalizationProject(int schemaVersion, String sourceModId, String patchId,
+            String patchName, List<ProjectEntry> entries) {
+        this(schemaVersion, sourceModId, patchId, patchName, entries, null);
+    }
+
+    @Override public com.fasterxml.jackson.databind.node.ObjectNode methodDocument() {
+        return methodDocument == null ? null : methodDocument.deepCopy();
+    }
 
     public LocalizationProject {
         if (schemaVersion != CURRENT_SCHEMA_VERSION) {
@@ -30,6 +40,13 @@ public record LocalizationProject(
         requireText(sourceModId, "sourceModId");
         requireText(patchId, "patchId");
         requireText(patchName, "patchName");
+        if (methodDocument != null) {
+            new BridgeForgeTranslationDocument().validate(methodDocument);
+            if (!sourceModId.equals(methodDocument.path("mod_id").asText())) {
+                throw new IllegalArgumentException("Translation method source identity differs");
+            }
+            methodDocument = methodDocument.deepCopy();
+        }
         entries = List.copyOf(entries).stream()
                 .sorted(Comparator
                         .comparing((ProjectEntry entry) ->
@@ -58,7 +75,7 @@ public record LocalizationProject(
      */
     public LocalizationProject withEntries(List<ProjectEntry> values) {
         return new LocalizationProject(
-                schemaVersion, sourceModId, patchId, patchName, values);
+                schemaVersion, sourceModId, patchId, patchName, values, methodDocument);
     }
 
     /**
@@ -69,7 +86,7 @@ public record LocalizationProject(
      */
     public LocalizationProject withPatchName(String value) {
         return new LocalizationProject(
-                schemaVersion, sourceModId, patchId, value, entries);
+                schemaVersion, sourceModId, patchId, value, entries, methodDocument);
     }
 
     private static void requireText(String value, String name) {

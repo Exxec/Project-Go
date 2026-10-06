@@ -66,22 +66,17 @@ A transient Windows file lock during `clean build` is not by itself evidence of 
 
 # CLI Invocation and Unicode Paths
 
-Some generated Windows `.bat` or PowerShell/native invocation paths can corrupt non-ASCII command-line arguments before Java receives them.
+Use the installed `ssmt-cli.bat` on Windows. It quotes Java/install paths and
+ships `ssmt-cli.ps1`, which carries command arguments through a temporary UTF-8
+Picocli argument file, preserving CJK source/output paths on this JDK. Windows
+PowerShell is required. `:ssmt-cli:verifyWindowsLauncher` verifies the installed
+launcher as part of `check`; keep the helper beside the batch file.
 
-Do not compensate for this inside SSMT.
-
-For compatibility diagnostics, direct Java invocation is acceptable:
-
-```powershell
-$java = Join-Path $env:JAVA_HOME "bin\java.exe"
-$cp = Join-Path (Get-Location) "ssmt-cli\build\install\ssmt-cli\lib\*"
-
-& $java -cp $cp com.ssmt.cli.Main extract "C:\path\to\mod"
-```
-
-Where possible, prefer launch methods that preserve Unicode path arguments exactly.
-
-The JavaFX file/directory chooser path remains an important Unicode-safe workflow.
+Raw `java.exe` and native Auto executable arguments can still undergo ANSI
+conversion before Java receives them on this Windows installation. Direct Java
+is therefore not a verified CJK-path workaround. Do not repair a path after it
+has become question marks. Native Auto CJK input drop and interactive GUI chooser
+acceptance remain review items; see `docs/P7_IMPLEMENTATION_STATUS.md`.
 
 ---
 

@@ -161,7 +161,7 @@ public final class ProjectCommand implements Runnable {
                 LocalizationProject project = jsonSchema.isPresent() || csvSchema.isPresent()
                         ? service.createWithSchemas(
                                 source, patchId, patchName, jsonSchema, csvSchema)
-                        : service.create(source, patchId, patchName);
+                        : service.createUsingBridgeForge(source, patchId, patchName);
                 service.write(destination, project);
                 LOG.info("Created project with {} translation(s): {}",
                         project.entries().size(), destination);

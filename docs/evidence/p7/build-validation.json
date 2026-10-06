@@ -1,0 +1,15 @@
+{
+  "gradle": "PASS",
+  "tasks_executed": 107,
+  "test_totals": {
+    "tests": 594,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "shared_fixture_bytes": "IDENTICAL",
+  "profile": "fresh .local/p7-final-launcher-profile-20261005",
+  "log": "build-p7-final-launcher.log",
+  "native_image_smokes": "PASS",
+  "windows_unicode_launcher": "PASS"
+}

@@ -1,0 +1,11 @@
+{
+  "native_auto": "PASS",
+  "exact_output_files": 12,
+  "source_unchanged": true,
+  "native_cjk_argv": "FAIL: JVM replaces CJK argv with question marks",
+  "gui_package_workflow": "PASS: 18 units, 12 exact files, source unchanged",
+  "interactive_gui": "NOT_TESTED",
+  "live_starsector": "NOT_TESTED",
+  "cli_unicode_apply_check": "PASS",
+  "cli_exact_output_files": 12
+}

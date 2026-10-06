@@ -460,6 +460,23 @@ public final class AutoWorkflow {
             Map<String, String> expectedSources) {
         try {
             JsonNode root = JSON.readTree(candidate.toFile());
+            if (root != null && root.has("schema_version") && !root.has("schemaVersion")) {
+                new com.ssmt.project.BridgeForgeTranslationDocument().validate(root);
+                var normalized = (ObjectNode) root;
+                normalized.put("schemaVersion", root.path("schema_version").asInt())
+                        .put("sourceModId", root.path("mod_id").asText())
+                        .put("sourceLanguage", root.path("source_language").asText())
+                        .put("targetLanguage", root.path("target_language").asText())
+                        .put("entryCount", root.path("entries").size());
+                List<String> bridgeIds = new ArrayList<>();
+                for (JsonNode item : root.path("entries")) {
+                    bridgeIds.add(item.path("id").asText());
+                    if (item.path("translation").asText().isEmpty()) {
+                        ((ObjectNode) item).put("translation", root.path("glossary").path(item.path("source").asText()).asText(""));
+                    }
+                }
+                normalized.put("entryIdsSha256", identityDigest(bridgeIds));
+            }
             if (root == null
                     || root.path("schemaVersion").asInt(-1) != 1
                     || !sourceModId.equals(root.path("sourceModId").asText())
@@ -483,7 +500,7 @@ public final class AutoWorkflow {
             }
             return root.path("entryCount").asInt(-1) == ids.size()
                     && root.path("entryIdsSha256").asText().equals(identityDigest(ids));
-        } catch (IOException | ProjectException exception) {
+        } catch (IOException | ProjectException | IllegalArgumentException exception) {
             return false;
         }
     }
@@ -491,7 +508,8 @@ public final class AutoWorkflow {
     private static Map<String, String> expectedSources(LocalizationProject project) {
         Map<String, String> expected = new HashMap<>();
         for (ProjectEntry entry : project.entries()) {
-            expected.put(entry.sourceFile().toString().replace('\\', '/') + "#" + entry.key(),
+            expected.put(entry.key().startsWith("bf:") ? entry.key().substring(3)
+                    : entry.sourceFile().toString().replace('\\', '/') + "#" + entry.key(),
                     entry.originalText());
         }
         return expected;

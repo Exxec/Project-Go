@@ -124,6 +124,7 @@ public final class AiTranslationExchangeService {
         }
         root.put("entryCount", exportedIds.size());
         root.put("entryIdsSha256", identityDigest(exportedIds));
+        BridgeForgeProjectExchange.exportFields(root, project);
         writeAtomically(destination, root);
     }
 
@@ -208,7 +209,7 @@ public final class AiTranslationExchangeService {
             AiImportPolicy policy) throws ProjectException {
         Objects.requireNonNull(policy, "policy");
         try {
-            JsonNode root = JSON.readTree(response.toFile());
+            JsonNode root = BridgeForgeProjectExchange.importFields(JSON.readTree(response.toFile()), project);
             if (root.path("schemaVersion").asInt(-1) != SCHEMA_VERSION) {
                 throw invalid("SCHEMA_VERSION", "",
                         "AI response schema version is unsupported");
@@ -260,7 +261,15 @@ public final class AiTranslationExchangeService {
                     }
                     continue;
                 }
-                var issues = validator.validate(entry.originalText(), translation);
+                if (entry.key().startsWith("bf:")) {
+                    String resolved = BridgeForgePlaceholders.resolve(entry.originalText(), translation);
+                    if (resolved == null) {
+                        throw invalid("PROTECTED_SYNTAX", id, "BridgeForge protected placeholders differ at " + id);
+                    }
+                    translation = resolved;
+                }
+                var issues = entry.key().startsWith("bf:") ? java.util.List.<com.ssmt.validation.ValidationIssue>of()
+                        : validator.validate(entry.originalText(), translation);
                 if (!issues.isEmpty()) {
                     throw invalid("PROTECTED_SYNTAX", id,
                             "AI response has invalid protected syntax at " + id
@@ -377,7 +386,8 @@ public final class AiTranslationExchangeService {
     }
 
     private static String identity(ProjectEntry entry) {
-        return entry.sourceFile().toString().replace('\\', '/') + "#" + entry.key();
+        return entry.key().startsWith("bf:") ? entry.key().substring(3)
+                : entry.sourceFile().toString().replace('\\', '/') + "#" + entry.key();
     }
 
     private static String contentType(Path sourceFile) {

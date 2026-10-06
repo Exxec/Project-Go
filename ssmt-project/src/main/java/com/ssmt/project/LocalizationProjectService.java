@@ -62,6 +62,25 @@ public final class LocalizationProjectService {
     private final ClassFileInjector classInjector = new ClassFileInjector();
     private final PatchBuilder patchBuilder = new PatchBuilder();
 
+    /** Normal CJK workflows use the shared method; existing non-CJK extraction remains compatible. */
+    public LocalizationProject createUsingBridgeForge(Path sourceRoot, String patchId, String patchName)
+            throws ProjectException {
+        ObjectNode document = new BridgeForgeTranslationService().export(sourceRoot);
+        if (!document.path("unreadable").isEmpty()) {
+            throw new ProjectException("Translation discovery has unreadable inputs: " + document.path("unreadable"));
+        }
+        if (document.path("entries").isEmpty()) {
+            return create(sourceRoot, patchId, patchName);
+        }
+        List<ProjectEntry> entries = new ArrayList<>();
+        for (JsonNode entry : document.path("entries")) {
+            entries.add(new ProjectEntry(Path.of(entry.path("file").asText()),
+                    "bf:" + entry.path("id").asText(), entry.path("source").asText(), ""));
+        }
+        return new LocalizationProject(LocalizationProject.CURRENT_SCHEMA_VERSION, document.path("mod_id").asText(),
+                patchId, patchName, entries, document);
+    }
+
     /**
      * Reads the automatically located {@code mod_info.json} for project defaults.
      *
@@ -281,8 +300,13 @@ public final class LocalizationProjectService {
             Optional<Path> jsonSchemaCatalog,
             Optional<Path> csvSchemaCatalog,
             CancellationToken cancellation) throws ProjectException {
-        return create(sourceRoot, patchId, patchName,
-                schemaExtraction(jsonSchemaCatalog, csvSchemaCatalog), cancellation);
+        ExtractionCoordinator configured = schemaExtraction(jsonSchemaCatalog, csvSchemaCatalog);
+        ObjectNode method = new BridgeForgeTranslationService().export(sourceRoot);
+        if (!method.path("entries").isEmpty()) {
+            cancellation.throwIfCancellationRequested();
+            return createUsingBridgeForge(sourceRoot, patchId, patchName);
+        }
+        return create(sourceRoot, patchId, patchName, configured, cancellation);
     }
 
     private static ExtractionCoordinator schemaExtraction(
@@ -362,8 +386,9 @@ public final class LocalizationProjectService {
             throw new IllegalArgumentException("cancellation must not be null");
         }
         cancellation.throwIfCancellationRequested();
-        LocalizationProject extracted =
-                create(
+        LocalizationProject extracted = project.methodDocument() != null
+                ? createUsingBridgeForge(sourceRoot, project.patchId(), project.patchName())
+                : create(
                         sourceRoot,
                         project.patchId(),
                         project.patchName(),
@@ -445,7 +470,7 @@ public final class LocalizationProjectService {
             }
         }
         return new ProjectRefreshResult(
-                project.withEntries(refreshed),
+                extracted.withEntries(refreshed),
                 new ReconciliationReport(findings));
     }
 
@@ -632,6 +657,9 @@ public final class LocalizationProjectService {
         root.put("sourceModId", project.sourceModId());
         root.put("patchId", project.patchId());
         root.put("patchName", project.patchName());
+        if (project.methodDocument() != null) {
+            root.set("bridgeforgeTranslation", project.methodDocument());
+        }
         ArrayNode entries = root.putArray("entries");
         for (ProjectEntry entry : project.entries()) {
             ObjectNode node = entries.addObject();
@@ -675,7 +703,9 @@ public final class LocalizationProjectService {
                     text(root, "sourceModId"),
                     text(root, "patchId"),
                     text(root, "patchName"),
-                    entries);
+                    entries,
+                    root.has("bridgeforgeTranslation")
+                            ? (ObjectNode) root.path("bridgeforgeTranslation") : null);
         } catch (IOException | IllegalArgumentException exception) {
             throw new ProjectException("Could not read project " + source, exception);
         }
@@ -774,7 +804,11 @@ public final class LocalizationProjectService {
         }
         List<PatchArtifact> artifacts = new ArrayList<>();
         try {
-            for (List<TranslationReplacement> replacements : grouped.values()) {
+            if (project.methodDocument() != null) {
+                artifacts.addAll(new BridgeForgeProjectAdapter().artifacts(sourceRoot, project));
+            }
+            for (List<TranslationReplacement> replacements : project.methodDocument() == null
+                    ? grouped.values() : List.<List<TranslationReplacement>>of()) {
                 cancellation.throwIfCancellationRequested();
                 Path relative = replacements.getFirst().sourceFile();
                 String lowerCaseName = relative.toString().toLowerCase(java.util.Locale.ROOT);
@@ -882,6 +916,12 @@ public final class LocalizationProjectService {
     private void validate(ProjectEntry entry) throws ProjectException {
         if (entry.translatedText().isBlank()) {
             throw new ProjectException("Blank translation at " + entry.key());
+        }
+        if (entry.key().startsWith("bf:")) {
+            if (BridgeForgePlaceholders.resolve(entry.originalText(), entry.translatedText()) == null) {
+                throw new ProjectException("Invalid protected placeholders at " + entry.key());
+            }
+            return;
         }
         var issues = validator.validate(entry.originalText(), entry.translatedText());
         if (!issues.isEmpty()) {
