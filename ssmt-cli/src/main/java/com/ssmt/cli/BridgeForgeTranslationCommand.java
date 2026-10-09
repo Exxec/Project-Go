@@ -1,6 +1,7 @@
 package com.ssmt.cli;
 
 import com.ssmt.project.BridgeForgeTranslationApply;
+import com.ssmt.project.BridgeForgeTranslationComparison;
 import com.ssmt.project.BridgeForgeTranslationDocument;
 import com.ssmt.project.BridgeForgeTranslationPrefill;
 import com.ssmt.project.BridgeForgeTranslationService;
@@ -17,7 +18,7 @@ import picocli.CommandLine.Parameters;
         description = "BridgeForge-compatible export, import, apply, prefill, or leftover check.")
 public final class BridgeForgeTranslationCommand implements Callable<Integer> {
     private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(BridgeForgeTranslationCommand.class);
-    @Parameters(index = "0", description = "Operation: export, import, apply, check, prefill.")
+    @Parameters(index = "0", description = "Operation: export, import, apply, check, prefill, compare.")
     private String action;
     @Parameters(index = "1", description = "Source mod working copy (or JSON document for import).")
     private Path source;
@@ -29,7 +30,7 @@ public final class BridgeForgeTranslationCommand implements Callable<Integer> {
     private boolean inPlace;
     @Option(names = "--record", description = "Author zh/en record file or directory.")
     private List<Path> records = new java.util.ArrayList<>();
-    @Option(names = "--reference", description = "English copy of this mod for aligned prefill.")
+    @Option(names = "--reference", description = "English mod for prefill, or BridgeForge export JSON for compare.")
     private Path reference;
 
     @Override public Integer call() {
@@ -40,6 +41,18 @@ public final class BridgeForgeTranslationCommand implements Callable<Integer> {
                 throw new IllegalArgumentException("--in-place is only valid for apply");
             }
             switch (action) {
+                case "compare" -> {
+                    requireOut();
+                    if (reference == null) {
+                        throw new IllegalArgumentException("Comparison needs --reference export.json");
+                    }
+                    var comparison = new BridgeForgeTranslationComparison();
+                    var result = comparison.compare(source, exchange.read(reference));
+                    comparison.write(source, out, result);
+                    LOG.info("Comparison {}: {} unit differences", result.path("status"),
+                            result.path("differences").size());
+                    return result.path("status").asText().equals("MATCH") ? 0 : 2;
+                }
                 case "export" -> {
                     requireOut();
                     var exported = service.export(source);
@@ -79,7 +92,7 @@ public final class BridgeForgeTranslationCommand implements Callable<Integer> {
                     }
                     exchange.write(out, value);
                 }
-                default -> throw new IllegalArgumentException("Operation must be export, import, apply, check, or prefill");
+                default -> throw new IllegalArgumentException("Operation must be export, import, apply, check, prefill, or compare");
             }
             return 0;
         } catch (ProjectException | IllegalArgumentException exception) {

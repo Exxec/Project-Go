@@ -557,9 +557,13 @@ Design and acceptance gates: [SISTER_REPO_INTEROPERABILITY_DESIGN.md](SISTER_REP
 
 ## Proposed ideas (2026-10-06, owner asked for per-project ideas; proposed, not approved)
 
-1. [ ] **Cross-check against BridgeForge's extractor.** A repeatable comparison on the same mod, listing files and units one tool
+1. [x] **Cross-check against BridgeForge's extractor.** A repeatable comparison on the same mod, listing files and units one tool
    finds and the other skips. Benefit: on FlowerGod Project Go missed 108 of 1,296 units across 5 files and on Nightcross 861
    strings; a routine diff finds such gaps without a manual audit.
+   Implemented 2026-10-08: `translate compare SOURCE_MOD --reference EXPORT.json --out REPORT.json`
+   reports missing/extra/changed protected units, verifies reference file hashes,
+   and retains unreadable-input gates. See [EXTRACTOR_COMPARISON.md](EXTRACTOR_COMPARISON.md).
+   This compares observed CJK discovery, not full localization coverage.
 2. [ ] **Leftover-text check on the output.** After a build, scan the translated copy for remaining source-language text and
    report the files. Benefit: catches skipped keys, CSV columns and jar strings before the mod ships.
 3. [ ] **Tolerant loading.** Accept what Starsector accepts (CSV rows wider or narrower than the header, unquoted JSON tokens)
