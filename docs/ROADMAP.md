@@ -615,15 +615,17 @@ Acceptance details: [GUI_WORKFLOW_ENHANCEMENTS.md](GUI_WORKFLOW_ENHANCEMENTS.md)
 passed 610 tests, Checkstyle/SpotBugs, Unicode CLI verification, rebuilt native
 GUI/Auto smoke tests, native Auto Unicode exact-output/source-hash acceptance,
 SBOM/checksums and archive checks. All 118 Gradle tasks executed against a fresh
-profile with no build cache. This is local source evidence; visual, candidate,
-hosted and release gates are not inferred from it.
+profile with no build cache. Implementation commit `55bf2f8` subsequently passed
+Windows and Ubuntu [CI run 37876311841](https://github.com/Exxec/Project-Go/actions/runs/37876311841),
+with uploaded branch evidence. Visual, candidate and release gates remain open.
 
 - Extractor cross-check: implemented by `translate compare` on 2026-10-08;
   [EXTRACTOR_COMPARISON.md](EXTRACTOR_COMPARISON.md) defines its observed-unit scope.
 - Tolerant CSV/JSON-like discovery and span-exact apply: implemented in P7.
   Future misses belong to P3's minimal-fixture gate, not a second parser.
 - Spaced JAVA_HOME and CLI CJK paths: covered by P7's launcher regression.
-  Native Auto Unicode remains P8.4 and is not inferred from CLI success.
+  P8.4 separately verifies native Auto Unicode command arguments; Explorer
+  drag/drop still requires visual acceptance.
 - JSON-key discovery: implemented in P7; displayed-label versus identifier policy
   remains P8.10, rather than a missing extraction implementation.
 - Leftover CJK scanning: exists in direct apply/check; P8.3 exposes its quality

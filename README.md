@@ -17,8 +17,12 @@ or redistribution rights.
 
 ## Current status
 
-The simplified source-safe workflow is implemented on `main`; exact implementation
-commit `10f274b` passed Windows and Linux CI run `34605294776`. The existing
+The source-safe P7 translation method and P8 workflow enhancements are implemented
+on `main`. Implementation commit `55bf2f8` passed Windows and Ubuntu
+[CI run 37876311841](https://github.com/Exxec/Project-Go/actions/runs/37876311841).
+Local validation passed 610 tests and packaged native Auto Unicode
+command-argument verification. See [the roadmap](docs/ROADMAP.md) and
+[P8 acceptance notes](docs/GUI_WORKFLOW_ENHANCEMENTS.md) for scope and open gates. The existing
 `v0.7.0` tag has no published GitHub Release;
 post-tag source now identifies itself as `0.8.0-rc.1`, not as the old
 tagged version. See [new-work review and release gates](docs/NEW_WORK_RELEASE_REVIEW.md).
@@ -132,6 +136,9 @@ same surface; later, drop the returned AI JSON there too. Project state is saved
 internally, completed saved work skips directly to installation, and a normal
 build creates one translated copy. Settings provides preview-first cleanup and
 conservative interrupted-install recovery.
+Review Changes exposes pending source changes and validation findings. Repeat
+installs use the validated remembered destination; installed-copy verification
+checks file bytes, while Test Instructions covers the separate game checks.
 The former project editor, practice project, custom paths, catalogs, schemas, AI
 providers, and diagnostics remain under Advanced. Custom schemas are
 exact-path/pointer (JSON) or exact-path/column (CSV) catalogs; see

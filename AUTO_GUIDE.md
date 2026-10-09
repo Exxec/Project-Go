@@ -99,7 +99,7 @@ creates the translated copy beside it.
    integrity (the documented name is checked first), then validate it and add it to both
    the project and the master SQLite library.
 6. If the master library is missing or incomplete, export only the remaining nonblank
-   strings in `AI translation request.json`; no patch is made yet.
+   strings in `<mod name> - Translate to English.json`; no copy is made yet.
 7. Build one translated copy only when nothing remains.
 8. Report `PATCH_UNCHANGED` when identical clone outputs already exist.
 
@@ -135,7 +135,9 @@ For a development JVM launch:
   only the remaining strings.
 - Changed IDs, source strings, schema, or source-mod identity reject the whole
   response.
-- Malformed source such as `Ture` remains rejected and is never repaired.
+- P7 discovers text in tolerant CSV and JSON-like syntax without normalizing or
+  repairing source bytes. Unsupported inputs are reported; extraction does not
+  establish that the source is valid for the game.
 - ZIP archives must contain exactly one `mod_info.json`. Entries that escape
   the workspace, archives with more than 10,000 entries, and archives that
   expand past 1 GB are rejected.

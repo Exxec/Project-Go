@@ -59,3 +59,19 @@ Large-modpack benchmarks use permission-compatible local inputs and record:
 - source immutability evidence.
 
 Proprietary source text is never committed with benchmark results.
+
+## Repository Hygiene
+
+Fetch `origin` and inspect `git status --short --branch` before making changes.
+Preserve unrelated edits and compare `HEAD` with `origin/main` before publishing.
+Run `git diff --check` and check local Markdown link targets after editing docs.
+
+`./gradlew hygieneDryRun` (`.\gradlew.bat hygieneDryRun` on Windows) lists existing
+repository-owned build and Gradle cache directories with their byte counts. It
+does not delete anything. Keep local acceptance evidence and packaged outputs
+until their claims have durable tracked or hosted receipts. Application storage
+cleanup is a separate hash-bound workflow described in [USER_GUIDE.md](USER_GUIDE.md).
+
+Keep current entry-point guides aligned with implemented behavior. Label older
+implementation receipts by checkpoint date, link follow-up evidence, and retain
+unverified visual, live-game, rights and release gates explicitly.

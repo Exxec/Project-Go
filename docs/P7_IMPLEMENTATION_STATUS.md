@@ -2,7 +2,9 @@
 
 Implemented 2026-10-05 against Project Go baseline `3e2cc26`, version `0.8.0-rc.1`.
 Scope: ROADMAP.md P7 items 1-7 and BRIDGEFORGE_METHOD_CONVERSION.md.
-These are local development builds; no commit, publication or live-game readiness is implied.
+This is the historical P7 development-build receipt. Its local checks do not
+establish release publication or live-game readiness. The later P8 implementation
+and hosted validation are recorded in [GUI_WORKFLOW_ENHANCEMENTS.md](GUI_WORKFLOW_ENHANCEMENTS.md).
 
 ## Result
 
@@ -84,7 +86,7 @@ CJK arguments; it does not guess a replacement for corrupted paths. Temporary
 arguments are removed and the JVM exit code is propagated. Windows PowerShell
 is required by this Windows launcher; the Unix launcher remains generated normally.
 
-The native `Project Go Auto.exe` still replaces CJK **input command arguments**
+At this P7 checkpoint, native `Project Go Auto.exe` replaced CJK **input command arguments**
 with question marks on this Windows/JDK installation. Backend Unicode tests pass,
 and native workflow acceptance passed on an ASCII source path, but dropping a
 CJK input path onto that executable is not cleared. A separate native launcher

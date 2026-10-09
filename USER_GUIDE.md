@@ -10,8 +10,9 @@ runtime, so testers do not need to install Java. It is a development-testing
 build, not a signed installer.
 
 Project Go reads source mods and makes one translated copy for your own game.
-It must never edit the source mod. Malformed source, including `Ture` where a
-boolean is required, is reported and is not silently repaired.
+It must never edit the source mod. P7 discovers text in tolerant CSV and JSON-like
+syntax without normalizing or repairing source bytes. Unsupported inputs are
+reported; extraction does not establish that the source is valid for the game.
 
 ## Start the Windows program
 
@@ -68,11 +69,14 @@ copy contains no proprietary Starsector or community-mod content.
    area. The response filename does not matter; a file picker remains available.
 4. Project Go validates the entire response before saving anything. If entries
    remain unfinished, it returns to the translation step.
-5. Select **Install English Copy**, choose the destination parent on the first
+5. Open **Review Changes** when pending source changes or validation findings
+   block installation. Viewing findings does not resolve them; import corrected
+   translations before continuing.
+6. Select **Install English Copy**, choose the destination parent on the first
    install, and use the one generated `<mod name> - English` folder.
    A successful build remembers that validated parent for the next install. A
    missing, linked, or unwritable remembered folder is ignored safely.
-6. Disable the original mod, enable only the translated copy, and launch
+7. Disable the original mod, enable only the translated copy, and launch
    Starsector. In-game behavior remains a separate manual validation gate.
 
 After a successful install, use **Open Mod Folder** or **Translate Another Mod**.

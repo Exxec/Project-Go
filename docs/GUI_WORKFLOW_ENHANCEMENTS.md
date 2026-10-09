@@ -99,6 +99,11 @@ The execution environment restored the standard Windows PowerShell module path
 for the existing hash check. Native-access/Gradle deprecation/static-analysis
 missing-class warnings remain visible. These logs are local development evidence.
 
+Implementation commit `55bf2f8` also passed Windows and Ubuntu
+[CI run 37876311841](https://github.com/Exxec/Project-Go/actions/runs/37876311841).
+Both jobs uploaded branch evidence; Windows exercised the packaged native gates.
+This is branch validation, not a tagged release or visual/game acceptance.
+
 - Candidate-specific evidence must establish whether particular keys are labels
   or lookup identifiers; schema-v1 parity is not semantic approval to rename them.
 - Coverage manifests retain unknown total supported strings; absence of entries
