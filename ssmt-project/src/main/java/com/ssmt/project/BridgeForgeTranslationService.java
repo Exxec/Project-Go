@@ -56,6 +56,7 @@ public final class BridgeForgeTranslationService {
             boolean fallbackJars = jars.isEmpty();
             Set<String> sources = new HashSet<>();
             for (Path path : files) {
+                WorkflowOperation.checkCancellation();
                 String file = relative(root, path);
                 if (excluded(file)) {
                     continue;
@@ -70,6 +71,7 @@ public final class BridgeForgeTranslationService {
                     try (var archive = new ZipFile(path.toFile())) {
                         var members = archive.entries();
                         while (members.hasMoreElements()) {
+                            WorkflowOperation.checkCancellation();
                             var member = members.nextElement();
                             if (!member.getName().endsWith(".class")) {
                                 continue;

@@ -216,6 +216,7 @@ public final class SsmtApplication extends Application {
                 schemaEditorTab(stage),
                 providerSettingsTab(),
                 fontCoverageTab(stage),
+                fixedTab("Extractor Comparison", new ExtractorComparisonPane(stage)),
                 logTab());
         return fixedTab(GuiText.get("tab.tools"), tools);
     }

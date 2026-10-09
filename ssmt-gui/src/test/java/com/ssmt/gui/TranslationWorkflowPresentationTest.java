@@ -5,6 +5,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 class TranslationWorkflowPresentationTest {
+    @Test void pendingReviewPrecedesExchangeAndViewingDoesNotAuthorizeAnIncompleteBuild() {
+        var presentation = new TranslationWorkflowPresentation();
+        presentation.completed(TranslationWorkflowPresentation.Action.CHOOSE_MOD, false, true);
+        assertThat(presentation.action()).isEqualTo(TranslationWorkflowPresentation.Action.REVIEW_CHANGES);
+        presentation.completed(TranslationWorkflowPresentation.Action.REVIEW_CHANGES, false);
+        assertThat(presentation.action()).isEqualTo(TranslationWorkflowPresentation.Action.EXPORT_TRANSLATION);
+    }
     @Test
     void successfulActionsAdvanceAcrossThreeStages() {
         var presentation = new TranslationWorkflowPresentation();

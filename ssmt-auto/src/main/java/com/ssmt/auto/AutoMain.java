@@ -20,6 +20,13 @@ public final class AutoMain {
      * @param args dropped mod archive, mod_info.json, or mod directory
      */
     public static void main(String[] args) {
+        try {
+            args = WindowsNativeArguments.resolve(args);
+        } catch (RuntimeException exception) {
+            LOG.error("Could not read native Auto arguments: {}", exception.getMessage());
+            System.exit(1);
+            return;
+        }
         if (args.length == 1 && "--version".equals(args[0])) {
             LOG.info("Project Go Auto {}", java.util.Objects.requireNonNull(
                     AutoMain.class.getPackage().getImplementationVersion(), "Packaged application version is missing"));

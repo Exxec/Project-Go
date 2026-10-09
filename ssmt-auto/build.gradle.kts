@@ -51,6 +51,8 @@ tasks.register<Exec>("jpackageImage") {
             "--vendor", "Project Go Contributors",
             "--description", "Headless drag-and-drop Starsector localization workflow",
             "--icon", packageIcon.asFile,
+            "--java-options", "--enable-native-access=ALL-UNNAMED",
+            "--java-options", "-Dprojectgo.auto.nativeArguments=true",
             "--win-console"
         )
     }
@@ -64,6 +66,20 @@ tasks.register<Exec>("smokeTestAppImage") {
     inputs.dir(appImage)
     doFirst {
         commandLine(appImage.get().file("Project Go Auto.exe").asFile, "--smoke-test")
+    }
+    onlyIf { hostOs.contains("win") }
+}
+
+tasks.register<Exec>("verifyNativeUnicode") {
+    group = "verification"
+    description = "Verifies native Auto Unicode input arguments and exact fixture output."
+    dependsOn(tasks.named("jpackageImage"))
+    doFirst {
+        commandLine("powershell.exe", "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass",
+            "-File", file("src/test/scripts/verify-native-unicode.ps1").absolutePath,
+            "-Launcher", appImage.get().file("Project Go Auto.exe").asFile.absolutePath,
+            "-Fixture", rootProject.file("fixtures/translation-conformance/input").absolutePath,
+            "-Response", rootProject.file("fixtures/translation-conformance/translated.json").absolutePath)
     }
     onlyIf { hostOs.contains("win") }
 }

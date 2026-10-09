@@ -1,6 +1,6 @@
 # Project Go Auto: Drag-and-Drop Workflow
 
-`Last updated: 2026-09-11 (internal workspace and single-copy output)`
+`Last updated: 2026-10-08 (native Unicode input arguments)`
 
 `Project Go Auto.exe` is the advanced headless compatibility helper for scripts
 and existing drag-to-executable habits. New desktop users can drop the same input
@@ -8,6 +8,12 @@ onto the main Project Go window. Drop one
 Starsector mod ZIP on it and it either makes your personal translated copy or
 creates one clear file for an AI translation pass. It never edits the archive
 or an unpacked original mod.
+
+The rebuilt native Windows launcher accepts CJK input command arguments using
+the original Unicode Windows command line. Packaged folder and metadata-path
+workflow tests verify exact output and unchanged sources. An actual Explorer
+drag/drop still has a separate visual acceptance gate; see
+[the P8 acceptance notes](docs/GUI_WORKFLOW_ENHANCEMENTS.md).
 
 ## First run
 
@@ -18,7 +24,7 @@ or an unpacked original mod.
    application-data folder. Beside the ZIP it creates only this handoff file:
 
 ```text
-Original Mod Name - AI translation request.json
+Original Mod Name - Translate to English.json
 ```
 
 4. Give it to an online AI and ask it to follow the embedded instructions.
@@ -32,7 +38,7 @@ Original Mod Name - AI translation library.json
 6. Drag the same ZIP onto `Project Go Auto.exe` again.
 
 Project Go validates the response, imports it into the persistent translation
-library, updates its internal project, and publishes one `<mod-id>.english`
+library, updates its internal project, and publishes one `<mod name> - English`
 translated copy beside the ZIP when every nonblank source string has a
 translation. The original ZIP remains the pristine source.
 
@@ -40,9 +46,9 @@ translation. The original ZIP remains the pristine source.
 
 ```text
 Original Mod.zip
-Original Mod Name - AI translation request.json
+Original Mod Name - Translate to English.json
 Original Mod Name - AI translation library.json
-<mod-id>.english\
+<mod name> - English\
 ```
 
 The request and response are temporary handoff files. Project Go does not create

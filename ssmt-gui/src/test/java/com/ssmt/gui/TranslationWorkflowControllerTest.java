@@ -108,7 +108,8 @@ class TranslationWorkflowControllerTest {
         assertThatThrownBy(() -> controller.buildPatch(attemptedOutput))
                 .isInstanceOf(ProjectException.class);
         Path canonicalOutput = directory.toRealPath().resolve("attempted-output");
-        assertThat(controller.lastOutput()).contains(attemptedOutput.toAbsolutePath().normalize());
+        assertThat(controller.lastOutput()).isEmpty();
+        assertThat(controller.recoveryOutput()).contains(canonicalOutput);
         var afterCrash = new TranslationWorkflowController(
                 new TranslationWorkflow(directory.resolve("restart-owned")),
                 new WorkflowPreferences(directory.resolve("settings.json")));

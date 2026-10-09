@@ -790,6 +790,7 @@ public final class LocalizationProjectService {
         Map<Path, List<TranslationReplacement>> grouped = new LinkedHashMap<>();
         for (ProjectEntry entry : project.entries()) {
             cancellation.throwIfCancellationRequested();
+            WorkflowOperation.checkCancellation();
             if (entry.originalText().isBlank()
                     && entry.translatedText().isBlank()) {
                 continue;
@@ -846,6 +847,7 @@ public final class LocalizationProjectService {
             if (!publishSupportArtifacts) {
                 requireOwnedNormalOutput(outputRoot, mod.id());
             }
+            WorkflowOperation.beginPublication();
             PatchBuildResult result = publishSupportArtifacts
                     ? patchBuilder.build(request)
                     : patchBuilder.buildTranslatedCopy(request);

@@ -1,6 +1,6 @@
 # Project Go Beginner Guide
 
-`Last updated: 2026-09-11 (one-drop-surface workflow)`
+`Last updated: 2026-10-08 (review, remembered installation and output checks)`
 
 Project Go makes a private translated copy of a Starsector mod. It does not
 change the original mod, and generated copies should not be shared without the
@@ -24,10 +24,10 @@ The source folder remains unchanged.
 If Project Go already has complete saved translations, it proceeds directly to
 the final step. Otherwise:
 
-1. Select **Save AI Translation Request**.
+1. Select **Create Translation File**.
 2. Give the resulting JSON file to your AI translator.
 3. Ask it to follow the instructions inside and return the complete JSON only.
-4. Drop the returned JSON onto the same area. **Open AI Translation Response**
+4. Drop the returned JSON onto the same area. **Open Returned Translation File**
    remains available if you prefer a file picker.
 
 The response filename does not matter. Project Go checks its embedded mod
@@ -37,11 +37,16 @@ anything. A rejected response leaves previous progress untouched.
 If entries are still blank, Project Go returns to the translation step and can
 create another request containing the remaining work.
 
+**Review Changes** shows changed source text, previous translations and validation
+findings when needed. Viewing the report does not approve a translation. Correct
+the returned response to resolve pending entries. JSON object keys need a separate
+check of whether they are displayed labels or lookup identifiers.
+
 ### 3. Install Copy
 
-1. Select **Create Translated Mod**.
-2. Choose the destination parent, normally Starsector's `mods` directory.
-3. Use the one generated `<mod-id>-translated` folder.
+1. Select **Install English Copy**.
+2. On the first install, choose the destination parent, normally Starsector's `mods` directory.
+3. Use the one generated `<mod name> - English` folder.
 4. Disable the original mod and enable only the translated copy.
 5. Launch Starsector and test the mod in the game.
 
@@ -49,11 +54,19 @@ A successful normal build creates one translated folder. It does not create a
 permanent source-backup sibling or put `Project Go Changes.csv` in that folder.
 Temporary rollback data is internal and is removed after successful publication.
 After the first successful build, Project Go remembers that validated destination
-and opens the chooser there next time. If the folder is moved or removed, it asks
+and installs there directly next time. **Other actions > Install to a different
+destination** opens the chooser explicitly. If the folder is moved or removed, it asks
 again instead of using a stale path.
 
 After installation, **Open Mod Folder** opens the result and **Translate Another
 Mod** clears the active screen without deleting saved work.
+
+The output summary reports remaining observed CJK text and unreadable inputs.
+**Verify Installed Copy** detects added, missing or changed files against the
+recorded publication. **Test Instructions** explains the separate game checks.
+These checks do not establish live compatibility. During long operations,
+**Cancel** stops at a safe boundary before publication; an already-started
+publication finishes safely.
 
 ## Files you need to understand
 

@@ -141,6 +141,7 @@ public final class ModInputPreparationService {
         try (ZipInputStream input = new ZipInputStream(Files.newInputStream(archive))) {
             ZipEntry entry;
             while ((entry = input.getNextEntry()) != null) {
+                WorkflowOperation.checkCancellation();
                 entries++;
                 if (entries > maxArchiveEntries) {
                     throw new ProjectException("Mod archive contains too many entries");
@@ -157,6 +158,7 @@ public final class ModInputPreparationService {
                         byte[] buffer = new byte[8192];
                         int read;
                         while ((read = input.read(buffer)) != -1) {
+                            WorkflowOperation.checkCancellation();
                             expandedBytes = Math.addExact(expandedBytes, read);
                             if (expandedBytes > maxArchiveBytes) {
                                 throw new ProjectException(

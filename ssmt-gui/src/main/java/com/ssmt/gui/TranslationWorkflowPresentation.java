@@ -6,6 +6,7 @@ final class TranslationWorkflowPresentation {
         CHOOSE_MOD(1, "normal.primary.choose", "normal.prompt.choose"),
         EXPORT_TRANSLATION(2, "normal.primary.export", "normal.prompt.export"),
         IMPORT_TRANSLATION(2, "normal.primary.import", "normal.prompt.import"),
+        REVIEW_CHANGES(2, "normal.primary.review", "normal.prompt.review"),
         BUILD_COPY(3, "normal.primary.build", "normal.prompt.build"),
         COMPLETE(3, "normal.primary.another", "normal.prompt.complete");
 
@@ -31,10 +32,15 @@ final class TranslationWorkflowPresentation {
     Action action() { return action; }
 
     void completed(Action completed, boolean readyToBuild) {
+        completed(completed, readyToBuild, false);
+    }
+
+    void completed(Action completed, boolean readyToBuild, boolean needsReview) {
         action = switch (completed) {
-            case CHOOSE_MOD, IMPORT_TRANSLATION -> readyToBuild
+            case CHOOSE_MOD, IMPORT_TRANSLATION -> needsReview ? Action.REVIEW_CHANGES : readyToBuild
                     ? Action.BUILD_COPY
                     : Action.EXPORT_TRANSLATION;
+            case REVIEW_CHANGES -> readyToBuild ? Action.BUILD_COPY : Action.EXPORT_TRANSLATION;
             case EXPORT_TRANSLATION -> Action.IMPORT_TRANSLATION;
             case BUILD_COPY -> Action.COMPLETE;
             case COMPLETE -> Action.CHOOSE_MOD;

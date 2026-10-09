@@ -1,6 +1,6 @@
 # Project Go Personal-Use Guide
 
-`Last updated: 2026-09-11 (unified drop flow and single-copy output)`
+`Last updated: 2026-10-08 (normal review and installation enhancements)`
 
 ## What this build is
 
@@ -29,14 +29,14 @@ The normal workflow has three stages: **Choose Mod**, **Translate Text**, and
 It shows one primary next action instead of asking you to manage project files.
 Project state, history, reports, recovery data, and translation memory remain in
 Project Go-owned storage outside the source mod. The desktop workspace currently
-defaults to `%USERPROFILE%\.project-go\workspaces`; Auto projects and the shared
-catalog use `%LOCALAPPDATA%\Project Go`. Unifying those internal roots is tracked
-as migration work and does not change the visible three-step flow.
+defaults to `%LOCALAPPDATA%\Project Go\workspaces`; Auto projects and the shared
+catalog use the same application-data parent. Custom internal locations remain
+available for advanced use.
 
 The normal workflow creates only one visible result:
 
 ```text
-<chosen destination>\<mod-id>-translated\
+<chosen destination>\<mod name> - English\
 ```
 
 Your selected ZIP or mod directory remains the pristine original. Project Go
@@ -63,13 +63,13 @@ copy contains no proprietary Starsector or community-mod content.
    large drop area. File and folder pickers remain under the primary and
    **Other actions** controls.
 2. If saved translations are already complete, Project Go advances directly to
-   **Install**. Otherwise select **Save AI Translation Request**.
+   **Install**. Otherwise select **Create Translation File**.
 3. Give that JSON to the translator and drop the returned JSON onto the same
    area. The response filename does not matter; a file picker remains available.
 4. Project Go validates the entire response before saving anything. If entries
    remain unfinished, it returns to the translation step.
-5. Select **Create Translated Mod**, choose the destination parent, and use the
-   one generated `<mod-id>-translated` folder.
+5. Select **Install English Copy**, choose the destination parent on the first
+   install, and use the one generated `<mod name> - English` folder.
    A successful build remembers that validated parent for the next install. A
    missing, linked, or unwritable remembered folder is ignored safely.
 6. Disable the original mod, enable only the translated copy, and launch
@@ -77,6 +77,20 @@ copy contains no proprietary Starsector or community-mod content.
 
 After a successful install, use **Open Mod Folder** or **Translate Another Mod**.
 The latter clears only the active screen; saved translation work remains internal.
+
+Repeat installs use the remembered destination directly. **Other actions >
+Install to a different destination** opens the chooser. **Review Changes**
+shows stale source text, previous translations, missing entries and validation
+findings; viewing it does not approve or change translations. Output quality
+reports observed remaining CJK units and unreadable inputs. **Verify Installed
+Copy** compares file bytes against the saved publication; **Test Instructions**
+explains separate game checks. Operation stages and cooperative **Cancel** keep
+pre-publication work responsive; publication itself finishes without interruption.
+
+**Other actions > Export Diagnostics** exports status and only logs selected by
+the user. **Advanced > Tools > Extractor Comparison** compares observed discovery
+against a BridgeForge export. See [the P8 acceptance notes](docs/GUI_WORKFLOW_ENHANCEMENTS.md)
+for evidence boundaries and the outstanding visual checks.
 
 ## Advanced project files and recovery
 

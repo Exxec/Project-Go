@@ -121,21 +121,19 @@ val generateSbom by tasks.registering {
     }
 }
 
+val distributionArchives = listOf(":ssmt-cli", ":ssmt-gui", ":ssmt-auto").map { module ->
+    project(module).layout.buildDirectory.file("distributions/${module.substring(1)}-${project.version}.zip")
+}
+
 val releaseChecksums by tasks.registering {
     group = "distribution"
     description = "Writes deterministic SHA-256 checksums for release ZIP archives."
     dependsOn(":ssmt-cli:distZip", ":ssmt-gui:distZip", ":ssmt-auto:distZip")
+    inputs.files(distributionArchives)
     val destination = layout.buildDirectory.file("distributions/SHA256SUMS")
     outputs.file(destination)
     doLast {
-        val archives = listOf(
-            project(":ssmt-cli").layout.buildDirectory
-                .file("distributions/ssmt-cli-${project.version}.zip").get().asFile,
-            project(":ssmt-gui").layout.buildDirectory
-                .file("distributions/ssmt-gui-${project.version}.zip").get().asFile,
-            project(":ssmt-auto").layout.buildDirectory
-                .file("distributions/ssmt-auto-${project.version}.zip").get().asFile)
-                .sortedBy { it.name }
+        val archives = distributionArchives.map { it.get().asFile }.sortedBy { it.name }
         val digest = MessageDigest.getInstance("SHA-256")
         val lines = archives.map { archive ->
             "${HexFormat.of().formatHex(digest.digest(archive.readBytes()))}  ${archive.name}"
@@ -145,6 +143,26 @@ val releaseChecksums by tasks.registering {
         output.writeText(lines.joinToString("\n", postfix = "\n"), Charsets.UTF_8)
     }
 }
+
+val verifyReleaseChecksums by tasks.registering {
+    group = "verification"
+    description = "Checks SHA256SUMS against every current distribution archive."
+    dependsOn(releaseChecksums)
+    inputs.files(distributionArchives)
+    inputs.file(layout.buildDirectory.file("distributions/SHA256SUMS"))
+    doLast {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val expected = distributionArchives.map { it.get().asFile }.sortedBy { it.name }.map { archive ->
+            "${HexFormat.of().formatHex(digest.digest(archive.readBytes()))}  ${archive.name}"
+        }
+        val actual = layout.buildDirectory.file("distributions/SHA256SUMS").get().asFile.readLines()
+        if (actual != expected) {
+            throw GradleException("Distribution checksums do not match the current ZIP bytes")
+        }
+    }
+}
+
+tasks.named("check") { dependsOn(verifyReleaseChecksums) }
 
 val scanReleaseArchives by tasks.registering {
     group = "verification"

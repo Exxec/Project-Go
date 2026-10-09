@@ -125,6 +125,7 @@ public final class TranslationWorkflow {
      * @throws ProjectException when the input cannot be prepared or opened
      */
     public Session loadInput(Path input, LineageChoice choice) throws ProjectException {
+        WorkflowOperation.stage("Preparing archive or folder");
         var prepared = new ModInputPreparationService().prepare(input, inputCache);
         return loadMod(prepared.modRoot(), choice);
     }
@@ -208,6 +209,7 @@ public final class TranslationWorkflow {
      * @throws ProjectException when the mod cannot be opened or saved
      */
     public Session loadMod(Path source, LineageChoice choice) throws ProjectException {
+        WorkflowOperation.stage("Extracting and reconciling text");
         Path canonical;
         try {
             canonical = source.toRealPath();
@@ -294,6 +296,8 @@ public final class TranslationWorkflow {
         requireOutsideWorkspace(session.workspace(), destination);
         locked(session.workspace(), () -> {
             requireCurrent(session);
+            WorkflowOperation.stage("Preparing translation request");
+            WorkflowOperation.beginPublication();
             workflow.exportAll(destination, workflow.bind(session.project()),
                     session.modName(), session.sourceLanguage(), TARGET_LANGUAGE);
             return null;
@@ -302,6 +306,7 @@ public final class TranslationWorkflow {
 
     /** Validates first, commits second; failures leave the caller's session and disk unchanged. */
     public Session importTranslation(Session session, Path response) throws ProjectException {
+        WorkflowOperation.stage("Checking response and source changes");
         return locked(session.workspace(), () -> {
             requireCurrent(session);
             ObjectNode metadata = readState(session.workspace().resolve(PROJECT_FILE));
@@ -327,15 +332,94 @@ public final class TranslationWorkflow {
 
     /** Initially publishes the proven translated clone; standalone patch output is a separate gate. */
     public ProjectBuildResult buildPatch(Session session, Path destination) throws ProjectException {
+        WorkflowOperation.stage("Validating translations and source");
         requireOutsideSource(session.source(), destination);
         requireOutsideWorkspace(session.workspace(), destination);
         return locked(session.workspace(), () -> {
             requireCurrent(session);
+            if (session.needsReview() != 0 || !WorkflowReview.validate(session.project()).findings().isEmpty()) {
+                throw new ProjectException("Review unresolved translations before installing");
+            }
             var current = workflow.refresh(session.source(), session.project());
             var built = workflow.build(session.source(), destination, current);
             persistence.commit(session.workspace(), List.of(
                     sourceAttestations.update(session.workspace(), built.sourceAttestations())));
+            try {
+                WorkflowOperation.stage("Checking installed output quality");
+                var evidence = new InstalledCopyEvidence().capture(destination);
+                persistence.commit(session.workspace(), List.of(new WorkflowPersistenceService.Update(
+                        session.workspace().resolve("installed-copy.json"),
+                        JSON.writerWithDefaultPrettyPrinter().writeValueAsBytes(evidence))));
+            } catch (IOException | ProjectException exception) {
+                LOG.log(System.Logger.Level.WARNING,
+                        "Copy published; installed-copy evidence could not be retained", exception);
+            }
             return built.result();
+        });
+    }
+
+    /** Returns pending refresh history and current validation findings without changing work. */
+    public WorkflowReview review(Session session) throws ProjectException {
+        WorkflowOperation.stage("Checking refresh history and translation validation");
+        return locked(session.workspace(), () -> {
+            requireCurrent(session);
+            var findings = new ArrayList<>(WorkflowReview.validate(session.project()).findings());
+            findings.addAll(WorkflowReview.jsonKeys(session.project()));
+            for (JsonNode node : readState(session.workspace().resolve(PROJECT_FILE)).path("pendingReview")) {
+                findings.add(new WorkflowReview.Finding(node.path("sourceFile").asText(),
+                        node.path("key").asText(), node.path("status").asText(), node.path("source").asText(),
+                        node.path("previousSource").asText(), node.path("previousTranslation").asText()));
+            }
+            for (JsonNode node : readState(session.workspace().resolve(PROJECT_FILE)).path("history")) {
+                if (node.path("status").asText().equals("REMOVED")) {
+                    findings.add(new WorkflowReview.Finding(node.path("sourceFile").asText(),
+                            node.path("key").asText(), "Removed source entry (history only)",
+                            node.path("source").asText(), node.path("previousSource").asText(),
+                            node.path("previousTranslation").asText()));
+                }
+            }
+            return new WorkflowReview(findings);
+        });
+    }
+
+    /** Reads saved publication quality; absence is visibly unknown, never clear. */
+    public InstalledCopyEvidence.Quality installedQuality(Session session) throws ProjectException {
+        return new InstalledCopyEvidence().quality(readInstalledEvidence(session));
+    }
+
+    /** Quality for a just-published output requires matching saved path and bytes. */
+    public InstalledCopyEvidence.Quality installedQuality(Session session, Path output) throws ProjectException {
+        var record = readInstalledEvidence(session);
+        var evidence = new InstalledCopyEvidence();
+        if (!evidence.verify(output, record).isEmpty()) {
+            throw new ProjectException("Saved quality evidence does not match the installed bytes");
+        }
+        return evidence.quality(record);
+    }
+
+    /** Read-only byte verification against the last successfully recorded publication. */
+    public List<String> verifyInstalled(Session session, Path output) throws ProjectException {
+        WorkflowOperation.stage("Comparing installed file bytes with publication evidence");
+        return new InstalledCopyEvidence().verify(output, readInstalledEvidence(session));
+    }
+
+    private ObjectNode readInstalledEvidence(Session session) throws ProjectException {
+        return locked(session.workspace(), () -> {
+            requireCurrent(session);
+            Path file = session.workspace().resolve("installed-copy.json");
+            try {
+                if (!Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(file)
+                        || Files.size(file) > 64L * 1024L * 1024L) {
+                    throw new ProjectException("Installed-copy evidence is unavailable");
+                }
+                JsonNode record = JSON.readTree(file.toFile());
+                if (!(record instanceof ObjectNode object)) {
+                    throw new ProjectException("Invalid installed-copy evidence");
+                }
+                return object;
+            } catch (IOException exception) {
+                throw new ProjectException("Could not read installed-copy evidence", exception);
+            }
         });
     }
 
@@ -657,6 +741,7 @@ public final class TranslationWorkflow {
             // Embed metadata with the project: a single publication commits both together.
             document.set("workspace", metadata);
             byte[] contents = JSON.writerWithDefaultPrettyPrinter().writeValueAsBytes(document);
+            WorkflowOperation.beginPublication();
             persistence.commit(workspace, List.of(
                     new WorkflowPersistenceService.Update(target, contents),
                     sourceAttestations.update(workspace, attestations)));

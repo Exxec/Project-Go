@@ -96,6 +96,13 @@ approval. Final disposition: `READY_WITH_REVIEW_ITEMS`.
 
 ## Local outputs
 
+Follow-up 2026-10-08: P8 now closes the native Auto Unicode **command-argument**
+limitation described above. The actual packaged executable passed the CJK,
+spaced/ampersand folder and metadata-path workflow, arbitrary-named response,
+exact-output and unchanged-source regression. See
+[GUI_WORKFLOW_ENHANCEMENTS.md](GUI_WORKFLOW_ENHANCEMENTS.md). Explorer drag/drop,
+visual GUI acceptance, live behavior and release/rights gates remain separate.
+
 - CLI: `ssmt-cli/build/install/ssmt-cli/` (batch plus PowerShell helper).
 - GUI distribution: `ssmt-gui/build/install/ssmt-gui/`.
 - Auto distribution: `ssmt-auto/build/install/ssmt-auto/`.

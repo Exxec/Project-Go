@@ -38,10 +38,33 @@ jobs:
       - name: Build application image
         if: runner.os == 'Windows'
         shell: bash
-        run: ./gradlew :ssmt-gui:smokeTestAppImage --no-daemon
+        run: ./gradlew :ssmt-gui:smokeTestAppImage :ssmt-auto:smokeTestAppImage :ssmt-auto:verifyNativeUnicode --no-daemon
       - name: Generate release evidence
         shell: bash
         run: ./gradlew generateSbom releaseChecksums scanReleaseArchives checkReleaseMetadata --no-daemon
+      - name: Bind branch packages to their source record
+        shell: bash
+        run: |
+          mkdir -p build/reports/release-chain
+          VERSION=$(sed -n 's/^ssmtVersion=//p' gradle.properties | tr -d '\r')
+          printf 'version=%s\ncommit=%s\n' "$VERSION" "$GITHUB_SHA" > build/reports/release-source.txt
+          ./gradlew :ssmt-cli:installDist --no-daemon
+          while IFS= read -r -d '' archive; do
+            ssmt-cli/build/install/ssmt-cli/bin/ssmt-cli release-chain \
+              --source-record build/reports/release-source.txt \
+              --archive "$archive" \
+              > "build/reports/release-chain/$(basename "$archive").json"
+          done < <(find ssmt-cli/build/distributions ssmt-gui/build/distributions ssmt-auto/build/distributions -maxdepth 1 -name '*.zip' -type f -print0)
+      - name: Upload branch evidence
+        uses: actions/upload-artifact@v5
+        with:
+          name: branch-evidence-${{ matrix.os }}
+          path: |
+            build/reports/release-source.txt
+            build/reports/release-chain/*.json
+            build/distributions/SHA256SUMS
+            **/build/test-results/test/TEST-*.xml
+          if-no-files-found: error
 
   dependency-review:
     if: github.event_name == 'pull_request'

@@ -30,6 +30,7 @@ public final class BridgeForgeTranslationApply {
             Path root = source.toRealPath();
             var hashFields = document.path("file_hashes").fields();
             while (hashFields.hasNext()) {
+                WorkflowOperation.checkCancellation();
                 var field = hashFields.next();
                 if (!BridgeForgeTranslationService.hash(BridgeForgeTranslationService.contained(root, field.getKey()))
                         .equalsIgnoreCase(field.getValue().asText())) {
@@ -48,6 +49,7 @@ public final class BridgeForgeTranslationApply {
             var problems = JSON.createArrayNode();
             var reindexed = JSON.createArrayNode();
             for (JsonNode entry : document.path("entries")) {
+                WorkflowOperation.checkCancellation();
                 String id = entry.path("id").asText();
                 JsonNode actual = discovered.get(id);
                 if (actual == null) {

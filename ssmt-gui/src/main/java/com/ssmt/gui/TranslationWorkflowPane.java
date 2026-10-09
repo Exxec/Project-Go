@@ -23,6 +23,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -42,7 +43,9 @@ final class TranslationWorkflowPane extends VBox {
     private final Label dropTarget = new Label(GuiText.get("normal.drop"));
     private final Button primary = new Button();
     private final Button openOutput = new Button(GuiText.get("normal.openOutput"));
-    private final HBox resultActions = new HBox(10, openOutput);
+    private final Button verifyOutput = new Button(GuiText.get("normal.verifyOutput"));
+    private final Button testInstructions = new Button(GuiText.get("normal.testInstructions"));
+    private final HBox resultActions = new HBox(10, openOutput, verifyOutput, testInstructions);
     private final MenuButton otherActions = new MenuButton(GuiText.get("normal.otherActions"));
     private final MenuItem exportAction = new MenuItem(GuiText.get("normal.action.exportAgain"));
     private final MenuItem importAction = new MenuItem(GuiText.get("normal.action.importFile"));
@@ -51,6 +54,13 @@ final class TranslationWorkflowPane extends VBox {
     private final Stage stage;
     private final Runnable openAdvanced;
     private Path attemptedInput;
+    private String lastOperation = "Workflow status";
+    private String lastDiagnostic = "No failure recorded in this session.";
+    private boolean busy;
+    private final java.util.concurrent.atomic.AtomicBoolean cancelRequested = new java.util.concurrent.atomic.AtomicBoolean();
+    private final java.util.concurrent.atomic.AtomicBoolean cancellable = new java.util.concurrent.atomic.AtomicBoolean();
+    private final Button cancel = new Button(GuiText.get("normal.cancel"));
+    private final ProgressIndicator activity = new ProgressIndicator();
 
     TranslationWorkflowPane(Stage stage) {
         this(stage, () -> { });
@@ -77,13 +87,13 @@ final class TranslationWorkflowPane extends VBox {
                 + " -fx-border-style: segments(8, 6); -fx-background-color: #f4f6f8;"
                 + " -fx-font-size: 16px; -fx-alignment: center;");
         setOnDragOver(event -> {
-            if (event.getDragboard().hasFiles() && event.getDragboard().getFiles().size() == 1) {
+            if (!busy && event.getDragboard().hasFiles() && event.getDragboard().getFiles().size() == 1) {
                 event.acceptTransferModes(TransferMode.COPY);
             }
             event.consume();
         });
         setOnDragDropped(event -> {
-            boolean accepted = event.getDragboard().hasFiles()
+            boolean accepted = !busy && event.getDragboard().hasFiles()
                     && event.getDragboard().getFiles().size() == 1;
             if (accepted) {
                 acceptDropped(event.getDragboard().getFiles().getFirst().toPath());
@@ -99,14 +109,29 @@ final class TranslationWorkflowPane extends VBox {
         exportAction.setOnAction(event -> exportTranslation());
         importAction.setOnAction(event -> importTranslation());
         buildAction.setOnAction(event -> buildCopy());
+        MenuItem changeDestination = menuItem(GuiText.get("normal.changeDestination"), this::chooseBuildDestination);
+        MenuItem review = menuItem(GuiText.get("normal.primary.review"), this::reviewChanges);
+        MenuItem diagnostics = menuItem("Export Diagnostics", this::exportDiagnostics);
         MenuItem settings = menuItem(GuiText.get("normal.settings"), this::showSettings);
         otherActions.getItems().addAll(chooseFolder, chooseFile, exportAction, importAction,
-                buildAction, settings);
+                buildAction, changeDestination, review, diagnostics, settings);
         openOutput.setOnAction(event -> openOutputFolder());
+        verifyOutput.setOnAction(event -> verifyInstalled());
+        testInstructions.setOnAction(event -> showText(GuiText.get("normal.testInstructions"),
+                GuiText.get("normal.testHelp")));
         resultActions.setManaged(false);
         resultActions.setVisible(false);
+        activity.setMaxSize(24, 24);
+        cancel.setOnAction(event -> {
+            if (cancellable.get()) {
+                cancelRequested.set(true);
+                cancel.setDisable(true);
+                status.setText(GuiText.get("normal.cancelling"));
+            }
+        });
+        setBusy(false);
         getChildren().addAll(title, explanation, new HBox(20, stages), prompt, dropTarget,
-                new HBox(10, primary, otherActions), resultActions, status);
+                new HBox(10, primary, otherActions, activity, cancel), resultActions, status);
         update();
     }
 
@@ -138,20 +163,21 @@ final class TranslationWorkflowPane extends VBox {
 
     private void acceptDropped(Path input) {
         attemptedInput = input;
-        setDisable(true);
+        startOperation();
         status.setText(GuiText.get("normal.working"));
         Task<TranslationWorkflowController.DropResult> task = new Task<>() {
             @Override protected TranslationWorkflowController.DropResult call() throws Exception {
-                return controller.acceptDrop(input);
+                return com.ssmt.project.WorkflowOperation.run(cancelRequested::get, thisProgress(),
+                        () -> controller.acceptDrop(input));
             }
         };
         task.setOnSucceeded(event -> {
-            setDisable(false);
+            setBusy(false);
             TranslationWorkflowPresentation.Action completed = task.getValue()
                     == TranslationWorkflowController.DropResult.MOD_LOADED
                     ? TranslationWorkflowPresentation.Action.CHOOSE_MOD
                     : TranslationWorkflowPresentation.Action.IMPORT_TRANSLATION;
-            presentation.completed(completed, readyToBuild());
+            presentation.completed(completed, readyToBuild(), controller.needsReview());
             update();
             String success = task.getValue() == TranslationWorkflowController.DropResult.MOD_LOADED
                     ? GuiText.get("normal.loaded") : GuiText.get("normal.imported");
@@ -189,23 +215,82 @@ final class TranslationWorkflowPane extends VBox {
     }
 
     private void buildCopy() {
+        var remembered = controller.modsDestination();
+        if (remembered.isPresent()) {
+            installBelow(remembered.get());
+        } else {
+            chooseBuildDestination();
+        }
+    }
+
+    private void chooseBuildDestination() {
         DirectoryChooser picker = new DirectoryChooser();
         picker.setTitle(GuiText.get("normal.output"));
         controller.modsDestination().filter(Files::isDirectory).map(Path::toFile)
                 .ifPresent(picker::setInitialDirectory);
         File folder = picker.showDialog(stage);
         if (folder != null) {
-            try {
-                Path output = controller.outputBelow(folder.toPath());
-                String installed = GuiText.get("normal.built")
-                        .replace("{0}", controller.installedFolderName());
-                run(TranslationWorkflowPresentation.Action.BUILD_COPY,
-                        () -> controller.buildPatch(output), installed + "\n" + output,
-                        "Install translated copy");
-            } catch (Exception exception) {
-                failed("Install translated copy", exception);
-            }
+            installBelow(folder.toPath());
         }
+    }
+
+    private void installBelow(Path folder) {
+        try {
+            Path output = controller.outputBelow(folder);
+            String installed = GuiText.get("normal.built")
+                    .replace("{0}", controller.installedFolderName());
+            run(TranslationWorkflowPresentation.Action.BUILD_COPY,
+                    () -> controller.buildPatch(output), installed + "\n" + output,
+                    "Install translated copy");
+        } catch (Exception exception) {
+            failed("Install translated copy", exception);
+        }
+    }
+
+    private void reviewChanges() {
+        inspect(controller::review, review -> {
+            StringBuilder text = new StringBuilder();
+            for (var finding : review.findings().stream().limit(2000).toList()) {
+                text.append(finding.file()).append(" / ").append(finding.key()).append("\n")
+                        .append(finding.reason()).append("\nSource: ").append(finding.source()).append("\n");
+                if (!finding.previousSource().isBlank()) {
+                    text.append("Previous source: ").append(finding.previousSource()).append("\n")
+                            .append("Previous translation: ").append(finding.previousTranslation()).append("\n");
+                }
+                text.append("\n");
+            }
+            if (review.findings().size() > 2000) { text.append("Showing the first 2000 findings.\n"); }
+            text.append("Create a new translation file and return corrected translations to resolve findings.\n")
+                    .append("Viewing this report does not approve or change translations.");
+            showText(GuiText.get("normal.primary.review"), text.toString());
+            if (presentation.action() == TranslationWorkflowPresentation.Action.REVIEW_CHANGES) {
+                presentation.completed(TranslationWorkflowPresentation.Action.REVIEW_CHANGES, readyToBuild());
+            }
+            update();
+            status.setText(summary());
+        }, "Review translation changes");
+    }
+
+    private void verifyInstalled() {
+        inspect(controller::verifyInstalled, findings -> {
+            showText(GuiText.get("normal.verifyOutput"), findings.isEmpty()
+                    ? "Installed file bytes match the recorded publication. Runtime behavior is untested."
+                    : String.join("\n", findings));
+        }, "Verify installed copy");
+    }
+
+    private void showText(String title, String text) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.initOwner(stage);
+        dialog.setTitle(title);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        TextArea content = new TextArea(text);
+        content.setEditable(false);
+        content.setWrapText(true);
+        content.setPrefColumnCount(80);
+        content.setPrefRowCount(22);
+        dialog.getDialogPane().setContent(content);
+        dialog.showAndWait();
     }
 
     private static FileChooser jsonChooser(String name) {
@@ -217,17 +302,19 @@ final class TranslationWorkflowPane extends VBox {
 
     private void run(TranslationWorkflowPresentation.Action completed, Action action,
             String success, String operation) {
-        setDisable(true);
+        startOperation();
         status.setText(GuiText.get("normal.working"));
         Task<Void> task = new Task<>() {
             @Override protected Void call() throws Exception {
-                action.run();
-                return null;
+                return com.ssmt.project.WorkflowOperation.run(cancelRequested::get, thisProgress(), () -> {
+                    action.run();
+                    return null;
+                });
             }
         };
         task.setOnSucceeded(event -> {
-            setDisable(false);
-            presentation.completed(completed, readyToBuild());
+            setBusy(false);
+            presentation.completed(completed, readyToBuild(), controller.needsReview());
             update();
             status.setText(success + "\n" + summary());
         });
@@ -236,10 +323,12 @@ final class TranslationWorkflowPane extends VBox {
     }
 
     private void failed(String operation, Throwable failure) {
-        setDisable(false);
+        setBusy(false);
         update();
         UserDiagnostic diagnostic = UserDiagnostic.failed(operation, failure);
         String detail = diagnostic.detail();
+        lastOperation = operation;
+        lastDiagnostic = detail;
         var protectedSources = new ArrayList<Path>();
         controller.session().ifPresent(session -> protectedSources.add(session.source()));
         if (attemptedInput != null) {
@@ -274,15 +363,94 @@ final class TranslationWorkflowPane extends VBox {
         alert.show();
     }
 
+    private void exportDiagnostics() {
+        FileChooser logs = new FileChooser();
+        logs.setTitle("Select optional diagnostic logs (Cancel exports without logs)");
+        logs.getExtensionFilters().add(new FileChooser.ExtensionFilter("Log files", "*.log", "*.txt"));
+        var selectedLogs = logs.showOpenMultipleDialog(stage);
+        var paths = selectedLogs == null ? java.util.List.<Path>of()
+                : selectedLogs.stream().map(File::toPath).toList();
+        FileChooser destination = jsonChooser("project-go-diagnostics.json");
+        destination.setTitle("Save Diagnostic Report");
+        File output = destination.showSaveDialog(stage);
+        if (output == null) { return; }
+        var sources = new ArrayList<Path>();
+        controller.session().ifPresent(session -> sources.add(session.source()));
+        if (attemptedInput != null && Files.exists(attemptedInput)) {
+            Path input = attemptedInput;
+            Path name = input.getFileName();
+            if (name != null && name.toString().equalsIgnoreCase("mod_info.json")) {
+                input = java.util.Objects.requireNonNull(input.toAbsolutePath().getParent());
+            }
+            sources.add(input);
+        }
+        String operation = lastOperation;
+        String detail = lastDiagnostic + "\n" + summary();
+        inspect(() -> {
+            new com.ssmt.project.WorkflowDiagnosticExport().write(output.toPath(), sources, operation, detail, paths);
+            return output.toPath();
+        }, path -> status.setText("Diagnostic report exported: " + path), "Export diagnostics");
+    }
+
+    private <T> void inspect(Work<T> work, java.util.function.Consumer<T> success, String operation) {
+        startOperation();
+        Task<T> task = new Task<>() {
+            @Override protected T call() throws Exception {
+                return com.ssmt.project.WorkflowOperation.run(cancelRequested::get, thisProgress(), work::run);
+            }
+        };
+        task.setOnSucceeded(event -> {
+            setBusy(false);
+            update();
+            success.accept(task.getValue());
+        });
+        task.setOnFailed(event -> handleFailure(operation, task.getException()));
+        Thread.ofVirtual().name("project-go-inspection").start(task);
+    }
+
     private void handleFailure(String operation, Throwable failure) {
-        setDisable(false);
-        if (failure instanceof LegacyProjectsFoundException legacy) {
+        setBusy(false);
+        if (failure instanceof com.ssmt.core.OperationCancelledException) {
+            update();
+            status.setText(GuiText.get("normal.cancelled") + "\n" + summary());
+        } else if (failure instanceof LegacyProjectsFoundException legacy) {
             showLegacyChoice(legacy);
         } else if (failure instanceof SourceIdentityConflictException conflict) {
             showLineageChoice(conflict);
         } else {
             failed(operation, failure);
         }
+    }
+
+    private void startOperation() {
+        cancelRequested.set(false);
+        cancellable.set(true);
+        setBusy(true);
+    }
+
+    private void setBusy(boolean working) {
+        busy = working;
+        primary.setDisable(working);
+        otherActions.setDisable(working);
+        dropTarget.setDisable(working);
+        resultActions.setDisable(working);
+        activity.setVisible(working);
+        activity.setManaged(working);
+        cancel.setVisible(working);
+        cancel.setManaged(working);
+        cancel.setDisable(!working || !cancellable.get() || cancelRequested.get());
+    }
+
+    private java.util.function.Consumer<String> thisProgress() {
+        return stageText -> {
+            if (stageText.startsWith("Publishing safely")) { cancellable.set(false); }
+            javafx.application.Platform.runLater(() -> {
+                if (busy) {
+                    status.setText(stageText);
+                    cancel.setDisable(!cancellable.get() || cancelRequested.get());
+                }
+            });
+        };
     }
 
     /**
@@ -362,9 +530,7 @@ final class TranslationWorkflowPane extends VBox {
     }
 
     private boolean readyToBuild() {
-        return controller.session().map(session -> session.project().entries().stream()
-                .filter(entry -> !entry.originalText().isBlank())
-                .allMatch(entry -> !entry.translatedText().isBlank())).orElse(false);
+        return controller.readyToBuild();
     }
 
     private void update() {
@@ -394,6 +560,7 @@ final class TranslationWorkflowPane extends VBox {
             case CHOOSE_MOD -> chooseMod();
             case EXPORT_TRANSLATION -> exportTranslation();
             case IMPORT_TRANSLATION -> importTranslation();
+            case REVIEW_CHANGES -> reviewChanges();
             case BUILD_COPY -> buildCopy();
             case COMPLETE -> reset();
         }
@@ -583,6 +750,14 @@ final class TranslationWorkflowPane extends VBox {
                             + GuiText.get("normal.summary.missing")
                                     .replace("{0}", Long.toString(missing));
             return session.modName() + "\n" + languages(session) + "\n" + progress
+                    + controller.quality().map(quality -> "\n" + (quality.clear()
+                            ? GuiText.get("normal.quality.clear")
+                            : "Output quality: " + quality.leftoverUnits() + " remaining CJK units; "
+                                    + quality.unreadable().size() + " unreadable inputs\n"
+                                    + quality.files().stream().limit(100)
+                                            .map(file -> file.file() + ": " + file.units())
+                                            .collect(java.util.stream.Collectors.joining("\n"))
+                                    + "\n" + String.join("\n", quality.unreadable()))).orElse("")
                     + controller.notice().map(value -> "\n" + value).orElse("");
         }).orElse(GuiText.get("normal.chooseHelp"));
     }

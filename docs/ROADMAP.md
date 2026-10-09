@@ -542,8 +542,9 @@ change lands in both, each with a fixture that fails first.
 **Done 2026-10-05 (implementation and bounded acceptance).** See
 [P7_IMPLEMENTATION_STATUS.md](P7_IMPLEMENTATION_STATUS.md) for exact receipts and
 limitations. The full suite and shared/real-mod parity pass. Packaged CLI CJK
-paths, GUI engine and native Auto ASCII-path workflow pass; native Auto CJK input
-arguments and interactive GUI chooser/drop remain review items. P1-P6 live,
+paths, GUI engine and native Auto ASCII-path workflow pass. P8.4 now closes native
+Auto CJK command arguments with packaged evidence; interactive GUI chooser/drop
+and Explorer drop remain review items. P1-P6 live,
 rights, exact-release and publication gates remain unchanged.
 
 ## Sister repository interoperability (proposed 2026-09-27)
@@ -555,21 +556,78 @@ Design and acceptance gates: [SISTER_REPO_INTEROPERABILITY_DESIGN.md](SISTER_REP
 
 **Implementation checkpoint 2026-09-27:** `ssmt assess --coverage --coverage-manifest FILE` writes versioned, text-free coverage evidence outside the candidate. Its per-file handling and aggregate supported/skipped-file and extracted-string counts are observed; total supported strings remain unknown. `ssmt release-chain --source-record FILE --archive FILE [--downloaded-asset FILE]` reports source-record, package, and optional asset hashes with independent unknown gates. The release workflow now generates chain reports for distribution ZIPs and compares downloaded published assets byte-for-byte after upload. CLI tests cover overwrite refusal and mismatched assets. A hosted workflow run, native interactive testing, and rights evidence remain open; both items stay unchecked.
 
-## Proposed ideas (2026-10-06, owner asked for per-project ideas; proposed, not approved)
+## P8 - GUI, workflow, and gap coverage (approved 2026-10-08)
 
-1. [x] **Cross-check against BridgeForge's extractor.** A repeatable comparison on the same mod, listing files and units one tool
-   finds and the other skips. Benefit: on FlowerGod Project Go missed 108 of 1,296 units across 5 files and on Nightcross 861
-   strings; a routine diff finds such gaps without a manual audit.
-   Implemented 2026-10-08: `translate compare SOURCE_MOD --reference EXPORT.json --out REPORT.json`
-   reports missing/extra/changed protected units, verifies reference file hashes,
-   and retains unreadable-input gates. See [EXTRACTOR_COMPARISON.md](EXTRACTOR_COMPARISON.md).
-   This compares observed CJK discovery, not full localization coverage.
-2. [ ] **Leftover-text check on the output.** After a build, scan the translated copy for remaining source-language text and
-   report the files. Benefit: catches skipped keys, CSV columns and jar strings before the mod ships.
-3. [ ] **Tolerant loading.** Accept what Starsector accepts (CSV rows wider or narrower than the header, unquoted JSON tokens)
-   and name the failing file in the error. Benefit: removes the bare "could not create localization project" message and the
-   workaround of extracting each file by hand.
-4. [ ] **Path and launcher robustness.** Handle non-ASCII paths and a `JAVA_HOME` that contains a space in `ssmt-cli.bat`.
-   Benefit: drops the ASCII-copy workaround every caller currently needs.
-5. [ ] **Translate JSON keys where the game shows them.** Cover keys such as `designTypeColors` that the current extractor skips,
-   behind an explicit list of keys known to be displayed. Benefit: closes a coverage gap without translating identifiers.
+Owner approved the recommendations following the extractor comparison. Implement
+these slices in order; automated completion and visual/runtime acceptance are
+independent. The normal flow keeps original mods read-only and publishes one copy.
+Acceptance details: [GUI_WORKFLOW_ENHANCEMENTS.md](GUI_WORKFLOW_ENHANCEMENTS.md).
+
+1. [x] **Remembered installation:** install to the validated remembered destination;
+   offer Change destination separately; prompt when absent or unusable.
+   Benefit: repeat installs take one click.
+2. [x] **Review Changes:** show changed source, previous translations, conflicts,
+   missing translations and validation findings in the normal flow; preserve history
+   and prevent unresolved validation from being called ready.
+   Benefit: users can resolve refresh problems without hunting through Advanced.
+3. [x] **Output quality:** show remaining CJK units and unreadable inputs by file,
+   retain evidence internally, and distinguish publication from translation quality.
+   Benefit: exposes missed text before a mod is used.
+4. [x] **Native Auto Unicode:** fix CJK arguments in the executable; add a packaged
+   Unicode-path export/import/build regression with source hashes.
+   Benefit: removes the ASCII-copy workaround.
+5. [ ] **Native GUI acceptance:** maintain a chooser/drop/renamed-response/rejection/
+   cancellation checklist and record visual observations. A checklist alone is not PASS.
+   Benefit: verifies Windows interactions beyond engine tests.
+6. [x] **Progress and cancellation:** show operation stages and cooperative Cancel;
+   stop before commit/publication at safe boundaries, preserve active work, and let
+   an already-started atomic publication finish.
+   Benefit: large-mod operations remain understandable without damaging output.
+7. [x] **Advanced extractor comparison:** choose source/reference and display
+   differences by file/reason through the existing service.
+   Benefit: makes coverage investigations accessible without CLI knowledge.
+8. [x] **Diagnostic export:** export application version/commit, operation, findings
+   and only user-selected logs; refuse overwrite and source-contained destinations.
+   Benefit: reproducible bug reports with less manual collection.
+9. [x] **Installed-copy verification:** retain a publication inventory internally,
+   compare later bytes/paths, and provide bounded game-test instructions.
+   Benefit: detects post-build edits and connects installation to runtime gates.
+10. [ ] **JSON-key policy:** classify displayed labels versus identifiers on neutral
+    fixtures; preserve direct schema-v1 parity and protected game-loading fields.
+    Benefit: reduces accidental translation of identifiers.
+    Implemented advisory: all discovered JSON keys are visibly role-UNKNOWN;
+    direct interchange stays unchanged. Candidate consumer evidence is still needed.
+11. [ ] **Interoperability acceptance:** exercise the existing coverage-manifest and
+    release-chain contracts, including hosted workflow/downloaded-asset evidence,
+    before closing the sister-repository items above.
+    Benefit: closes evidence gaps without duplicate implementations.
+    Branch CI now runs native Auto Unicode and retains source/package chain reports;
+    sister-tool joins and actual published/downloaded assets remain acceptance gates.
+    Incremental checksum freshness is fixed: ZIPs are declared checksum inputs,
+    and `check` verifies SHA256SUMS against the actual current distribution bytes.
+12. [ ] **Candidate acceptance:** execute existing P5/P6 campaign, combat,
+    persistence, rights and final-package gates on an authorized candidate.
+    Benefit: ties readiness to exact bytes and observed behavior.
+
+### Reconciled earlier proposals
+
+**Local implementation checkpoint 2026-10-08:** eight implementation slices above
+passed 610 tests, Checkstyle/SpotBugs, Unicode CLI verification, rebuilt native
+GUI/Auto smoke tests, native Auto Unicode exact-output/source-hash acceptance,
+SBOM/checksums and archive checks. All 118 Gradle tasks executed against a fresh
+profile with no build cache. This is local source evidence; visual, candidate,
+hosted and release gates are not inferred from it.
+
+- Extractor cross-check: implemented by `translate compare` on 2026-10-08;
+  [EXTRACTOR_COMPARISON.md](EXTRACTOR_COMPARISON.md) defines its observed-unit scope.
+- Tolerant CSV/JSON-like discovery and span-exact apply: implemented in P7.
+  Future misses belong to P3's minimal-fixture gate, not a second parser.
+- Spaced JAVA_HOME and CLI CJK paths: covered by P7's launcher regression.
+  Native Auto Unicode remains P8.4 and is not inferred from CLI success.
+- JSON-key discovery: implemented in P7; displayed-label versus identifier policy
+  remains P8.10, rather than a missing extraction implementation.
+- Leftover CJK scanning: exists in direct apply/check; P8.3 exposes its quality
+  boundary and durable findings to the normal workflow.
+
+P1-P6 manual, candidate, rights and release gates remain authoritative. P8 does
+not imply a new release, live compatibility, or permission to redistribute mods.
