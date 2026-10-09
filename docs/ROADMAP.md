@@ -633,3 +633,9 @@ with uploaded branch evidence. Visual, candidate and release gates remain open.
 
 P1-P6 manual, candidate, rights and release gates remain authoritative. P8 does
 not imply a new release, live compatibility, or permission to redistribute mods.
+
+**Owner confirmation 2026-10-09:** the latest version was live-tested, including
+save/reload. This is recorded as owner-reported acceptance in
+[0.8.0-rc.2 release notes](RELEASE_0.8.0_RC2.md). Candidate identity and executable
+hash were not supplied, so the historical per-candidate evidence gates remain
+separate from that confirmation. Version 0.8.0-rc.2 packages the current code.

@@ -24,11 +24,14 @@ Local validation passed 610 tests and packaged native Auto Unicode
 command-argument verification. See [the roadmap](docs/ROADMAP.md) and
 [P8 acceptance notes](docs/GUI_WORKFLOW_ENHANCEMENTS.md) for scope and open gates. The existing
 `v0.7.0` tag has no published GitHub Release;
-post-tag source now identifies itself as `0.8.0-rc.1`, not as the old
+post-tag source now identifies itself as `0.8.0-rc.2`, not as the old
 tagged version. See [new-work review and release gates](docs/NEW_WORK_RELEASE_REVIEW.md).
 The release candidate adds readable naming, immutable source identity, explicit
 legacy adoption and same-id lineage choices with source-content checks. Manual
-GUI/file-picker and in-game acceptance remain separate gates.
+GUI/file-picker and candidate-specific game acceptance remain separate gates.
+The owner confirmed live testing of the latest build, including save/reload, on
+2026-10-09. See [0.8.0-rc.2 release notes](docs/RELEASE_0.8.0_RC2.md) for the
+confirmation's scope and distribution details.
 Project Go scans Starsector mods, extracts standard CSV/JSON-like and bytecode
 strings without executing mod classes, stores reusable translations in
 SQLite, validates protected syntax, and generates deterministic

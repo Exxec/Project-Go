@@ -114,11 +114,9 @@ val developmentBundle by tasks.registering(Zip::class) {
         from(project(":ssmt-auto").layout.buildDirectory.dir("jpackage/Project Go Auto"))
     }
     into("documentation") {
-        from(rootProject.file("USER_GUIDE.md"))
-        from(rootProject.file("BEGINNERS_GUIDE.md"))
-        from(rootProject.file("AUTO_GUIDE.md"))
-        from(rootProject.file("SECURITY.md"))
-        from(rootProject.file("COMPATIBILITY_MATRIX.md"))
+        from(rootProject.projectDir) {
+            include("*.md", "LICENSE", "docs/**")
+        }
     }
 }
 
