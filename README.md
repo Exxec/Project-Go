@@ -24,7 +24,7 @@ Local validation passed 610 tests and packaged native Auto Unicode
 command-argument verification. See [the roadmap](docs/ROADMAP.md) and
 [P8 acceptance notes](docs/GUI_WORKFLOW_ENHANCEMENTS.md) for scope and open gates. The existing
 `v0.7.0` tag has no published GitHub Release;
-post-tag source now identifies itself as `0.8.0-rc.2`, not as the old
+post-tag source now identifies itself as `0.8.0-rc.3`, not as the old
 tagged version. See [new-work review and release gates](docs/NEW_WORK_RELEASE_REVIEW.md).
 The release candidate adds readable naming, immutable source identity, explicit
 legacy adoption and same-id lineage choices with source-content checks. Manual

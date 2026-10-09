@@ -1,5 +1,7 @@
 param([Parameter(Mandatory=$true)][string]$Launcher, [Parameter(Mandatory=$true)][string]$Fixture)
 $ErrorActionPreference = 'Stop'
+# pwsh CI parents can omit Windows PowerShell modules from the inherited path.
+$env:PSModulePath = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\Modules;$env:PSModulePath"
 $testRoot = Join-Path ([IO.Path]::GetTempPath()) ('project-go-launcher-' + [Guid]::NewGuid().ToString('N'))
 $cjkName = ([char]0x4e2d).ToString() + [char]0x6587 + ' path'
 try {
