@@ -6,6 +6,7 @@ import com.ssmt.project.BridgeForgeTranslationDocument;
 import com.ssmt.project.BridgeForgeTranslationPrefill;
 import com.ssmt.project.BridgeForgeTranslationService;
 import com.ssmt.project.ProjectException;
+import com.ssmt.project.TranslationSnapshot;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -18,10 +19,12 @@ import picocli.CommandLine.Parameters;
         description = "BridgeForge-compatible export, import, apply, prefill, or leftover check.")
 public final class BridgeForgeTranslationCommand implements Callable<Integer> {
     private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(BridgeForgeTranslationCommand.class);
-    @Parameters(index = "0", description = "Operation: export, import, apply, check, prefill, compare.")
+    @Parameters(index = "0", description = "Operation: export, import, apply, check, prefill, compare, restore.")
     private String action;
     @Parameters(index = "1", description = "Source mod working copy (or JSON document for import).")
     private Path source;
+    @Parameters(index = "2", arity = "0..1", description = "Snapshot timestamp for restore (omit to list snapshots).")
+    private String snapshot;
     @Option(names = "--document", description = "Returned schema-v1 translation JSON.")
     private Path document;
     @Option(names = "--out", description = "New JSON document or translated mod directory.")
@@ -73,6 +76,14 @@ public final class BridgeForgeTranslationCommand implements Callable<Integer> {
                     LOG.info("{}", result);
                     return result.path("status").asText().equals("OK") ? 0 : 2;
                 }
+                case "restore" -> {
+                    if (snapshot == null) {
+                        LOG.info("Snapshots: {}", TranslationSnapshot.list(source));
+                    } else {
+                        LOG.info("Restored {} files from snapshot {}",
+                                TranslationSnapshot.restore(source, snapshot).size(), snapshot);
+                    }
+                }
                 case "check" -> {
                     var result = service.export(source);
                     LOG.info("Leftover CJK units: {}; unreadable diagnostics: {}", result.path("entry_count"),
@@ -92,10 +103,10 @@ public final class BridgeForgeTranslationCommand implements Callable<Integer> {
                     }
                     exchange.write(out, value);
                 }
-                default -> throw new IllegalArgumentException("Operation must be export, import, apply, check, prefill, or compare");
+                default -> throw new IllegalArgumentException("Operation must be export, import, apply, check, prefill, compare, or restore");
             }
             return 0;
-        } catch (ProjectException | IllegalArgumentException exception) {
+        } catch (ProjectException | IllegalArgumentException | java.io.IOException exception) {
             LOG.error("{}", exception.getMessage());
             return 1;
         }

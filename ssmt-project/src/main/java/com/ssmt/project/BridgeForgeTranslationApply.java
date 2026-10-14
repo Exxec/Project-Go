@@ -20,6 +20,22 @@ public final class BridgeForgeTranslationApply {
     private static final ObjectMapper JSON = new ObjectMapper();
     private record Edit(int start, int end, String replacement) { }
 
+    /** Writes one file's final bytes; injectable so tests can fail the Nth write. */
+    @FunctionalInterface
+    interface FileWriter {
+        void write(Path target, byte[] bytes) throws IOException;
+    }
+
+    private final FileWriter writer;
+
+    public BridgeForgeTranslationApply() {
+        this(TranslationSnapshot::writeAtomic);
+    }
+
+    BridgeForgeTranslationApply(FileWriter writer) {
+        this.writer = writer;
+    }
+
     /** Exactly one of out or inPlace is required; in-place means an explicitly designated working copy. */
     public ObjectNode apply(Path source, ObjectNode document, Path out, boolean inPlace) throws ProjectException {
         if ((out == null) == !inPlace) {
@@ -152,6 +168,7 @@ public final class BridgeForgeTranslationApply {
                 originals.put(path, original);
                 rewritten.put(path, replacement);
             }
+            String snapshotStamp = null;
             Path target = inPlace ? root : out.toAbsolutePath().normalize();
             if (!inPlace) {
                 if (Files.exists(target) || target.startsWith(root) || root.startsWith(target)) {
@@ -182,22 +199,29 @@ public final class BridgeForgeTranslationApply {
                 }
             } else {
                 verifySources(originals, document, root);
+                String snapshot = rewritten.isEmpty() ? null : TranslationSnapshot.create(root, rewritten.keySet());
                 List<Path> changed = new ArrayList<>();
                 try {
                     for (var entry : rewritten.entrySet()) {
                         changed.add(entry.getKey());
-                        Files.write(entry.getKey(), entry.getValue());
+                        writer.write(entry.getKey(), entry.getValue());
                     }
                 } catch (IOException exception) {
+                    boolean restored = true;
                     for (Path path : changed.reversed()) {
                         try {
-                            Files.write(path, originals.get(path));
+                            TranslationSnapshot.writeAtomic(path, originals.get(path));
                         } catch (IOException rollback) {
+                            restored = false;
                             exception.addSuppressed(rollback);
                         }
                     }
+                    if (restored && snapshot != null) {
+                        TranslationSnapshot.discard(root, snapshot);
+                    }
                     throw exception;
                 }
+                snapshotStamp = snapshot;
             }
             var remaining = new BridgeForgeTranslationService().export(target);
             int leftover = remaining.path("entry_count").asInt();
@@ -207,6 +231,9 @@ public final class BridgeForgeTranslationApply {
             ObjectNode report = JSON.createObjectNode().put("schema_version", 1).put("mode", "TRANSLATION_APPLY")
                     .put("target", target.toString()).put("entries", document.path("entries").size())
                     .put("leftover_cjk_units", leftover);
+            if (snapshotStamp != null) {
+                report.put("snapshot", snapshotStamp);
+            }
             report.set("applied", applied);
             report.set("problems", problems);
             report.set("format_slots_reindexed", reindexed);
@@ -300,6 +327,9 @@ public final class BridgeForgeTranslationApply {
             for (Path path : walk.toList()) {
                 if (Files.isSymbolicLink(path)) {
                     throw new IOException("Source contains linked path " + path);
+                }
+                if (source.relativize(path).startsWith(TranslationSnapshot.DIRECTORY)) {
+                    continue;
                 }
                 Path target = destination.resolve(source.relativize(path));
                 if (Files.isDirectory(path)) {

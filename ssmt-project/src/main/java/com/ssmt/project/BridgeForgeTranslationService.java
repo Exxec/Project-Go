@@ -22,7 +22,7 @@ import java.util.zip.ZipFile;
 public final class BridgeForgeTranslationService {
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final Set<String> EXCLUDED = Set.of("src", "out", "build", "target", ".idea", ".vscode",
-            ".git", "__macosx", "meta-inf", "disabled_files", "reports", "scratch");
+            ".git", TranslationSnapshot.DIRECTORY, "__macosx", "meta-inf", "disabled_files", "reports", "scratch");
     private static final Set<String> JSON_SUFFIXES = Set.of("json", "faction", "ship", "variant", "wpn",
             "proj", "skin", "system");
     private static final long MAX_TEXT_BYTES = 64L * 1024L * 1024L;
