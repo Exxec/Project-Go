@@ -651,13 +651,13 @@ Source: BridgeForge `ROADMAP.md` item 70, `docs/HARDENING_PLAN.md`, `docs/RC8_BE
 - **Check an agent's branch before merging it** (`agent-diff-check`: files deleted or cut by more than a fifth) and rerun the whole suite on the merged tree; do not edit tracked files while the suite runs (its hermeticity check reports the checkout as changed).
 - **Line endings and backups.** LF everywhere (`.gitattributes`; batch files CRLF). An append-only snapshot of the irreplaceable state is taken after each major new revision, not on a weekly clock (owner rule 2026-10-12).
 - **Say PREDICTED or OBSERVED.** BridgeForge keeps a prediction ledger: of two forecasts about a mod pair, one held live and one was refuted. Record the method, date and run id with each fact.
-- **Paths.** The translator needs ASCII paths and no space in `JAVA_HOME`; BridgeForge's `rig-doctor` now warns about non-ASCII paths and a disabled Windows long-path setting. Check both before an in-place run.
+- **Paths.** Fixed here: the launcher passes arguments through a UTF-8 argfile and quotes `JAVA_HOME`, so non-ASCII paths and a `JAVA_HOME` with spaces work (gates `verifyWindowsLauncher` and `verifyNativeUnicode`, `ssmt-cli/build.gradle.kts`). BridgeForge's `rig-doctor` still warns about non-ASCII paths and a disabled Windows long-path setting on its side; check both before an in-place run there.
 - **In-place translation (`translate-apply --in-place`) should use the atomic write and a pre-apply snapshot** of the target mod, and read mod archives through a size-capped reader.
 - **Read a name or version with a JSON parser, not a regex over the whole file** (see above); use a lenient parser for `mod_info.json`.
 - **Long runs** should print one progress line per item, offer `--quiet`, and resume from a checkpoint (BridgeForge rule since 2026-09-27); `translate-batch` should follow it.
 - **Conformance fixtures keep their own line endings.** BridgeForge's LF policy exempts `fixtures/translation-conformance` through its own attributes; do the same here so the golden files do not change.
 
-## Automation plan (2026-10-14; plan only, not started)
+## Automation plan (2026-10-14; in progress on branch `automation-plan`)
 
 Owner request 2026-10-14: further automation, fixes, checks and less hand work, written so any AI can implement it. Spec:
 `docs/AUTOMATION_PLAN.md`. Phases: G0 atomic in-place apply with a pre-apply snapshot and restore, the stale ASCII/`JAVA_HOME`
@@ -667,3 +667,8 @@ by the tool (unit roles TEXT/IDENTIFIER/LINKED, linked groups translated togethe
 closes P8 item 10); G3 approval by rules (glossary from the mod and TM, per-unit policy approval, ranked fuzzy/prefill matches, API
 round trip in Auto); G4 gates that run themselves (candidate ZIP audit, BridgeForge run records as runtime evidence, GUI checklist
 screenshots). Owner decisions 2026-10-14 ('follow your recommendations') are recorded in the plan. Same day: `AGENTS.md` (agent contract, version 1) and a pointer `CLAUDE.md` added.
+
+Status (branch `automation-plan`, one commit per item):
+
+- **G0.1 Done 2026-10-14.** `TranslationSnapshot`, atomic writes in `BridgeForgeTranslationApply`, `translate restore`. Tests: `BridgeForgeInPlaceSnapshotTest`, `BridgeForgeTranslationRestoreCommandTest`.
+- **G0.2 Done 2026-10-14.** The stale ASCII/`JAVA_HOME` line above now states the fix.
