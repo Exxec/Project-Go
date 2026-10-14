@@ -1,5 +1,6 @@
 import com.github.spotbugs.snom.SpotBugsTask
 import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import java.security.MessageDigest
 import java.util.HexFormat
@@ -49,8 +50,17 @@ subprojects {
         options.compilerArgs.addAll(listOf("-Xlint:all", "-Werror"))
     }
 
+    // Shared test support: auto-registered extension that tolerates entries of config/known-failures.tsv until expiry.
+    extensions.configure<SourceSetContainer>("sourceSets") {
+        named("test") {
+            java.srcDir(rootProject.file("config/test-support/java"))
+            resources.srcDir(rootProject.file("config/test-support/resources"))
+        }
+    }
+
     tasks.withType<Test>().configureEach {
         useJUnitPlatform()
+        systemProperty("ssmt.knownFailures", rootProject.file("config/known-failures.tsv").absolutePath)
     }
 
     tasks.withType<Jar>().configureEach {

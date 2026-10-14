@@ -1,0 +1,2 @@
+# Known environmental test failures, tolerated until the date. Format: Class#method<TAB>yyyy-MM-dd<TAB>reason
+# An expired entry no longer hides the failure. Keep this file empty unless a failure is understood and external.

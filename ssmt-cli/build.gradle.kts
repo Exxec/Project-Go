@@ -69,3 +69,14 @@ val verifyWindowsLauncher by tasks.registering(Exec::class) {
         "-Fixture", rootProject.file("fixtures/translation-conformance/input").absolutePath)
 }
 tasks.check { dependsOn(verifyWindowsLauncher) }
+
+// Rewrites src/test/resources/golden-help.tsv after a deliberate command-line change; review the diff.
+val writeGoldenHelp by tasks.registering(Test::class) {
+    group = "verification"
+    description = "Rewrites the golden --help hashes (CliGoldenHelpTest)."
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter { includeTestsMatching("*CliGoldenHelpTest") }
+    systemProperty("ssmt.goldenHelp.write", "true")
+    outputs.upToDateWhen { false }
+}

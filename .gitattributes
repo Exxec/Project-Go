@@ -1,4 +1,4 @@
-* text=auto
+* text=auto eol=lf
 *.java text eol=lf
 *.kt text eol=lf
 *.kts text eol=lf
@@ -9,3 +9,13 @@
 *.bat text eol=crlf
 *.jar binary
 *.zip binary
+*.ps1 text eol=lf
+*.sh text eol=lf
+*.tsv text eol=lf
+*.json text eol=lf
+*.csv text eol=lf
+*.yml text eol=lf
+*.cmd text eol=crlf
+*.png binary
+# Conformance fixtures keep their own bytes and line endings (shared with BridgeForge).
+fixtures/translation-conformance/** -text
