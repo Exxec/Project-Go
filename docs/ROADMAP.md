@@ -656,3 +656,14 @@ Source: BridgeForge `ROADMAP.md` item 70, `docs/HARDENING_PLAN.md`, `docs/RC8_BE
 - **Read a name or version with a JSON parser, not a regex over the whole file** (see above); use a lenient parser for `mod_info.json`.
 - **Long runs** should print one progress line per item, offer `--quiet`, and resume from a checkpoint (BridgeForge rule since 2026-09-27); `translate-batch` should follow it.
 - **Conformance fixtures keep their own line endings.** BridgeForge's LF policy exempts `fixtures/translation-conformance` through its own attributes; do the same here so the golden files do not change.
+
+## Automation plan (2026-10-14; plan only, not started)
+
+Owner request 2026-10-14: further automation, fixes, checks and less hand work, written so any AI can implement it. Spec:
+`docs/AUTOMATION_PLAN.md`. Phases: G0 atomic in-place apply with a pre-apply snapshot and restore, the stale ASCII/`JAVA_HOME`
+line above corrected, golden `--help` and line-ending guards; G1 coverage the user cannot see (mission and string `.txt`, loose
+`.class`, unreadable files no longer stop a project, a reason for every leftover unit, custom dialogue CSVs); G2 identifiers found
+by the tool (unit roles TEXT/IDENTIFIER/LINKED, linked groups translated together, bytecode allowlist proposed from call sites,
+closes P8 item 10); G3 approval by rules (glossary from the mod and TM, per-unit policy approval, ranked fuzzy/prefill matches, API
+round trip in Auto); G4 gates that run themselves (candidate ZIP audit, BridgeForge run records as runtime evidence, GUI checklist
+screenshots). Owner decisions 2026-10-14 ('follow your recommendations') are recorded in the plan. Same day: `AGENTS.md` (agent contract, version 1) and a pointer `CLAUDE.md` added.
