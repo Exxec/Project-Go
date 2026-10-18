@@ -56,14 +56,27 @@ public final class TranslationWorkflowController {
         return session != null && session.unreadableAcknowledged();
     }
 
-    /** Records that the user accepts the unreadable list; the build refuses until this is done. */
-    public void acknowledgeUnreadable() throws ProjectException {
-        TranslationWorkflow.Session acknowledged = workflow.acknowledgeUnreadable(requireSession());
+    /** Approved and proposed glossary terms of the loaded mod. */
+    public com.ssmt.project.GlossaryService.Proposal glossary() throws ProjectException {
+        return workflow.glossary(requireSession());
+    }
+
+    /** One-click approval of a proposed term, for this mod or for every mod. */
+    public void approveGlossaryTerm(String source, String target, boolean global) throws ProjectException {
+        keepingReadiness(workflow.approveGlossaryTerm(requireSession(), source, target, global));
+    }
+
+    private void keepingReadiness(TranslationWorkflow.Session replacement) {
         boolean keepReady = ready;
         boolean keepReview = reviewRequired;
-        activate(acknowledged);
+        activate(replacement);
         ready = keepReady;
         reviewRequired = keepReview;
+    }
+
+    /** Records that the user accepts the unreadable list; the build refuses until this is done. */
+    public void acknowledgeUnreadable() throws ProjectException {
+        keepingReadiness(workflow.acknowledgeUnreadable(requireSession()));
     }
 
     public boolean needsReview() {

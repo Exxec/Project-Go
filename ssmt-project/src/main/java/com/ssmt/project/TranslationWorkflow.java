@@ -36,6 +36,7 @@ public final class TranslationWorkflow {
     private final WorkspacePublisher publisher;
     private final WorkflowPersistenceService persistence;
     private final SourceAttestationStore sourceAttestations = new SourceAttestationStore();
+    private Path translationMemory;
     private static final int MAX_LEGACY_DIRECTORIES = 128;
     private static final int MAX_LEGACY_PROJECTS = 256;
     private static final long MAX_LEGACY_PROJECT_BYTES = 64L * 1024L * 1024L;
@@ -126,6 +127,41 @@ public final class TranslationWorkflow {
         this.inputCache = this.root.resolveSibling("input-cache");
         this.publisher = publisher;
         this.persistence = new WorkflowPersistenceService(publisher::publish);
+    }
+
+    /**
+     * Lets the glossary use a translation library (human-approved exact entries become approved terms). Off by
+     * default; the library is only read.
+     */
+    public TranslationWorkflow withTranslationMemory(Path library) {
+        this.translationMemory = library;
+        return this;
+    }
+
+    private GlossaryService glossaryService(Path workspace) {
+        return new GlossaryService(workspace.resolve("glossary.json"), root.resolve("global-glossary.json"),
+                translationMemory, GlossaryService.DEFAULT_REPEAT_THRESHOLD);
+    }
+
+    /** Approved and proposed glossary terms of the session's mod. */
+    public GlossaryService.Proposal glossary(Session session) throws ProjectException {
+        return locked(session.workspace(), () -> {
+            requireCurrent(session);
+            return glossaryService(session.workspace()).propose(session.source(), session.project());
+        });
+    }
+
+    /** Approves one glossary term for this mod or for every mod, and puts it into the saved project's glossary. */
+    public Session approveGlossaryTerm(Session session, String source, String target, boolean global)
+            throws ProjectException {
+        return locked(session.workspace(), () -> {
+            requireCurrent(session);
+            var service = glossaryService(session.workspace());
+            service.approve(source, target, global);
+            LocalizationProject updated = service.apply(session.source(), session.project());
+            ObjectNode metadata = readState(session.workspace().resolve(PROJECT_FILE));
+            return commit(session.source(), session.workspace(), updated, session.identity(), metadata, null);
+        });
     }
 
     /** Accepts a mod folder, mod_info.json, or ZIP and opens its normalized mod root. */
@@ -258,7 +294,7 @@ public final class TranslationWorkflow {
         if (previous == null) {
             var prepared = workflow.create(
                     canonical, identity.originalId(), identity.originalName());
-            LocalizationProject created = prepared.project();
+            LocalizationProject created = glossaryService(workspace).apply(canonical, prepared.project());
             Session session = commit(canonical, workspace, created, identity, metadata,
                     prepared.sourceAttestations());
             recordLineage(primary, identity, canonical, workspace, created, separated);
@@ -273,9 +309,10 @@ public final class TranslationWorkflow {
             return separateOrResumeFork(canonical, identity, primary, workspace, refreshed.project(), choice);
         }
         retainHistory(metadata, previous, refreshed);
-        Session session = commit(canonical, workspace, refreshed.project(), identity, metadata,
+        LocalizationProject glossaried = glossaryService(workspace).apply(canonical, refreshed.project());
+        Session session = commit(canonical, workspace, glossaried, identity, metadata,
                 prepared.sourceAttestations());
-        recordLineage(primary, identity, canonical, workspace, refreshed.project(), separated);
+        recordLineage(primary, identity, canonical, workspace, glossaried, separated);
         return session;
     }
 

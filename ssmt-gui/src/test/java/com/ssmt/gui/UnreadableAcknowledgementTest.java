@@ -36,4 +36,20 @@ class UnreadableAcknowledgementTest {
         assertThat(controller.quality().orElseThrow().unreadable()).hasSize(1);
         assertThat(controller.quality().orElseThrow().reasons()).containsEntry("UNREADABLE", 1);
     }
+
+    @Test void glossaryProposalsCanBeApprovedThroughTheControllerWithoutLosingReadiness() throws Exception {
+        Path source = directory.resolve("gsource");
+        Files.createDirectories(source.resolve("data"));
+        Files.writeString(source.resolve("mod_info.json"), "{\"id\":\"gloss\",\"name\":\"Gloss\",\"version\":\"1\"}");
+        Files.writeString(source.resolve("data/a.csv"), "id,name\na,维修\nb,维修\nc,维修\n");
+        var controller = new TranslationWorkflowController(new TranslationWorkflow(directory.resolve("gowned")),
+                new WorkflowPreferences(directory.resolve("gsettings.json")));
+        controller.loadMod(source);
+        assertThat(controller.glossary().proposed()).hasSize(1);
+        controller.approveGlossaryTerm("维修", "Repairs", false);
+        assertThat(controller.glossary().proposed()).isEmpty();
+        assertThat(controller.glossary().approvedMap()).containsEntry("维修", "Repairs");
+        assertThat(controller.session().orElseThrow().project().methodDocument().path("glossary")
+                .path("维修").asText()).isEqualTo("Repairs");
+    }
 }

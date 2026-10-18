@@ -84,4 +84,27 @@ class BridgeForgeTranslationCheckCommandTest {
         assertThat(new CommandLine(new BridgeForgeTranslationCommand()).execute("bytecode-audit", mod.toString(),
                 "--out", proposal.toString())).isEqualTo(1);
     }
+
+    @Test void glossaryProposesTermsAndApprovalsAreStoredAndUsed() throws Exception {
+        Path mod = temporary.resolve("glmod");
+        Files.createDirectories(mod.resolve("data"));
+        Files.writeString(mod.resolve("mod_info.json"), "{\"id\":\"gl\",\"name\":\"Gl\",\"version\":\"1\"}");
+        Files.writeString(mod.resolve("data/a.csv"), "id,name\ns1,维修\ns2,维修\ns3,维修\n");
+        Path proposal = temporary.resolve("glossary.json");
+        Path store = temporary.resolve("mine.json");
+        assertThat(new CommandLine(new BridgeForgeTranslationCommand()).execute("glossary", mod.toString(),
+                "--out", proposal.toString(), "--mod-glossary", store.toString())).isZero();
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        assertThat(mapper.readTree(proposal.toFile()).path("proposed")).hasSize(1);
+        assertThat(new CommandLine(new BridgeForgeTranslationCommand()).execute("glossary-approve", store.toString(),
+                "--term", "维修=Repairs")).isZero();
+        Path second = temporary.resolve("glossary2.json");
+        assertThat(new CommandLine(new BridgeForgeTranslationCommand()).execute("glossary", mod.toString(),
+                "--out", second.toString(), "--mod-glossary", store.toString())).isZero();
+        var tree = mapper.readTree(second.toFile());
+        assertThat(tree.path("proposed")).isEmpty();
+        assertThat(tree.path("approved").get(0).path("target").asText()).isEqualTo("Repairs");
+        assertThat(new CommandLine(new BridgeForgeTranslationCommand()).execute("glossary-approve", store.toString(),
+                "--term", "broken")).isEqualTo(1);
+    }
 }

@@ -35,7 +35,8 @@ import javafx.util.StringConverter;
 /** One drop-driven normal flow; optional pickers and maintenance stay secondary. */
 final class TranslationWorkflowPane extends VBox {
     private final TranslationWorkflowController controller =
-            new TranslationWorkflowController(new TranslationWorkflow());
+            new TranslationWorkflowController(
+                    new TranslationWorkflow().withTranslationMemory(com.ssmt.tm.MasterTranslationLibrary.currentUserDefault()));
     private final WorkflowMaintenanceController maintenance = new WorkflowMaintenanceController();
     private final Label status = new Label(GuiText.get("normal.chooseHelp"));
     private final javafx.scene.control.CheckBox acknowledgeUnreadable =
@@ -115,8 +116,9 @@ final class TranslationWorkflowPane extends VBox {
         MenuItem review = menuItem(GuiText.get("normal.primary.review"), this::reviewChanges);
         MenuItem diagnostics = menuItem("Export Diagnostics", this::exportDiagnostics);
         MenuItem settings = menuItem(GuiText.get("normal.settings"), this::showSettings);
+        MenuItem glossary = menuItem(GuiText.get("normal.glossary.menu"), this::showGlossary);
         otherActions.getItems().addAll(chooseFolder, chooseFile, exportAction, importAction,
-                buildAction, changeDestination, review, diagnostics, settings);
+                buildAction, changeDestination, review, glossary, diagnostics, settings);
         openOutput.setOnAction(event -> openOutputFolder());
         verifyOutput.setOnAction(event -> verifyInstalled());
         testInstructions.setOnAction(event -> showText(GuiText.get("normal.testInstructions"),
@@ -287,6 +289,50 @@ final class TranslationWorkflowPane extends VBox {
                     ? "Installed file bytes match the recorded publication. Runtime behavior is untested."
                     : String.join("\n", findings));
         }, "Verify installed copy");
+    }
+
+    /** Lists approved glossary terms and offers one-click approval of proposed ones. */
+    private void showGlossary() {
+        inspect(controller::glossary, this::showGlossaryDialog, "Read glossary");
+    }
+
+    private void showGlossaryDialog(com.ssmt.project.GlossaryService.Proposal proposal) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.initOwner(stage);
+        dialog.setTitle(GuiText.get("normal.glossary.title"));
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        VBox rows = new VBox(8);
+        rows.setPadding(new Insets(8));
+        rows.getChildren().add(new Label(GuiText.get("normal.glossary.approved").replace("{0}",
+                Integer.toString(proposal.approved().size()))));
+        proposal.approved().stream().limit(100).forEach(term -> rows.getChildren().add(new Label(
+                term.source() + "  ->  " + term.target() + "   [" + term.origin() + "]")));
+        rows.getChildren().add(new Label(GuiText.get("normal.glossary.proposed").replace("{0}",
+                Integer.toString(proposal.proposed().size()))));
+        for (var term : proposal.proposed().stream().limit(40).toList()) {
+            javafx.scene.control.TextField target = new javafx.scene.control.TextField();
+            target.setPromptText(GuiText.get("normal.glossary.prompt"));
+            javafx.scene.control.CheckBox everyMod = new javafx.scene.control.CheckBox(
+                    GuiText.get("normal.glossary.global"));
+            Button approve = new Button(GuiText.get("normal.glossary.approve"));
+            approve.setOnAction(event -> {
+                if (target.getText().isBlank()) {
+                    return;
+                }
+                dialog.close();
+                inspect(() -> {
+                    controller.approveGlossaryTerm(term.source(), target.getText().strip(), everyMod.isSelected());
+                    return controller.glossary();
+                }, this::showGlossaryDialog, "Approve glossary term");
+            });
+            rows.getChildren().add(new VBox(2, new Label(term.source() + "   (" + term.occurrences() + "x, "
+                    + term.note() + ")"), new HBox(8, target, everyMod, approve)));
+        }
+        javafx.scene.control.ScrollPane scroll = new javafx.scene.control.ScrollPane(rows);
+        scroll.setPrefViewportWidth(720);
+        scroll.setPrefViewportHeight(480);
+        dialog.getDialogPane().setContent(scroll);
+        dialog.showAndWait();
     }
 
     private void showText(String title, String text) {

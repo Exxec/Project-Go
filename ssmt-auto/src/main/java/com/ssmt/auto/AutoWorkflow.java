@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.ssmt.core.model.ModInfo;
 import com.ssmt.project.LocalizationProject;
+import com.ssmt.project.GlossaryService;
 import com.ssmt.project.LocalizationProjectService;
 import com.ssmt.project.ModInputPreparationService;
 import com.ssmt.project.ProjectBuildResult;
@@ -205,6 +206,10 @@ public final class AutoWorkflow {
             project = projects.acknowledgeUnreadable(project);
             prepared = workflow.bind(project, prepared.sourceAttestations());
         }
+
+        project = new GlossaryService(workspace.resolve("glossary.json"), sharedCatalog.resolveSibling("global-glossary.json"),
+                sharedCatalog, GlossaryService.DEFAULT_REPEAT_THRESHOLD).apply(source, project);
+        prepared = workflow.bind(project, prepared.sourceAttestations());
 
         String sourceLanguage = languages.detect(project.entries());
         project = applyUniqueExactMatches(

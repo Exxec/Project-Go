@@ -19,7 +19,7 @@ import picocli.CommandLine.Parameters;
         description = "BridgeForge-compatible export, import, apply, prefill, or leftover check.")
 public final class BridgeForgeTranslationCommand implements Callable<Integer> {
     private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(BridgeForgeTranslationCommand.class);
-    @Parameters(index = "0", description = "Operation: export, import, apply, check, prefill, compare, restore, bytecode-audit.")
+    @Parameters(index = "0", description = "Operation: export, import, apply, check, prefill, compare, restore, bytecode-audit, glossary, glossary-approve.")
     private String action;
     @Parameters(index = "1", description = "Source mod working copy (or JSON document for import).")
     private Path source;
@@ -36,6 +36,14 @@ public final class BridgeForgeTranslationCommand implements Callable<Integer> {
     private boolean acceptUnreadable;
     @Option(names = "--json", description = "check or bytecode-audit: write the JSON report to this file.")
     private Path jsonReport;
+    @Option(names = "--tm", description = "glossary: translation library whose human-approved exact entries become terms.")
+    private Path translationMemory;
+    @Option(names = "--mod-glossary", description = "glossary: this mod's approved-terms file.")
+    private Path modGlossary;
+    @Option(names = "--global-glossary", description = "glossary: approved terms shared by every mod.")
+    private Path globalGlossary;
+    @Option(names = "--term", description = "glossary-approve: SOURCE=TARGET to approve (repeatable).")
+    private List<String> terms = new java.util.ArrayList<>();
     @Option(names = "--record", description = "Author zh/en record file or directory.")
     private List<Path> records = new java.util.ArrayList<>();
     @Option(names = "--reference", description = "English mod for prefill, or BridgeForge export JSON for compare.")
@@ -102,6 +110,33 @@ public final class BridgeForgeTranslationCommand implements Callable<Integer> {
                                         "mode", "BYTECODE_AUDIT", "sites", sites, "unreadable", unreadable));
                     }
                 }
+                case "glossary" -> {
+                    requireOut();
+                    var glossary = new com.ssmt.project.GlossaryService(modGlossary, globalGlossary, translationMemory,
+                            com.ssmt.project.GlossaryService.DEFAULT_REPEAT_THRESHOLD);
+                    var project = new com.ssmt.project.LocalizationProjectService()
+                            .createUsingBridgeForge(source, "glossary", "Glossary", true);
+                    var proposal = glossary.propose(source.toRealPath(), project);
+                    new com.fasterxml.jackson.databind.ObjectMapper().writerWithDefaultPrettyPrinter()
+                            .writeValue(out.toFile(), java.util.Map.of("schema_version", 1, "mode", "GLOSSARY",
+                                    "approved", proposal.approved(), "proposed", proposal.proposed()));
+                    LOG.info("Glossary: {} approved term(s), {} proposed for approval: {}",
+                            proposal.approved().size(), proposal.proposed().size(), out);
+                }
+                case "glossary-approve" -> {
+                    if (terms.isEmpty()) {
+                        throw new IllegalArgumentException("glossary-approve needs at least one --term SOURCE=TARGET");
+                    }
+                    var store = new com.ssmt.project.GlossaryService(source, null, null, 1);
+                    for (String term : terms) {
+                        int equals = term.indexOf('=');
+                        if (equals <= 0 || equals == term.length() - 1) {
+                            throw new IllegalArgumentException("Term must be SOURCE=TARGET: " + term);
+                        }
+                        store.approve(term.substring(0, equals), term.substring(equals + 1), false);
+                    }
+                    LOG.info("Approved {} term(s) in {}", terms.size(), source);
+                }
                 case "restore" -> {
                     if (snapshot == null) {
                         LOG.info("Snapshots: {}", TranslationSnapshot.list(source));
@@ -140,7 +175,7 @@ public final class BridgeForgeTranslationCommand implements Callable<Integer> {
                     }
                     exchange.write(out, value);
                 }
-                default -> throw new IllegalArgumentException("Operation must be export, import, apply, check, prefill, compare, restore, or bytecode-audit");
+                default -> throw new IllegalArgumentException("Operation must be export, import, apply, check, prefill, compare, restore, bytecode-audit, glossary, or glossary-approve");
             }
             return 0;
         } catch (ProjectException | IllegalArgumentException | java.io.IOException exception) {

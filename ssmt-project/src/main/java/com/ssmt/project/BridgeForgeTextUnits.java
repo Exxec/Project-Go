@@ -72,6 +72,15 @@ final class BridgeForgeTextUnits {
     }
 
     static List<Unit> csv(String file, String text) {
+        return csvUnits(file, text, true);
+    }
+
+    /** Every non-comment, non-header CSV cell with a value, CJK or not (for pairing a cell with its English twin). */
+    static List<Unit> csvAll(String file, String text) {
+        return csvUnits(file, text, false);
+    }
+
+    private static List<Unit> csvUnits(String file, String text, boolean onlyCjk) {
         List<Cell> cells = cells(text);
         List<String> header = cells.stream().filter(cell -> cell.row() == 0)
                 .map(cell -> cell.value().strip()).toList();
@@ -101,7 +110,7 @@ final class BridgeForgeTextUnits {
         List<Unit> result = new ArrayList<>();
         for (Cell cell : cells) {
             if (cell.row() == 0 || rows.get(cell.row()).getOrDefault(0, "").stripLeading().startsWith("#")
-                    || !cjk(cell.value())) {
+                    || (onlyCjk ? !cjk(cell.value()) : cell.value().isBlank())) {
                 continue;
             }
             String column = cell.column() < header.size() ? header.get(cell.column()) : "#" + cell.column();
