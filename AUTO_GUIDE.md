@@ -121,6 +121,12 @@ For a development JVM launch:
 .\gradlew.bat :ssmt-auto:run --args='"C:\Games\Starsector\mods\ExampleMod\mod_info.json"'
 ```
 
+## Files that cannot be read
+
+If some input files cannot be read (for example bytes that are neither UTF-8 nor a supported legacy encoding), Auto stops with
+`UNREADABLE_INPUTS_NEED_ACCEPTANCE` and lists them. Nothing is built. Run Auto with `--accept-unreadable` after the mod path to
+translate the rest; the listed files are copied unchanged and stay untranslated.
+
 ## Safety and recovery
 
 - Keep `%LOCALAPPDATA%\Project Go`; it contains the master library and internal

@@ -53,6 +53,15 @@ restart, and never stored inside a source mod.
 Opening another database makes that catalog the remembered GUI default.
 Portable projects and custom locations remain available under Advanced.
 
+## Files that cannot be read
+
+When some of the mod's files cannot be read, the program still opens the mod and translates the rest. The status area lists each
+file with its error under "PARTIAL", and a checkbox asks you to accept that those files stay untranslated; installing is
+disabled until you tick it. After installing, "Output quality" shows the remaining Chinese text with a reason per item
+(`UNSUPPORTED_TYPE`, `UNREADABLE`, `UNTRANSLATED`, `REJECTED`). On the command line use `project create --accept-unreadable`
+and `translate check --accept-unreadable --json report.json`; `translate restore <mod> [timestamp]` returns an in-place
+translated working copy to its pre-apply snapshot.
+
 ## Recommended first test
 
 If you do not want to begin with a real mod, select **Try a Practice Project**.

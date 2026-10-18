@@ -14,6 +14,7 @@ public record AutoRunResult(Status status, java.nio.file.Path workspace, String 
     public enum Status {
         MASTER_LIBRARY_NEEDED,
         MASTER_LIBRARY_INCOMPLETE,
+        UNREADABLE_INPUTS_NEED_ACCEPTANCE,
         PATCH_PUBLISHED,
         PATCH_UNCHANGED
     }

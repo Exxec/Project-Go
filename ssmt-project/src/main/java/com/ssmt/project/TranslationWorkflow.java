@@ -67,6 +67,23 @@ public final class TranslationWorkflow {
         public String modName() {
             return identity.originalName();
         }
+
+        /** Input files that could not be read, with their errors; empty for a fully readable mod. */
+        public List<String> unreadableInputs() {
+            var document = project.methodDocument();
+            var result = new ArrayList<String>();
+            if (document != null) {
+                document.path("unreadable").forEach(node -> result.add(node.asText()));
+            }
+            return List.copyOf(result);
+        }
+
+        /** True when the user accepted the unreadable list (builds refuse until then). */
+        public boolean unreadableAcknowledged() {
+            var document = project.methodDocument();
+            return document != null
+                    && document.path(LocalizationProjectService.UNREADABLE_ACKNOWLEDGED).asBoolean();
+        }
     }
 
     /** User decision when one mod id maps to two genuinely different sources. */
@@ -327,6 +344,19 @@ public final class TranslationWorkflow {
             }
             return commit(session.source(), session.workspace(), imported.result().project(),
                     session.identity(), metadata, imported.sourceAttestations());
+        });
+    }
+
+    /** Persists the user's acceptance of the unreadable-input list; a mod without such a list is unchanged. */
+    public Session acknowledgeUnreadable(Session session) throws ProjectException {
+        return locked(session.workspace(), () -> {
+            requireCurrent(session);
+            LocalizationProject acknowledged = projects.acknowledgeUnreadable(session.project());
+            if (acknowledged == session.project()) {
+                return session;
+            }
+            ObjectNode metadata = readState(session.workspace().resolve(PROJECT_FILE));
+            return commit(session.source(), session.workspace(), acknowledged, session.identity(), metadata, null);
         });
     }
 
@@ -742,9 +772,12 @@ public final class TranslationWorkflow {
             document.set("workspace", metadata);
             byte[] contents = JSON.writerWithDefaultPrettyPrinter().writeValueAsBytes(document);
             WorkflowOperation.beginPublication();
-            persistence.commit(workspace, List.of(
-                    new WorkflowPersistenceService.Update(target, contents),
-                    sourceAttestations.update(workspace, attestations)));
+            var updates = new ArrayList<WorkflowPersistenceService.Update>();
+            updates.add(new WorkflowPersistenceService.Update(target, contents));
+            if (attestations != null) {
+                updates.add(sourceAttestations.update(workspace, attestations));
+            }
+            persistence.commit(workspace, updates);
         } catch (IOException exception) {
             throw new ProjectException("Could not prepare translation workspace", exception);
         }

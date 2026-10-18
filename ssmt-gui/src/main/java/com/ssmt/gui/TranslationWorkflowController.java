@@ -44,7 +44,26 @@ public final class TranslationWorkflowController {
     }
 
     public boolean readyToBuild() {
-        return session != null && ready;
+        return session != null && ready && (session.unreadableInputs().isEmpty() || session.unreadableAcknowledged());
+    }
+
+    /** Input files that could not be read, with their errors; empty when none or no mod is loaded. */
+    public List<String> unreadableInputs() {
+        return session == null ? List.of() : session.unreadableInputs();
+    }
+
+    public boolean unreadableAcknowledged() {
+        return session != null && session.unreadableAcknowledged();
+    }
+
+    /** Records that the user accepts the unreadable list; the build refuses until this is done. */
+    public void acknowledgeUnreadable() throws ProjectException {
+        TranslationWorkflow.Session acknowledged = workflow.acknowledgeUnreadable(requireSession());
+        boolean keepReady = ready;
+        boolean keepReview = reviewRequired;
+        activate(acknowledged);
+        ready = keepReady;
+        reviewRequired = keepReview;
     }
 
     public boolean needsReview() {

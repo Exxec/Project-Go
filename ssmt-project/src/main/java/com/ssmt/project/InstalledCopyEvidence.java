@@ -14,10 +14,12 @@ public final class InstalledCopyEvidence {
     private static final ObjectMapper JSON = new ObjectMapper();
 
     /** Output-quality findings grouped by portable file path. */
-    public record Quality(int leftoverUnits, List<FileFinding> files, List<String> unreadable) {
+    public record Quality(int leftoverUnits, List<FileFinding> files, List<String> unreadable,
+            java.util.Map<String, Integer> reasons) {
         public Quality {
             files = List.copyOf(files);
             unreadable = List.copyOf(unreadable);
+            reasons = reasons == null ? java.util.Map.of() : java.util.Map.copyOf(reasons);
         }
         public boolean clear() { return leftoverUnits == 0 && unreadable.isEmpty(); }
     }
@@ -51,8 +53,19 @@ public final class InstalledCopyEvidence {
         }
         var unreadable = new java.util.ArrayList<String>();
         document.path("unreadable").forEach(node -> unreadable.add(node.asText()));
+        var reasons = new TreeMap<String, Integer>();
+        try {
+            LeftoverClassifier.classify(output, document, null, List.of()).path("by_reason").fields()
+                    .forEachRemaining(field -> {
+                        if (field.getValue().asInt() > 0) {
+                            reasons.put(field.getKey(), field.getValue().asInt());
+                        }
+                    });
+        } catch (IOException exception) {
+            throw new ProjectException("Could not classify leftover text", exception);
+        }
         return new Quality(document.path("entry_count").asInt(), counts.entrySet().stream()
-                .map(entry -> new FileFinding(entry.getKey(), entry.getValue())).toList(), unreadable);
+                .map(entry -> new FileFinding(entry.getKey(), entry.getValue())).toList(), unreadable, reasons);
     }
 
     /** Compares added, missing and modified files against the saved publication inventory. */

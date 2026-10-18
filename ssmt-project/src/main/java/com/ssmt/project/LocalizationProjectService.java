@@ -102,7 +102,7 @@ public final class LocalizationProjectService {
     /** Returns the project with its unreadable-input list acknowledged; a project without such a list is unchanged. */
     public LocalizationProject acknowledgeUnreadable(LocalizationProject project) {
         ObjectNode document = project.methodDocument();
-        if (document == null || document.path("unreadable").isEmpty()) {
+        if (document == null || document.path("unreadable").isEmpty() || document.path(UNREADABLE_ACKNOWLEDGED).asBoolean()) {
             return project;
         }
         document.put(UNREADABLE_ACKNOWLEDGED, true);

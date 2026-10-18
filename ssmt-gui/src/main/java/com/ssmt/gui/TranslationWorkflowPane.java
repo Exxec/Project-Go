@@ -38,6 +38,8 @@ final class TranslationWorkflowPane extends VBox {
             new TranslationWorkflowController(new TranslationWorkflow());
     private final WorkflowMaintenanceController maintenance = new WorkflowMaintenanceController();
     private final Label status = new Label(GuiText.get("normal.chooseHelp"));
+    private final javafx.scene.control.CheckBox acknowledgeUnreadable =
+            new javafx.scene.control.CheckBox(GuiText.get("normal.unreadable.accept"));
     private final Label prompt = new Label();
     private final Label[] stages = new Label[3];
     private final Label dropTarget = new Label(GuiText.get("normal.drop"));
@@ -121,6 +123,14 @@ final class TranslationWorkflowPane extends VBox {
                 GuiText.get("normal.testHelp")));
         resultActions.setManaged(false);
         resultActions.setVisible(false);
+        acknowledgeUnreadable.setManaged(false);
+        acknowledgeUnreadable.setVisible(false);
+        acknowledgeUnreadable.setOnAction(event -> {
+            if (acknowledgeUnreadable.isSelected()) {
+                run(TranslationWorkflowPresentation.Action.REVIEW_CHANGES, controller::acknowledgeUnreadable,
+                        GuiText.get("normal.unreadable.accepted"), "Accept unreadable inputs");
+            }
+        });
         activity.setMaxSize(24, 24);
         cancel.setOnAction(event -> {
             if (cancellable.get()) {
@@ -131,7 +141,7 @@ final class TranslationWorkflowPane extends VBox {
         });
         setBusy(false);
         getChildren().addAll(title, explanation, new HBox(20, stages), prompt, dropTarget,
-                new HBox(10, primary, otherActions, activity, cancel), resultActions, status);
+                new HBox(10, primary, otherActions, activity, cancel), acknowledgeUnreadable, resultActions, status);
         update();
     }
 
@@ -546,6 +556,11 @@ final class TranslationWorkflowPane extends VBox {
         buildAction.setDisable(missing || !readyToBuild());
         resultActions.setManaged(complete);
         resultActions.setVisible(complete);
+        boolean unreadable = !controller.unreadableInputs().isEmpty();
+        acknowledgeUnreadable.setManaged(unreadable);
+        acknowledgeUnreadable.setVisible(unreadable);
+        acknowledgeUnreadable.setSelected(controller.unreadableAcknowledged());
+        acknowledgeUnreadable.setDisable(controller.unreadableAcknowledged());
         openOutput.setDisable(controller.lastOutput().isEmpty());
         for (int i = 0; i < stages.length; i++) {
             int number = i + 1;
@@ -750,16 +765,38 @@ final class TranslationWorkflowPane extends VBox {
                             + GuiText.get("normal.summary.missing")
                                     .replace("{0}", Long.toString(missing));
             return session.modName() + "\n" + languages(session) + "\n" + progress
+                    + unreadableSummary()
                     + controller.quality().map(quality -> "\n" + (quality.clear()
                             ? GuiText.get("normal.quality.clear")
                             : "Output quality: " + quality.leftoverUnits() + " remaining CJK units; "
-                                    + quality.unreadable().size() + " unreadable inputs\n"
+                                    + quality.unreadable().size() + " unreadable inputs"
+                                    + reasonSummary(quality) + "\n"
                                     + quality.files().stream().limit(100)
                                             .map(file -> file.file() + ": " + file.units())
                                             .collect(java.util.stream.Collectors.joining("\n"))
                                     + "\n" + String.join("\n", quality.unreadable()))).orElse("")
                     + controller.notice().map(value -> "\n" + value).orElse("");
         }).orElse(GuiText.get("normal.chooseHelp"));
+    }
+
+    /** Unreadable inputs found while reading the mod; the build waits for the user's acceptance. */
+    private String unreadableSummary() {
+        var unreadable = controller.unreadableInputs();
+        if (unreadable.isEmpty()) {
+            return "";
+        }
+        return "\nPARTIAL: " + unreadable.size() + " input file(s) could not be read"
+                + (controller.unreadableAcknowledged() ? " (accepted)" : " (accept below to build)") + ":\n"
+                + String.join("\n", unreadable.stream().limit(50).toList());
+    }
+
+    private static String reasonSummary(com.ssmt.project.InstalledCopyEvidence.Quality quality) {
+        if (quality.reasons().isEmpty()) {
+            return "";
+        }
+        return " (" + new java.util.TreeMap<>(quality.reasons()).entrySet().stream()
+                .map(entry -> entry.getKey() + " " + entry.getValue())
+                .collect(java.util.stream.Collectors.joining(", ")) + ")";
     }
 
     /** Readable language pair; a hidden or undetected source code is simply omitted. */

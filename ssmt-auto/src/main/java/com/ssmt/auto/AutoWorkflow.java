@@ -58,6 +58,7 @@ public final class AutoWorkflow {
     private final SourceAttestationStore sourceAttestations = new SourceAttestationStore();
     private final Path sharedCatalog;
     private final Path workspaceRoot;
+    private boolean acceptUnreadable;
 
     /**
      * Creates a workflow using the persistent catalog shared by all auto projects.
@@ -85,6 +86,18 @@ public final class AutoWorkflow {
         this.sharedCatalog = sharedCatalog.toAbsolutePath().normalize();
         this.workspaceRoot = workspaceRoot.toAbsolutePath().normalize();
         this.persistence = Objects.requireNonNull(persistence, "persistence");
+    }
+
+    /**
+     * Accepts the list of unreadable input files up front (command line {@code --accept-unreadable});
+     * without it a mod with unreadable files stops with {@code UNREADABLE_INPUTS_NEED_ACCEPTANCE}.
+     *
+     * @param accept whether the user accepted unreadable inputs
+     * @return this workflow
+     */
+    public AutoWorkflow acceptUnreadable(boolean accept) {
+        this.acceptUnreadable = accept;
+        return this;
     }
 
     /**
@@ -179,6 +192,18 @@ public final class AutoWorkflow {
         } else {
             prepared = workflow.create(source, mod.id(), mod.name());
             project = prepared.project();
+        }
+
+        var unreadable = project.methodDocument() == null ? null : project.methodDocument().path("unreadable");
+        if (unreadable != null && !unreadable.isEmpty()) {
+            if (!acceptUnreadable && !project.methodDocument()
+                    .path(LocalizationProjectService.UNREADABLE_ACKNOWLEDGED).asBoolean()) {
+                return new AutoRunResult(AutoRunResult.Status.UNREADABLE_INPUTS_NEED_ACCEPTANCE, workspace,
+                        "PARTIAL: " + unreadable.size() + " input file(s) could not be read: " + unreadable
+                                + ". Nothing was built. Run again with --accept-unreadable to translate the rest.");
+            }
+            project = projects.acknowledgeUnreadable(project);
+            prepared = workflow.bind(project, prepared.sourceAttestations());
         }
 
         String sourceLanguage = languages.detect(project.entries());
