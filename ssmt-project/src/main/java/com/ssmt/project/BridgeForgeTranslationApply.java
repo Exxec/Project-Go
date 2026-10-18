@@ -136,7 +136,12 @@ public final class BridgeForgeTranslationApply {
                                 continue;
                             }
                         }
+                        if (unit.kind().equals("text-line") && (target.indexOf(10) >= 0 || target.indexOf(13) >= 0)) {
+                            problems.add(unit.id() + ": translation of a text line must not contain a line break");
+                            continue;
+                        }
                         String token = unit.kind().equals("csv") ? csvQuote(target, unit.quoted())
+                                : unit.kind().equals("text-line") ? target
                                 : unit.kind().equals("java") ? javaQuote(target) : JSON.writeValueAsString(target);
                         edits.add(new Edit(unit.start(), unit.end(), token));
                     }
@@ -150,7 +155,11 @@ public final class BridgeForgeTranslationApply {
                     if (kind.equals("csv") && !shape(text).equals(shape(result))) {
                         throw new IOException("CSV row shape would change: " + file.getKey());
                     }
-                    if (!kind.equals("csv") && !kind.equals("java")) {
+                    if (kind.equals("txt") && text.chars().filter(ch -> ch == 10).count()
+                            != result.chars().filter(ch -> ch == 10).count()) {
+                        throw new IOException("Text line count would change: " + file.getKey());
+                    }
+                    if (!kind.equals("csv") && !kind.equals("java") && !kind.equals("txt")) {
                         // Token replacement must preserve the parse structure and leaf/key count.
                         if (!structure(text).equals(structure(result))
                                 || BridgeForgeTextUnits.json(file.getKey(), text).size()
@@ -164,7 +173,8 @@ public final class BridgeForgeTranslationApply {
                     var encoded = charset.newEncoder().encode(java.nio.CharBuffer.wrap((bom ? "\ufeff" : "") + result));
                     replacement = new byte[encoded.remaining()];
                     encoded.get(replacement);
-                    String counter = kind.equals("csv") ? "csv" : kind.equals("java") ? "java" : "json";
+                    String counter = kind.equals("csv") ? "csv" : kind.equals("java") ? "java"
+                            : kind.equals("txt") ? "text" : "json";
                     applied.put(counter, applied.path(counter).asInt() + edits.size());
                 }
                 originals.put(path, original);

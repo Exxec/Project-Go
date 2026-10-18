@@ -206,6 +206,39 @@ final class BridgeForgeTextUnits {
         }
     }
 
+    /**
+     * One unit per line holding CJK text. The unit is the line without its terminator and without leading or
+     * trailing whitespace, so indentation, trailing spaces and CR/LF stay as the author wrote them.
+     */
+    static List<Unit> textLines(String file, String text) {
+        List<Unit> result = new ArrayList<>();
+        int lineStart = 0;
+        int line = 1;
+        while (lineStart <= text.length()) {
+            int newline = text.indexOf('\n', lineStart);
+            int lineEnd = newline < 0 ? text.length() : newline;
+            int start = lineStart;
+            int end = lineEnd;
+            while (start < end && Character.isWhitespace(text.charAt(start))) {
+                start++;
+            }
+            while (end > start && Character.isWhitespace(text.charAt(end - 1))) {
+                end--;
+            }
+            String value = text.substring(start, end);
+            if (cjk(value)) {
+                result.add(new Unit("text:" + file + "@" + line, "text-line", value,
+                        JSON.createObjectNode().put("line", line), start, end, false));
+            }
+            if (newline < 0) {
+                break;
+            }
+            lineStart = newline + 1;
+            line++;
+        }
+        return result;
+    }
+
     static List<Unit> java(String file, String text) {
         String blanked = blankComments(text);
         List<Unit> result = new ArrayList<>();

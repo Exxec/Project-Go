@@ -313,6 +313,11 @@ extracts as exactly one stable-keyed unit per file. Reinjection verifies the
 whole file's exact original text before replacement, the same as any other
 format.
 
+The shared translation method (`ssmt-project`, schema v1) reads the same files line by line: kind `text-line`, one unit per line
+holding CJK text, stable id `text:<file>@<line>`, leading/trailing whitespace and line endings left untouched, UTF-8 with the
+same GB18030 fallback. Covered paths: any `.txt` directly inside `data/missions/<name>/` and any `.txt` under `data/strings/`.
+A translation containing a line break is refused for that line. Other `.txt` files are reported as `UNSUPPORTED_TYPE` leftovers.
+
 ---
 
 # Translation Memory Boundary

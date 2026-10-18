@@ -104,7 +104,7 @@ public final class BridgeForgeTranslationService {
                     } catch (IOException exception) {
                         unreadable.add(file + ": " + exception.getMessage());
                     }
-                } else if (suffix.equals("csv") || suffix.equals("java") || JSON_SUFFIXES.contains(suffix)) {
+                } else if (covers(file) && !suffix.equals("jar")) {
                     try {
                         String text = readText(path);
                         for (var unit : units(file, text)) {
@@ -139,13 +139,35 @@ public final class BridgeForgeTranslationService {
     /** True when the shared method reads this file kind (jar archives are further limited to the mod's jar list). */
     static boolean covers(String file) {
         String suffix = suffix(file);
-        return suffix.equals("jar") || suffix.equals("csv") || suffix.equals("java") || JSON_SUFFIXES.contains(suffix);
+        return textLines(file) || suffix.equals("jar") || suffix.equals("csv") || suffix.equals("java") || JSON_SUFFIXES.contains(suffix);
+    }
+
+    /**
+     * Plain-text files whose lines are shown text: any {@code .txt} directly inside a mission folder
+     * ({@code data/missions/<name>/}, which holds {@code mission_text.txt}) and any {@code .txt} under
+     * {@code data/strings/}. Same location rules as the legacy plain-text extractor, per line instead of per file.
+     */
+    static boolean textLines(String file) {
+        if (!suffix(file).equals("txt")) {
+            return false;
+        }
+        String[] parts = file.toLowerCase(Locale.ROOT).split("/");
+        for (int index = 0; index + 1 < parts.length; index++) {
+            if (parts[index].equals("data") && parts[index + 1].equals("strings") && index + 2 < parts.length) {
+                return true;
+            }
+            if (parts[index].equals("data") && parts[index + 1].equals("missions") && index + 4 == parts.length) {
+                return true;
+            }
+        }
+        return false;
     }
 
     static List<BridgeForgeTextUnits.Unit> units(String file, String text) {
         return switch (suffix(file)) {
             case "csv" -> BridgeForgeTextUnits.csv(file, text);
             case "java" -> BridgeForgeTextUnits.java(file, text);
+            case "txt" -> BridgeForgeTextUnits.textLines(file, text);
             default -> BridgeForgeTextUnits.json(file, text);
         };
     }
@@ -164,7 +186,7 @@ public final class BridgeForgeTranslationService {
             StandardCharsets.UTF_8.newDecoder().decode(java.nio.ByteBuffer.wrap(bytes));
             return StandardCharsets.UTF_8;
         } catch (java.nio.charset.CharacterCodingException exception) {
-            if (!suffix(path.toString()).equals("csv")
+            if (!suffix(path.toString()).equals("csv") && !suffix(path.toString()).equals("txt")
                     || bytes.length >= 3 && bytes[0] == (byte) 0xef && bytes[1] == (byte) 0xbb && bytes[2] == (byte) 0xbf) {
                 throw exception;
             }

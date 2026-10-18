@@ -16,7 +16,7 @@ public final class BridgeForgeTranslationDocument {
     private static final long MAX_BYTES = 64L * 1024L * 1024L;
     private static final int MAX_ENTRIES = 250_000;
     private static final ObjectMapper JSON = mapper();
-    private static final Set<String> KINDS = Set.of("csv", "json", "json-key", "java", "jar");
+    private static final Set<String> KINDS = Set.of("csv", "json", "json-key", "java", "jar", "text-line", "class");
 
     private static ObjectMapper mapper() {
         ObjectMapper result = new ObjectMapper();
