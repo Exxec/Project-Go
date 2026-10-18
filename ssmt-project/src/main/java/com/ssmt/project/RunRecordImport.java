@@ -19,19 +19,28 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Reads a BridgeForge live run record ({@code <queue>/_live/<TESTID>.json}) as runtime evidence for AUTOMATED_BOOT,
- * CAMPAIGN and SAVE_RELOAD (owner decision 2026-10-14: only when the record's mod hash matches the candidate).
+ * Reads a BridgeForge live run record ({@code <queue>/_live/<TESTID>.json}, written by
+ * {@code live_trust.write_run_record}) as runtime evidence for AUTOMATED_BOOT, CAMPAIGN and SAVE_RELOAD (owner decision
+ * 2026-10-14: only when the record's mod hash matches the candidate).
  *
- * <p>Evidence rules: the record must be bound to a launch manifest ({@code manifest_id}; BridgeForge item 75 R1); only a
- * member with provenance {@code BOUND} whose {@code shipped_sha256} equals the candidate's BridgeForge shipped hash
- * ({@link BridgeForgeShippedHash}) counts; the record must carry the launch environment (Starsector build, Java,
- * process exit code). Legacy records, unbound members and mismatching bytes leave the three gates NOT_TESTED. The
- * record is read only; a schema-2 runtime capture with the record as its hashed log is written for the ledger.</p>
+ * <p>The record shape read here is BridgeForge's R1 format (ROADMAP item 75): {@code manifest_id}, {@code manifest}
+ * (the pre-launch manifest summary: kind, dependencies with versions, {@code java_executable}), {@code members[]}
+ * with {@code shipped_sha256}, {@code verdict} and {@code provenance} BOUND or UNKNOWN, {@code core_baseline_sha256},
+ * {@code evidence{status, run_id, manifest_id, log, milestones{main_menu, campaign_load, save, content_ids, combat}}},
+ * {@code triage} counts and {@code jvm_crashes}.</p>
  *
- * <p>Expected record fields beyond today's format (written by R1, which is specified but not yet built in BridgeForge):
- * {@code manifest_id}, {@code members[].provenance}, {@code milestones{main_menu_reached, campaign_loads[],
- * finished_saving_count, reload_after_save}}, {@code environment{starsector_build, java_executable, java_version,
- * process_exit_code, enabled_mods[]}}. Names are reconciled with BridgeForge when R1 lands.</p>
+ * <p>Evidence rules: the record must carry a manifest id; only a member with provenance {@code BOUND} whose
+ * {@code shipped_sha256} equals the candidate's BridgeForge shipped hash ({@link BridgeForgeShippedHash}) counts;
+ * {@code evidence.status} must be ACCEPTABLE and name the same manifest. Legacy records, unbound members, mismatching
+ * bytes and refused evidence leave the three gates NOT_TESTED with the reason.</p>
+ *
+ * <p>Project Go's runtime capture also needs a Starsector build identity (taken from {@code core_baseline_sha256}), the
+ * Java executable ({@code manifest.java_executable}), a Java version and the process exit code. BridgeForge's record has
+ * no Java version and no process exit code today; they are read from {@code manifest.java_version} and a top-level
+ * {@code process_exit_code} if BridgeForge starts writing them. Until then nothing is guessed: all three gates stay
+ * NOT_TESTED and the reason names what is missing. SAVE_RELOAD additionally stays NOT_TESTED because the milestones
+ * record that a save finished and a campaign loaded, not that the save was reloaded. The record is copied verbatim
+ * beside the ledger as the hashed log of the schema-2 capture.</p>
  */
 public final class RunRecordImport {
     /** Evidence file names beside the ledger are derived from the test id. */
@@ -106,7 +115,7 @@ public final class RunRecordImport {
     }
 
     private static String refusal(JsonNode root, String shipped, List<String> notes) {
-        if (root.path("manifest_id").asText("").isBlank()) {
+        if (root.path("manifest_id").asText("").isBlank() || !root.path("manifest").isObject()) {
             return "legacy run record: no launch manifest, provenance UNKNOWN; a record without a manifest is not evidence";
         }
         boolean sameBytes = false;
@@ -124,14 +133,37 @@ public final class RunRecordImport {
         if (!bound) {
             return "the matching member's provenance is not BOUND";
         }
-        JsonNode environment = root.path("environment");
-        for (String field : List.of("starsector_build", "java_executable", "java_version")) {
-            if (environment.path(field).asText("").isBlank()) {
-                return "the record lacks environment." + field;
+        JsonNode evidence = root.path("evidence");
+        if (!"ACCEPTABLE".equals(evidence.path("status").asText())) {
+            JsonNode problems = evidence.path("problems");
+            return "BridgeForge's evidence status is " + evidence.path("status").asText("missing") + " (not ACCEPTABLE)"
+                    + (problems.isArray() && !problems.isEmpty() ? ": " + problems.get(0).asText() : "");
+        }
+        if (!root.path("manifest_id").asText().equals(evidence.path("manifest_id").asText())) {
+            return "the evidence names another manifest than the record";
+        }
+        List<String> missing = new ArrayList<>();
+        if (root.path("core_baseline_sha256").asText("").isBlank()) {
+            missing.add("core_baseline_sha256 (the Starsector build identity)");
+        }
+        JsonNode manifest = root.path("manifest");
+        if (manifest.path("java_executable").asText("").isBlank()) {
+            missing.add("manifest.java_executable");
+        }
+        if (manifest.path("java_version").asText("").isBlank()) {
+            missing.add("manifest.java_version");
+        }
+        if (!root.path("process_exit_code").isInt()) {
+            missing.add("process_exit_code");
+        }
+        for (JsonNode member : root.path("members")) {
+            if (member.path("version").asText("").isBlank()) {
+                missing.add("members[" + member.path("mod_id").asText() + "].version");
             }
         }
-        if (!environment.path("process_exit_code").isInt()) {
-            return "the record lacks environment.process_exit_code";
+        if (!missing.isEmpty()) {
+            return "BridgeForge's run record does not carry " + String.join(", ", missing)
+                    + ", which a Project Go runtime capture requires; nothing is guessed";
         }
         return null;
     }
@@ -146,31 +178,27 @@ public final class RunRecordImport {
     private Imported decide(JsonNode root, JsonNode member, boolean passing, String fingerprint, String testId,
             byte[] recordBytes, List<String> notes) throws IOException, NoSuchAlgorithmException {
         JsonNode triage = root.path("triage");
-        JsonNode milestones = root.path("milestones");
-        JsonNode environment = root.path("environment");
+        JsonNode milestones = root.path("evidence").path("milestones");
         boolean clean = triage.path("FATAL").asInt(0) == 0 && triage.path("MOD-ERROR").asInt(0) == 0
                 && root.path("jvm_crashes").isEmpty();
-        boolean failed = !passing || !clean || environment.path("process_exit_code").asInt() != 0;
-        boolean menu = milestones.path("main_menu_reached").asBoolean(false);
-        boolean campaign = !milestones.path("campaign_loads").isEmpty();
-        boolean saved = milestones.path("finished_saving_count").asInt(0) > 0;
-        boolean reload = milestones.path("reload_after_save").asBoolean(false);
+        boolean failed = !passing || !clean || root.path("process_exit_code").asInt() != 0;
+        boolean menu = milestones.path("main_menu").asBoolean(false);
+        boolean campaign = milestones.path("campaign_load").asBoolean(false);
+        boolean saved = milestones.path("save").asBoolean(false);
 
         var boot = failed ? AssuranceSummary.Disposition.FAIL
                 : menu ? AssuranceSummary.Disposition.PASS : AssuranceSummary.Disposition.NOT_TESTED;
         var campaignGate = boot == AssuranceSummary.Disposition.PASS && campaign
                 ? AssuranceSummary.Disposition.PASS : AssuranceSummary.Disposition.NOT_TESTED;
-        var saveGate = campaignGate == AssuranceSummary.Disposition.PASS && saved && reload
-                ? AssuranceSummary.Disposition.PASS : AssuranceSummary.Disposition.NOT_TESTED;
+        var saveGate = AssuranceSummary.Disposition.NOT_TESTED;
         String bootReason = failed ? "the record shows a failure (FAIL verdict, FATAL, MOD-ERROR, JVM crash or non-zero process exit)"
                 : menu ? "BridgeForge run " + testId + " reached the main menu on these exact bytes"
                 : "the record shows no main menu";
         String campaignReason = campaignGate == AssuranceSummary.Disposition.PASS
                 ? "a campaign loaded in BridgeForge run " + testId
                 : "no campaign load in the record (or the boot did not pass)";
-        String saveReason = saveGate == AssuranceSummary.Disposition.PASS
-                ? "a save was made and reloaded in BridgeForge run " + testId
-                : "no ordered save-then-reload evidence in the record (saves: " + saved + ", reload flag: " + reload + ")";
+        String saveReason = "BridgeForge's milestones record a save (" + saved + ") and a campaign load (" + campaign
+                + ") but not that the save was reloaded; no reload evidence exists in the record";
 
         String recordFile = "run-record-" + testId + ".json";
         String profileFile = PROFILE_PREFIX + testId + ".json";
@@ -180,22 +208,21 @@ public final class RunRecordImport {
                 scenario(AssuranceSummary.Gate.CAMPAIGN, campaignGate, scenarioPrefix, campaignReason),
                 scenario(AssuranceSummary.Gate.SAVE_RELOAD, saveGate, scenarioPrefix, saveReason));
         List<RuntimeEvidenceReader.EnabledMod> enabled = new ArrayList<>();
-        JsonNode listed = environment.path("enabled_mods").isArray() ? environment.path("enabled_mods") : null;
-        if (listed != null) {
-            listed.forEach(mod -> enabled.add(new RuntimeEvidenceReader.EnabledMod(mod.path("id").asText(),
-                    mod.path("version").asText())));
-        } else {
-            for (JsonNode each : root.path("members")) {
-                enabled.add(new RuntimeEvidenceReader.EnabledMod(each.path("mod_id").asText(),
-                        each.path("version").asText()));
-            }
+        // The summary keeps the staged providers (dependencies) in enabled order, then the run's own members; the
+        // manifest summary does not keep the enabled list itself, so this order is BridgeForge's staging order.
+        root.path("manifest").path("dependencies").fields().forEachRemaining(dependency ->
+                enabled.add(new RuntimeEvidenceReader.EnabledMod(dependency.getKey(),
+                        dependency.getValue().path("version").asText())));
+        for (JsonNode each : root.path("members")) {
+            enabled.add(new RuntimeEvidenceReader.EnabledMod(each.path("mod_id").asText(),
+                    each.path("version").asText()));
         }
         List<String> modals = new ArrayList<>();
-        root.path("modal_dialogs").forEach(dialog -> modals.add(dialog.asText()));
-        var profile = new RuntimeEvidenceReader.Profile(2, fingerprint, environment.path("starsector_build").asText(),
+        var profile = new RuntimeEvidenceReader.Profile(2, fingerprint,
+                "core-baseline-sha256:" + root.path("core_baseline_sha256").asText(),
                 enabled, enabled.stream().map(RuntimeEvidenceReader.EnabledMod::id).toList(),
-                environment.path("java_executable").asText(), environment.path("java_version").asText(),
-                environment.path("process_exit_code").asInt(),
+                root.path("manifest").path("java_executable").asText(), root.path("manifest").path("java_version").asText(),
+                root.path("process_exit_code").asInt(),
                 List.of(new RuntimeEvidenceReader.LogReference(recordFile, sha256(recordBytes))), modals, scenarios);
         byte[] profileBytes = JSON.writerWithDefaultPrettyPrinter().writeValueAsBytes(profile);
         List<AssuranceSummary.Result> results = new ArrayList<>();

@@ -2,7 +2,8 @@ package com.ssmt.cli;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ssmt.project.BridgeForgeShippedHash;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Files;
@@ -11,45 +12,47 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import picocli.CommandLine;
 
+/** Uses the run record BridgeForge itself wrote for a synthetic tree (see ssmt-project's bridgeforge-r1 fixture). */
 class AssuranceImportRunCommandTest {
+    private static final Path FIXTURE = Path.of("../ssmt-project/src/test/resources/bridgeforge-r1");
+    private static final ObjectMapper JSON = new ObjectMapper();
     @TempDir Path root;
 
-    private static String record(String shipped) {
-        return "{\"schema_version\":1,\"mode\":\"LIVE_RUN_RECORD\",\"test_id\":\"CLI-1\",\"manifest_id\":\"m1\","
-                + "\"members\":[{\"workspace\":\"W\",\"mod_id\":\"cli\",\"version\":\"1\",\"shipped_sha256\":\""
-                + shipped + "\",\"verdict\":\"PASS\",\"provenance\":\"BOUND\"}],"
-                + "\"triage\":{\"FATAL\":0,\"MOD-ERROR\":0},\"jvm_crashes\":[],"
-                + "\"milestones\":{\"main_menu_reached\":true,\"campaign_loads\":[\"s\"],\"finished_saving_count\":0},"
-                + "\"environment\":{\"starsector_build\":\"RC8\",\"java_executable\":\"java\",\"java_version\":\"25\","
-                + "\"process_exit_code\":0}}";
+    private Path record(boolean withLaunchFacts) throws Exception {
+        ObjectNode record = (ObjectNode) JSON.readTree(FIXTURE.resolve("R-FIX.json").toFile());
+        if (withLaunchFacts) {
+            ((ObjectNode) record.path("manifest")).put("java_executable", "java.exe").put("java_version", "25");
+            record.put("process_exit_code", 0);
+        }
+        Path file = root.resolve("_live/R-FIX.json");
+        Files.createDirectories(java.util.Objects.requireNonNull(file.getParent()));
+        JSON.writeValue(file.toFile(), record);
+        return file;
     }
 
-    @Test void importRunWritesTheLedgerForMatchingBytesAndLeavesGatesPendingOtherwise() throws Exception {
-        Path candidate = Files.createDirectory(root.resolve("candidate"));
-        Files.writeString(candidate.resolve("mod_info.json"), "{\"id\":\"cli\",\"name\":\"Cli\",\"version\":\"1\"}");
-        Path matching = root.resolve("_live/CLI-1.json");
-        Files.createDirectories(java.util.Objects.requireNonNull(matching.getParent()));
-        Files.writeString(matching, record(BridgeForgeShippedHash.of(candidate)));
-        Path ledger = root.resolve("out/ledger.json");
+    private int run(StringWriter output, String... arguments) {
         var command = new CommandLine(new Main());
-        StringWriter output = new StringWriter();
         command.setOut(new PrintWriter(output));
-        assertThat(command.execute("assurance", "--candidate", candidate.toString(), "--import-run",
-                matching.toString(), "--ledger-out", ledger.toString())).isZero();
-        assertThat(output.toString()).contains("AUTOMATED_BOOT PASS").contains("CAMPAIGN PASS")
-                .contains("SAVE_RELOAD NOT_TESTED");
-        assertThat(ledger).isRegularFile();
-        assertThat(ledger.resolveSibling("runtime-CLI-1.json")).isRegularFile();
+        return command.execute(arguments);
+    }
 
-        Path stale = root.resolve("_live/CLI-2.json");
-        Files.writeString(stale, record("0".repeat(64)).replace("CLI-1", "CLI-2"));
-        StringWriter second = new StringWriter();
-        var again = new CommandLine(new Main());
-        again.setOut(new PrintWriter(second));
-        assertThat(again.execute("assurance", "--candidate", candidate.toString(), "--import-run", stale.toString(),
-                "--ledger-out", root.resolve("out/other.json").toString())).isZero();
-        assertThat(second.toString()).contains("AUTOMATED_BOOT NOT_TESTED").doesNotContain("PASS");
-        assertThat(again.execute("assurance", "--candidate", candidate.toString(), "--import-run", stale.toString()))
-                .isEqualTo(1);
+    @Test void importRunReportsWhatTheRealRecordLacksAndPassesOnceTheLaunchFactsExist() throws Exception {
+        Path candidate = FIXTURE.resolve("candidate");
+        StringWriter pending = new StringWriter();
+        Path ledger = root.resolve("out/ledger.json");
+        assertThat(run(pending, "assurance", "--candidate", candidate.toString(), "--import-run",
+                record(false).toString(), "--ledger-out", ledger.toString())).isZero();
+        assertThat(pending.toString()).contains("AUTOMATED_BOOT NOT_TESTED").contains("manifest.java_version")
+                .contains("process_exit_code").doesNotContain("PASS");
+
+        StringWriter passing = new StringWriter();
+        Path second = root.resolve("out/second.json");
+        assertThat(run(passing, "assurance", "--candidate", candidate.toString(), "--import-run",
+                record(true).toString(), "--ledger-out", second.toString())).isZero();
+        assertThat(passing.toString()).contains("AUTOMATED_BOOT PASS").contains("CAMPAIGN PASS")
+                .contains("SAVE_RELOAD NOT_TESTED");
+        assertThat(second.resolveSibling("runtime-R-FIX.json")).isRegularFile();
+        assertThat(run(new StringWriter(), "assurance", "--candidate", candidate.toString(), "--import-run",
+                record(true).toString())).isEqualTo(1);
     }
 }

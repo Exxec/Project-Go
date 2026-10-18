@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "mode": "LIVE_RUN_RECORD",
+  "test_id": "R-FIX",
+  "date": "2026-10-18",
+  "recorded_at": "2026-10-18T23:52:26+00:00",
+  "members": [
+    {
+      "workspace": "B",
+      "mod_id": "mod_b",
+      "version": "1.2",
+      "shipped_sha256": "292fcd2c8195c896471a0d1e0cccff7c22958c97d3c69023e126fa86d50e9e93",
+      "verdict": "PASS",
+      "provenance": "BOUND"
+    }
+  ],
+  "core_baseline_sha256": "097124bc8f8b7e05450f065e5d3f6e127a20efc45a0cf06f157bae663e275530",
+  "probe_config_sha256": null,
+  "save_made_with": null,
+  "rig_state": null,
+  "manifest_id": "9992307aa6fa8f2f65ff17a8c05497b6832dba97a8a6f18be9607f35319939ed",
+  "manifest": {
+    "manifest_id": "9992307aa6fa8f2f65ff17a8c05497b6832dba97a8a6f18be9607f35319939ed",
+    "kind": "campaign",
+    "scenario": "",
+    "dependencies": {
+      "lib": {
+        "version": "1.0",
+        "staged_sha256": "3163e8b45b9f8a2192bca6d031035d1332f5cf017360687227b5fb5a36945fce",
+        "folder": "lib"
+      }
+    },
+    "launcher_files": {},
+    "probe_config_sha256": null,
+    "java_executable": null,
+    "expected_milestones": [
+      "campaign_load",
+      "main_menu",
+      "save"
+    ]
+  },
+  "evidence": {
+    "status": "ACCEPTABLE",
+    "run_id": "R-FIX",
+    "manifest_id": "9992307aa6fa8f2f65ff17a8c05497b6832dba97a8a6f18be9607f35319939ed",
+    "log": {
+      "path": "<synthetic-root>\\rig\\logs\\R-FIX.stdout.log",
+      "sha256": "db65e31031dcba52ff710e6445e6f3179aea98a2fed80a5142dec93df50db04a",
+      "size": 288
+    },
+    "milestones": {
+      "main_menu": true,
+      "campaign_load": true,
+      "save": true,
+      "content_ids": false,
+      "combat": false
+    },
+    "expected_milestones": [
+      "campaign_load",
+      "main_menu",
+      "save"
+    ],
+    "problems": []
+  },
+  "triage": {
+    "FATAL": 0,
+    "MOD-ERROR": 0,
+    "KNOWN-NOISE": 2,
+    "OTHER": 0
+  },
+  "jvm_crashes": [],
+  "known_noise": {
+    "count": 2,
+    "previous_run": null,
+    "previous_count": null,
+    "status": "NO_PREVIOUS"
+  }
+}

@@ -579,11 +579,19 @@ rule recorded. `--approve` and `--approve-by-rules` cannot be combined.
   means both passed, 2 means review is needed, 1 a failure. It claims nothing about
   game behaviour.
 - `assurance --candidate DIR --import-run RECORD.json --ledger-out LEDGER` reads a
-  BridgeForge live run record (`<queue>/_live/<TESTID>.json`). It sets
-  `AUTOMATED_BOOT`, `CAMPAIGN` and `SAVE_RELOAD` only when the record names the
-  candidate's exact bytes (a `BOUND` member whose `shipped_sha256` matches) and
-  carries the launch environment; otherwise those gates stay `NOT_TESTED` with the
-  reason. Records in BridgeForge's older format never count.
+  BridgeForge live run record (`<queue>/_live/<TESTID>.json`, the R1 format with
+  `manifest_id`, `manifest` and `evidence`). A record counts only when it has a
+  manifest id, a `BOUND` member whose `shipped_sha256` equals the candidate's
+  BridgeForge shipped hash, and `evidence.status` `ACCEPTABLE` for the same manifest.
+  Then `AUTOMATED_BOOT` is `PASS` when `evidence.milestones.main_menu` is true and the
+  triage shows no FATAL or MOD-ERROR, no JVM crash and a `PASS` verdict (these signs
+  give `FAIL`), and `CAMPAIGN` is `PASS` when `campaign_load` is true as well.
+  `SAVE_RELOAD` stays `NOT_TESTED`: the record says a save finished, not that it was
+  reloaded. Project Go's runtime capture also needs the Java version and the process
+  exit code, which BridgeForge's record does not carry yet (it has the Java
+  executable and the core baseline hash); until it does, every gate stays
+  `NOT_TESTED` and the reason names what is missing. Older records without a
+  manifest never count.
 
 On Windows, use the GUI file choosers for paths containing non-ASCII characters
 until the native PowerShell/batch argument-boundary limitation is resolved.

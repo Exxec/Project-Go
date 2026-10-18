@@ -182,7 +182,12 @@ Status: Done 2026-10-18 as the command `audit-candidate ZIP --manifest installed
 every file hash against the apply manifest, run `translate check` on it, and check the mod id and version. Writes the
 PACKAGE_IDENTITY and STATIC_VALIDATION gates in the assurance ledger.
 
-Status: Done on this side 2026-10-18 as `assurance --candidate DIR --import-run RECORD --ledger-out LEDGER` (not an `import-run` subcommand); live pending on the BridgeForge side (item 75 R1 fields).
+Status: Done 2026-10-18 as `assurance --candidate DIR --import-run RECORD --ledger-out LEDGER` (not an `import-run` subcommand).
+Reads BridgeForge's real R1 record (`manifest_id`, `manifest`, `evidence.status` and `evidence.milestones`, `triage`, `jvm_crashes`,
+`core_baseline_sha256`), checked against a record BridgeForge's own `write_run_record` wrote for a synthetic tree. Open: the record
+has no Java version and no process exit code, which Project Go's runtime capture requires, so every gate stays `NOT_TESTED` with
+that reason until BridgeForge writes `manifest.java_version` and `process_exit_code`; SAVE_RELOAD needs reload evidence the
+milestones do not provide.
 
 **G4.2 Boot, campaign and save/reload from BridgeForge.** `assurance import-run <BridgeForge run record>`: read a BridgeForge
 live run record (`<queue>/_live/<TESTID>.json`, for example `In operation/_live/DIAG-3.json`, written by `bridgeforge accept` and `probe-group record`) and set
