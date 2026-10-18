@@ -51,7 +51,7 @@ class BridgeForgeInPlaceSnapshotTest {
         assertThat(hashes(mod)).isEqualTo(before);
         assertThat(TranslationSnapshot.list(mod)).isEmpty();
         try (var leftovers = Files.walk(mod)) {
-            assertThat(leftovers.filter(path -> path.getFileName().toString().endsWith(".tmp"))).isEmpty();
+            assertThat(leftovers.filter(path -> String.valueOf(path.getFileName()).endsWith(".tmp"))).isEmpty();
         }
     }
 

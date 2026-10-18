@@ -27,7 +27,7 @@ class CliGoldenHelpTest {
         if (Boolean.getBoolean("ssmt.goldenHelp.write")) {
             StringBuilder text = new StringBuilder("# command<TAB>sha256 of --help text; rewrite with gradlew :ssmt-cli:writeGoldenHelp\n");
             actual.forEach((name, hash) -> text.append(name).append('\t').append(hash).append('\n'));
-            Files.createDirectories(GOLDEN.getParent());
+            Files.createDirectories(java.util.Objects.requireNonNull(GOLDEN.getParent()));
             Files.writeString(GOLDEN, text.toString(), StandardCharsets.UTF_8);
         }
         Map<String, String> expected = new TreeMap<>();

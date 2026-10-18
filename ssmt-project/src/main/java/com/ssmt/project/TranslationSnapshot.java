@@ -42,7 +42,7 @@ public final class TranslationSnapshot {
         for (Path file : files) {
             String relative = root.relativize(file).toString().replace('\\', '/');
             Path copy = directory.resolve(relative);
-            Files.createDirectories(copy.getParent());
+            Files.createDirectories(java.util.Objects.requireNonNull(copy.getParent()));
             Files.copy(file, copy, StandardCopyOption.COPY_ATTRIBUTES);
             hashes.put(relative, BridgeForgeTranslationService.hash(copy));
         }
@@ -50,7 +50,7 @@ public final class TranslationSnapshot {
                 .put("created", ZonedDateTime.now(ZoneOffset.UTC).toString());
         manifest.set("files", hashes);
         writeAtomic(directory.resolve(MANIFEST), JSON.writerWithDefaultPrettyPrinter().writeValueAsBytes(manifest));
-        return directory.getFileName().toString();
+        return String.valueOf(directory.getFileName());
     }
 
     /** Removes a snapshot that was not needed (the apply was rolled back completely). */
@@ -71,7 +71,7 @@ public final class TranslationSnapshot {
             return List.of();
         }
         try (var children = Files.list(base)) {
-            return children.filter(Files::isDirectory).map(path -> path.getFileName().toString()).sorted().toList();
+            return children.filter(Files::isDirectory).map(path -> String.valueOf(path.getFileName())).sorted().toList();
         }
     }
 
@@ -119,7 +119,7 @@ public final class TranslationSnapshot {
 
     /** Writes through a sibling temp file and an atomic replace, so a crash never leaves a half-written target. */
     static void writeAtomic(Path target, byte[] bytes) throws IOException {
-        Path temporary = Files.createTempFile(target.getParent(), ".ssmt-write-", ".tmp");
+        Path temporary = Files.createTempFile(java.util.Objects.requireNonNull(target.getParent()), ".ssmt-write-", ".tmp");
         try {
             Files.write(temporary, bytes);
             if (Files.exists(target)) {
