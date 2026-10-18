@@ -315,17 +315,36 @@ public final class AiTranslationExchangeService {
             List<TranslationDraft> drafts = new ArrayList<>();
             String sourceLanguage = root.path("sourceLanguage").asText();
             String targetLanguage = root.path("targetLanguage").asText();
-            TranslationProvenance importedProvenance =
-                    policy == AiImportPolicy.APPROVE_ALL_VALIDATED
-                            ? TranslationProvenance.HUMAN_EDITED
-                            : TranslationProvenance.AI_TRANSLATED;
+            boolean byRules = policy == AiImportPolicy.APPROVE_BY_RULES;
+            PolicyApproval approval = PolicyApproval.withDefaultRules();
+            Map<String, String> roles = PolicyApproval.rolesOf(project);
+            Map<String, String> kinds = PolicyApproval.kindsOf(project);
+            Map<String, String> glossary = PolicyApproval.glossaryOf(project);
+            List<String> policyReview = new ArrayList<>();
+            int policyApproved = 0;
             for (ProjectEntry entry : project.entries()) {
                 String translated = translations.get(identity(entry));
-                updated.add(translated == null
-                        ? entry
-                        : entry.withTranslation(
-                                translated, importedProvenance));
-                if (translated != null && translationMemory != null) {
+                if (translated == null) {
+                    updated.add(entry);
+                    continue;
+                }
+                TranslationProvenance importedProvenance = policy == AiImportPolicy.APPROVE_ALL_VALIDATED
+                        ? TranslationProvenance.HUMAN_EDITED : TranslationProvenance.AI_TRANSLATED;
+                if (byRules) {
+                    String unit = identity(entry);
+                    var decision = entry.key().startsWith("bf:")
+                            ? approval.evaluate(roles.getOrDefault(unit, "TEXT"), kinds.getOrDefault(unit, "csv"),
+                                    entry.originalText(), translated, glossary)
+                            : new PolicyApproval.Decision(false, "unit is not classified by the translation method");
+                    if (decision.approved()) {
+                        importedProvenance = TranslationProvenance.POLICY_APPROVED;
+                        policyApproved++;
+                    } else {
+                        policyReview.add(entry.key() + ": " + decision.reason());
+                    }
+                }
+                updated.add(entry.withTranslation(translated, importedProvenance));
+                if (translationMemory != null) {
                     drafts.add(new TranslationDraft(
                             entry.originalText(),
                             sourceLanguage,
@@ -339,10 +358,6 @@ public final class AiTranslationExchangeService {
                 try (SqliteTranslationMemory memory =
                         SqliteTranslationMemory.open(translationMemory)) {
                     memory.upsertAll(drafts);
-                    TranslationReviewStatus reviewStatus =
-                            policy == AiImportPolicy.APPROVE_ALL_VALIDATED
-                                    ? TranslationReviewStatus.APPROVED
-                                    : TranslationReviewStatus.DRAFT;
                     String providerId = root.path("providerId")
                             .asText("external-ai").trim();
                     if (providerId.isBlank()) {
@@ -352,6 +367,10 @@ public final class AiTranslationExchangeService {
                     String providerVersion = root.path("providerVersion").asText("");
                     Instant generatedAt = Instant.now();
                     for (TranslationDraft draft : drafts) {
+                        TranslationReviewStatus reviewStatus =
+                                draft.provenance() == TranslationProvenance.HUMAN_EDITED
+                                        || draft.provenance() == TranslationProvenance.POLICY_APPROVED
+                                        ? TranslationReviewStatus.APPROVED : TranslationReviewStatus.DRAFT;
                         memory.recordGenerationMetadata(
                                 draft.sourceText(),
                                 draft.sourceLanguage(),
@@ -379,7 +398,9 @@ public final class AiTranslationExchangeService {
                     result,
                     translations.size(),
                     project.entries().size() - translations.size(),
-                    nameUpdated);
+                    nameUpdated,
+                    policyApproved,
+                    policyReview);
         } catch (IOException | TranslationMemoryException | IllegalArgumentException exception) {
             throw new ProjectException("Could not import AI translation response", exception);
         }

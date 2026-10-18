@@ -424,6 +424,15 @@ Core extraction, validation, project handling, and patch building must work full
 
 AI may suggest corrections to malformed source, but must never apply source fixes automatically.
 
+A draft may become approved without a person only through the approval rules (owner decision 2026-10-14, `PolicyApproval`,
+`approval-rules.json`): the unit is plain `TEXT` (never `IDENTIFIER`, `LINKED` or `UNKNOWN`), the placeholder, marker and
+option-syntax validators passed, line breaks match, glossary terms are rendered consistently, no CJK is left, and the length
+ratio is within the bounds of the unit kind. The result is recorded per unit as provenance `POLICY_APPROVED` (rule version in
+the rules file) and is reversible (`PolicyApproval.revoke` returns the units to reviewable `AI_TRANSLATED` drafts). A
+rule-approved translation is not a human-approved glossary or translation-memory entry. A draft that fails any rule stays a
+reviewable draft; AI still never fixes source and never writes into a mod. Sending strings to a provider happens only when the
+user configured one (opt-in, off by default).
+
 ---
 
 # Portable Project Boundary

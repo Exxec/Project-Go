@@ -244,22 +244,37 @@ public final class ProjectCommand implements Runnable {
                         + "leaving it a reviewable AI draft.")
         private boolean approve;
 
+        @Option(
+                names = "--approve-by-rules",
+                description = "Approve each translation that passes every approval rule (TEXT units only, "
+                        + "validators, glossary, no CJK left, length ratio); the rest stay reviewable drafts.")
+        private boolean approveByRules;
+
         @Override
         public Integer call() {
             LocalizationProjectService service = new LocalizationProjectService();
             try {
+                if (approve && approveByRules) {
+                    throw new ProjectException("Use either --approve or --approve-by-rules");
+                }
                 LocalizationProject project = service.read(projectFile);
                 AiTranslationImportResult result = new AiTranslationExchangeService().importResponse(
                         response,
                         project,
                         translationMemory.orElse(null),
-                        approve ? AiImportPolicy.APPROVE_ALL_VALIDATED : AiImportPolicy.REVIEW_DRAFTS);
+                        approve ? AiImportPolicy.APPROVE_ALL_VALIDATED
+                                : approveByRules ? AiImportPolicy.APPROVE_BY_RULES : AiImportPolicy.REVIEW_DRAFTS);
                 service.write(projectFile, result.project());
                 LOG.info("Imported {} translation(s), {} left unchanged{}: {}",
                         result.importedEntries(),
                         result.skippedEntries(),
                         result.patchNameUpdated() ? " (patch name updated)" : "",
                         projectFile);
+                if (approveByRules) {
+                    LOG.info("Policy approval: {} approved, {} sent to review", result.policyApproved(),
+                            result.policyReview().size());
+                    result.policyReview().stream().limit(50).forEach(line -> LOG.info("  review: {}", line));
+                }
                 return 0;
             } catch (ProjectException exception) {
                 LOG.error(CliDiagnostics.explain("AI response import", exception));

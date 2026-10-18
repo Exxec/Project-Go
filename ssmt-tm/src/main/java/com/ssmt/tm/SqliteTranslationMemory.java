@@ -367,6 +367,7 @@ public final class SqliteTranslationMemory implements AutoCloseable {
                     WHEN 'AI_TRANSLATED' THEN 2
                     WHEN 'ARGOS_TRANSLATED' THEN 2
                     WHEN 'TRANSLATE_LOCALLY' THEN 2
+                    WHEN 'POLICY_APPROVED' THEN 2
                     ELSE 1 END
                   >= CASE translations.provenance
                     WHEN 'HUMAN_EDITED' THEN 5
@@ -375,6 +376,7 @@ public final class SqliteTranslationMemory implements AutoCloseable {
                     WHEN 'AI_TRANSLATED' THEN 2
                     WHEN 'ARGOS_TRANSLATED' THEN 2
                     WHEN 'TRANSLATE_LOCALLY' THEN 2
+                    WHEN 'POLICY_APPROVED' THEN 2
                     ELSE 1 END
                 """;
         importUsing(drafts, sql);

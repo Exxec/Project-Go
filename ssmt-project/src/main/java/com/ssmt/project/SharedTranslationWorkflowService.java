@@ -106,7 +106,7 @@ public final class SharedTranslationWorkflowService {
     public Imported importResponse(Path source, Path response, Prepared prepared, Path catalog)
             throws ProjectException {
         var attested = sourceIntegrity.runAttested("IMPORT_RESPONSE", source,
-                () -> exchange.importResponse(response, prepared.project(), catalog));
+                () -> exchange.importResponse(response, prepared.project(), catalog, AiImportPolicy.APPROVE_BY_RULES));
         AiTranslationImportResult imported = attested.result();
         WorkflowTransitionContract.State state = transitions.responseImported(
                 prepared.state(), prepared.project(), imported.project());

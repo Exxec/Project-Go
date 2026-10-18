@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "rules_version": "policy-1",
+  "comment": "Per-unit approval by rules (owner decision 2026-10-14): only TEXT units, every validator passing, glossary terms used, no CJK left, length ratio (translation characters per source character) inside the bounds of the unit kind. short_source_chars: sources this short may exceed max up to short_source_max.",
+  "length_ratio": {
+    "default": {"min": 0.5, "max": 12.0},
+    "csv": {"min": 0.5, "max": 12.0},
+    "json": {"min": 0.5, "max": 12.0},
+    "java": {"min": 0.5, "max": 14.0},
+    "text-line": {"min": 0.5, "max": 14.0},
+    "jar": {"min": 0.5, "max": 14.0},
+    "class": {"min": 0.5, "max": 14.0}
+  },
+  "short_source_chars": 4,
+  "short_source_max": 24.0
+}

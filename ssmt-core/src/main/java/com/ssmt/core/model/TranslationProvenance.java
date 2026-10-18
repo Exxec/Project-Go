@@ -10,6 +10,8 @@ public enum TranslationProvenance {
     AI_TRANSLATED(2),
     ARGOS_TRANSLATED(2),
     TRANSLATE_LOCALLY(2),
+    /** A machine draft that passed every approval rule without a person (owner decision 2026-10-14); reversible. */
+    POLICY_APPROVED(2),
     FUZZY_MATCH(1);
 
     private final int preference;
