@@ -5,11 +5,12 @@ import java.util.Locale;
 /**
  * Deterministic normalized text similarity.
  */
-final class TextSimilarity {
+public final class TextSimilarity {
     private TextSimilarity() {
     }
 
-    static double score(String left, String right) {
+    /** Normalized edit similarity from 0 to 1 (case and whitespace insensitive). */
+    public static double score(String left, String right) {
         int[] first = normalize(left).codePoints().toArray();
         int[] second = normalize(right).codePoints().toArray();
         int maximum = Math.max(first.length, second.length);

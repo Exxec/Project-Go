@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "rules_version": "ranking-1",
+  "comment": "Ranking of competing translations (fuzzy or conflicting library matches, ambiguous record prefill). A feature that cannot be measured is left out and the remaining weights are renormalised. A candidate is applied without a person only when its score reaches auto_apply_threshold, it leads the runner-up by auto_apply_margin, and the approval rules (approval-rules.json) also pass. Fuzzy candidates (different source text) are never applied unless auto_apply_fuzzy is true: a similar sentence is not the same sentence.",
+  "weights": {
+    "same_file": 0.30,
+    "same_field": 0.25,
+    "neighbours": 0.20,
+    "similarity": 0.25
+  },
+  "auto_apply_threshold": 0.85,
+  "auto_apply_margin": 0.05,
+  "minimum_suggestion_score": 0.40,
+  "auto_apply_fuzzy": false,
+  "fuzzy_floor": 0.60
+}

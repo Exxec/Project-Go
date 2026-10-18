@@ -16,9 +16,13 @@ import java.util.Set;
 public final class BridgeForgeTranslationPrefill {
     private static final ObjectMapper JSON = new ObjectMapper();
 
+    /** Where an author record pair was seen: the record file and the records around it. */
+    private record Occurrence(String file, String previous, String next) { }
+
     public ObjectNode records(ObjectNode document, List<Path> paths) throws ProjectException {
         new BridgeForgeTranslationDocument().validate(document);
         Map<String, Set<String>> pairs = new HashMap<>();
+        Map<String, Map<String, List<Occurrence>>> seen = new HashMap<>();
         try {
             for (Path path : paths) {
                 List<Path> files;
@@ -39,11 +43,18 @@ public final class BridgeForgeTranslationPrefill {
                         if (items == null || !items.isArray()) {
                             continue;
                         }
-                        for (JsonNode item : items) {
+                        for (int index = 0; index < items.size(); index++) {
+                            JsonNode item = items.get(index);
                             JsonNode target = item.has("en") ? item.path("en") : item.path("c");
                             if (item.path("zh").isTextual() && target.isTextual()) {
                                 pairs.computeIfAbsent(item.path("zh").asText(), ignored -> new HashSet<>())
                                         .add(target.asText());
+                                seen.computeIfAbsent(item.path("zh").asText(), ignored -> new HashMap<>())
+                                        .computeIfAbsent(target.asText(), ignored -> new java.util.ArrayList<>())
+                                        .add(new Occurrence(file.getFileName().toString(),
+                                                index > 0 ? items.get(index - 1).path("zh").asText("") : "",
+                                                index + 1 < items.size()
+                                                        ? items.get(index + 1).path("zh").asText("") : ""));
                             }
                         }
                     } catch (IOException exception) {
@@ -53,8 +64,12 @@ public final class BridgeForgeTranslationPrefill {
             }
             int filled = 0;
             int ambiguous = 0;
-            for (JsonNode node : document.path("entries")) {
-                ObjectNode entry = (ObjectNode) node;
+            int ranked = 0;
+            var ranker = CandidateRanker.withDefaultRules();
+            List<JsonNode> all = new java.util.ArrayList<>();
+            document.path("entries").forEach(all::add);
+            for (int position = 0; position < all.size(); position++) {
+                ObjectNode entry = (ObjectNode) all.get(position);
                 if (!entry.path("translation").asText().isEmpty()) {
                     continue;
                 }
@@ -65,12 +80,101 @@ public final class BridgeForgeTranslationPrefill {
                 } else if (!options.isEmpty()) {
                     entry.set("candidates", JSON.valueToTree(options.stream().sorted().toList()));
                     ambiguous++;
+                    var outcome = rankRecords(ranker, entry, all, position, seen.get(entry.path("source").asText()));
+                    if (outcome != null) {
+                        entry.set("candidates_ranked", outcome.ranking());
+                        if (outcome.applied() != null) {
+                            entry.put("translation", outcome.applied()).put("provenance", "record-ranked");
+                            ranked++;
+                        } else if (outcome.suggestion() != null) {
+                            entry.set("suggestion", outcome.suggestion());
+                        }
+                    }
                 }
             }
-            return JSON.createObjectNode().put("filled", filled).put("ambiguous", ambiguous);
+            return JSON.createObjectNode().put("filled", filled).put("ambiguous", ambiguous)
+                    .put("ranked_applied", ranked);
         } catch (IOException exception) {
             throw new ProjectException("Could not discover translator records", exception);
         }
+    }
+
+    private record RankOutcome(com.fasterxml.jackson.databind.node.ArrayNode ranking, ObjectNode suggestion,
+            String applied) { }
+
+    /**
+     * Ranks the competing record translations of one unit by how well the records around each pair match the units
+     * around it (same neighbouring ids) and by file-name overlap; applies the leader only when the ranking rules allow.
+     */
+    private static RankOutcome rankRecords(CandidateRanker ranker, ObjectNode entry, List<JsonNode> all, int position,
+            Map<String, List<Occurrence>> byTranslation) {
+        if (byTranslation == null) {
+            return null;
+        }
+        String file = entry.path("file").asText();
+        String previous = neighbour(all, position, -1, file);
+        String next = neighbour(all, position, 1, file);
+        Set<String> unitTokens = tokens(file);
+        List<CandidateRanker.Candidate> candidates = new java.util.ArrayList<>();
+        for (var option : new java.util.TreeMap<>(byTranslation).entrySet()) {
+            double neighbours = 0;
+            double sameFile = 0;
+            boolean measured = false;
+            for (Occurrence occurrence : option.getValue()) {
+                int hits = 0;
+                int possible = 0;
+                if (!previous.isEmpty() && !occurrence.previous().isEmpty()) {
+                    possible++;
+                    hits += previous.equals(occurrence.previous()) ? 1 : 0;
+                }
+                if (!next.isEmpty() && !occurrence.next().isEmpty()) {
+                    possible++;
+                    hits += next.equals(occurrence.next()) ? 1 : 0;
+                }
+                if (possible > 0) {
+                    neighbours = Math.max(neighbours, (double) hits / possible);
+                    measured = true;
+                }
+                Set<String> shared = new HashSet<>(tokens(occurrence.file()));
+                shared.retainAll(unitTokens);
+                sameFile = Math.max(sameFile, shared.isEmpty() ? 0.0 : 1.0);
+            }
+            Map<String, Double> features = new java.util.LinkedHashMap<>();
+            features.put("same_file", sameFile);
+            if (measured) {
+                features.put("neighbours", neighbours);
+            }
+            candidates.add(new CandidateRanker.Candidate(option.getKey(), "record", features));
+        }
+        var ranking = ranker.rank(candidates);
+        var array = JSON.createArrayNode();
+        ranking.forEach(item -> array.addObject().put("text", item.text()).put("score", item.score()));
+        var suggestion = ranker.suggestion(ranking);
+        var automatic = ranker.autoApplicable(ranking);
+        ObjectNode proposed = suggestion == null ? null
+                : JSON.createObjectNode().put("text", suggestion.text()).put("score", suggestion.score());
+        String applied = automatic == null ? null
+                : BridgeForgePlaceholders.resolve(entry.path("source").asText(), automatic.text());
+        return new RankOutcome(array, proposed, applied);
+    }
+
+    private static String neighbour(List<JsonNode> all, int position, int step, String file) {
+        int index = position + step;
+        return index >= 0 && index < all.size() && all.get(index).path("file").asText().equals(file)
+                ? all.get(index).path("source").asText() : "";
+    }
+
+    private static Set<String> tokens(String file) {
+        Set<String> result = new HashSet<>();
+        String stem = file.substring(file.lastIndexOf('/') + 1);
+        int dot = stem.lastIndexOf('.');
+        String name = (dot > 0 ? stem.substring(0, dot) : stem).toLowerCase(java.util.Locale.ROOT);
+        for (String token : name.split("[^a-z0-9]+")) {
+            if (token.length() >= 3) {
+                result.add(token);
+            }
+        }
+        return result;
     }
 
     public ObjectNode reference(ObjectNode document, Path source, Path reference) throws ProjectException {

@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.ssmt.core.model.ModInfo;
+import com.ssmt.project.CandidateRanker;
 import com.ssmt.project.LocalizationProject;
 import com.ssmt.project.GlossaryService;
 import com.ssmt.project.LocalizationProjectService;
+import com.ssmt.project.MemoryMatchSuggester;
 import com.ssmt.project.ModInputPreparationService;
 import com.ssmt.project.ProjectBuildResult;
 import com.ssmt.project.ProjectEntry;
@@ -214,6 +216,7 @@ public final class AutoWorkflow {
         String sourceLanguage = languages.detect(project.entries());
         project = applyUniqueExactMatches(
                 project, sharedCatalog, sourceLanguage, "en");
+        project = rankedMatches(project, workspace);
         prepared = workflow.bind(project, prepared.sourceAttestations());
 
         String responseHash = state == null ? "" : state.responseHash();
@@ -230,6 +233,7 @@ public final class AutoWorkflow {
                 projectFile = suggested;
                 project = applyUniqueExactMatches(
                         project, sharedCatalog, sourceLanguage, "en");
+                project = rankedMatches(project, workspace);
                 prepared = workflow.bind(project, imported.sourceAttestations());
             }
         }
@@ -327,6 +331,31 @@ public final class AutoWorkflow {
 
     private static boolean isWindows() {
         return System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("win");
+    }
+
+    /**
+     * Conflicting exact and fuzzy library matches for blank entries are ranked; the best one is applied only when the
+     * ranking threshold and every approval rule pass. All proposals are kept in {@code suggestions.json} beside the
+     * project so a person can look at what was proposed and why.
+     */
+    private LocalizationProject rankedMatches(LocalizationProject project, Path workspace) throws ProjectException {
+        var suggester = new MemoryMatchSuggester(CandidateRanker.withDefaultRules());
+        var suggestions = suggester.suggest(project, sharedCatalog);
+        Path file = workspace.resolve("suggestions.json");
+        try {
+            if (suggestions.isEmpty()) {
+                Files.deleteIfExists(file);
+            } else {
+                Path temporary = Files.createTempFile(workspace, ".suggestions-", ".tmp");
+                Files.write(temporary, JSON.writerWithDefaultPrettyPrinter().writeValueAsBytes(
+                        Map.of("schema_version", 1, "rules", "ranking-1", "suggestions", suggestions)));
+                Files.move(temporary, file, java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (IOException exception) {
+            throw new ProjectException("Could not store translation suggestions", exception);
+        }
+        return suggester.applyTo(project, suggestions);
     }
 
     private static LocalizationProject applyUniqueExactMatches(
