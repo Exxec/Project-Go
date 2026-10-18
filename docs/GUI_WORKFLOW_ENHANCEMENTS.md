@@ -89,6 +89,18 @@ row starts `NOT_TESTED`; mark PASS only from actual observation.
 | Diagnostics without and with selected logs | Only selected logs exported; overwrite refused. | NOT_TESTED |
 | Native Auto Explorer drop | Unicode folder and ZIP reach the same packaged workflow. | NOT_TESTED |
 
+## Automated walk with screenshots (2026-10-18)
+
+`gradlew :ssmt-gui:guiChecklist` drives the normal-workflow pane in a real JavaFX window (needs a desktop session; it is not
+part of `test` or `build`), saves a screenshot per step and writes `ssmt-gui/build/gui-checklist/checklist.json`. It walks the
+folder/ZIP/metadata drops, a Unicode folder name, a renamed response, a malformed response, a changed source with prior
+translations, first and different install destinations, a missing remembered destination, output quality with a later byte
+edit, and the unreadable-input acceptance added by the automation plan. Each row records what the program asserted
+(`AUTOMATED_PASS`/`AUTOMATED_FAIL`) and which parts only a person can judge (native file choosers, dialog wording, Explorer
+drops). Rows that cannot be reached from outside the process (cancel mid-operation, the short publication window, the Advanced
+tab, diagnostics choosers, native Auto) are listed as `NOT_AUTOMATED` with the reason. `owner_status` stays `NOT_TESTED`: the
+table above is marked only from a person looking at the screenshots.
+
 ## Remaining gates
 
 Local validation on 2026-10-08: all 610 tests passed with zero failures, errors

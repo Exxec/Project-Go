@@ -34,9 +34,7 @@ import javafx.util.StringConverter;
 
 /** One drop-driven normal flow; optional pickers and maintenance stay secondary. */
 final class TranslationWorkflowPane extends VBox {
-    private final TranslationWorkflowController controller =
-            new TranslationWorkflowController(
-                    new TranslationWorkflow().withTranslationMemory(com.ssmt.tm.MasterTranslationLibrary.currentUserDefault()));
+    private final TranslationWorkflowController controller;
     private final WorkflowMaintenanceController maintenance = new WorkflowMaintenanceController();
     private final Label status = new Label(GuiText.get("normal.chooseHelp"));
     private final javafx.scene.control.CheckBox acknowledgeUnreadable =
@@ -70,7 +68,14 @@ final class TranslationWorkflowPane extends VBox {
     }
 
     TranslationWorkflowPane(Stage stage, Runnable openAdvanced) {
+        this(stage, openAdvanced, new TranslationWorkflowController(new TranslationWorkflow()
+                .withTranslationMemory(com.ssmt.tm.MasterTranslationLibrary.currentUserDefault())));
+    }
+
+    /** Lets a test (the visual-checklist harness) supply a controller with its own workspace and settings. */
+    TranslationWorkflowPane(Stage stage, Runnable openAdvanced, TranslationWorkflowController controller) {
         super(16);
+        this.controller = controller;
         this.stage = stage;
         this.openAdvanced = openAdvanced;
         setPadding(new Insets(24));
@@ -167,13 +172,27 @@ final class TranslationWorkflowPane extends VBox {
         }
     }
 
-    private void loadInput(Path input) {
+    /** True while a background operation runs (for the checklist harness). */
+    boolean busy() {
+        return busy;
+    }
+
+    /** The status text the user sees (for the checklist harness). */
+    String statusText() {
+        return status.getText();
+    }
+
+    TranslationWorkflowController controller() {
+        return controller;
+    }
+
+    void loadInput(Path input) {
         attemptedInput = input;
         run(TranslationWorkflowPresentation.Action.CHOOSE_MOD,
                 () -> controller.loadInput(input), GuiText.get("normal.loaded"), "Open mod");
     }
 
-    private void acceptDropped(Path input) {
+    void acceptDropped(Path input) {
         attemptedInput = input;
         startOperation();
         status.setText(GuiText.get("normal.working"));
@@ -202,19 +221,27 @@ final class TranslationWorkflowPane extends VBox {
     private void exportTranslation() {
         File file = jsonChooser(requestFilename()).showSaveDialog(stage);
         if (file != null) {
-            run(TranslationWorkflowPresentation.Action.EXPORT_TRANSLATION,
-                    () -> controller.exportTranslation(file.toPath()), GuiText.get("normal.exported"),
-                    "Create translation file");
+            exportRequestFile(file.toPath());
         }
+    }
+
+    void exportRequestFile(Path file) {
+        run(TranslationWorkflowPresentation.Action.EXPORT_TRANSLATION,
+                () -> controller.exportTranslation(file), GuiText.get("normal.exported"),
+                "Create translation file");
     }
 
     private void importTranslation() {
         File file = jsonChooser(requestFilename()).showOpenDialog(stage);
         if (file != null) {
-            run(TranslationWorkflowPresentation.Action.IMPORT_TRANSLATION,
-                    () -> controller.importTranslation(file.toPath()), GuiText.get("normal.imported"),
-                    "Open returned translation file");
+            importResponseFile(file.toPath());
         }
+    }
+
+    void importResponseFile(Path file) {
+        run(TranslationWorkflowPresentation.Action.IMPORT_TRANSLATION,
+                () -> controller.importTranslation(file), GuiText.get("normal.imported"),
+                "Open returned translation file");
     }
 
     /** Readable suggested filename; the returned file may keep any name at all. */
@@ -246,7 +273,7 @@ final class TranslationWorkflowPane extends VBox {
         }
     }
 
-    private void installBelow(Path folder) {
+    void installBelow(Path folder) {
         try {
             Path output = controller.outputBelow(folder);
             String installed = GuiText.get("normal.built")
@@ -832,7 +859,7 @@ final class TranslationWorkflowPane extends VBox {
             return "";
         }
         return "\nPARTIAL: " + unreadable.size() + " input file(s) could not be read"
-                + (controller.unreadableAcknowledged() ? " (accepted)" : " (accept below to build)") + ":\n"
+                + (controller.unreadableAcknowledged() ? " (accepted)" : " (tick the box above to build)") + ":\n"
                 + String.join("\n", unreadable.stream().limit(50).toList());
     }
 

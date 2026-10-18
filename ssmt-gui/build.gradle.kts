@@ -197,3 +197,15 @@ tasks.register<Exec>("signNativePackage") {
         }
     }
 }
+
+// Visual acceptance walk: drives the normal-workflow pane in a real window and saves a screenshot per checklist step.
+// Needs a desktop session, so it is not part of `test` or `build`; results land in build/gui-checklist/.
+val guiChecklist by tasks.registering(Test::class) {
+    group = "verification"
+    description = "Walks the GUI visual checklist and saves screenshots to build/gui-checklist/."
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter { includeTestsMatching("*GuiChecklistTest") }
+    systemProperty("ssmt.guiChecklist.out", layout.buildDirectory.dir("gui-checklist").get().asFile.absolutePath)
+    outputs.upToDateWhen { false }
+}
