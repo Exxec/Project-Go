@@ -692,3 +692,39 @@ Status (one commit per item on `main`):
 - **G4.2 follow-up 2026-10-18 (`fix-import-run-schema`):** `RunRecordImport` now reads BridgeForge's real R1 record shape (milestones under `evidence.milestones`, identity from `manifest` and `core_baseline_sha256`, `evidence.status` ACCEPTABLE required, triage and `jvm_crashes` for failures); the test fixture is a record BridgeForge's `write_run_record` produced for a synthetic tree, and the Java shipped-hash port matches it. BridgeForge does not record a Java version or a process exit code, so all three gates stay NOT_TESTED with that reason until it does. The paragraph below describes the first version and its guessed field names, now superseded.
 - **G4.2 Done 2026-10-18 on the Project Go side; LIVE PENDING on the BridgeForge side.** `assurance --candidate DIR --import-run <queue>/_live/<TESTID>.json --ledger-out LEDGER` (`RunRecordImport`, `AssuranceLedgerWriter`, `BridgeForgeShippedHash`). A record is evidence only when it has a `manifest_id` (BridgeForge item 75 R1), a member with provenance `BOUND` whose `shipped_sha256` equals the candidate's BridgeForge shipped hash (the copy-drift file-set hash, ported to Java and pinned against a value BridgeForge computed on a synthetic tree), and the launch environment (Starsector build, Java, process exit code). Legacy records (today's format, no manifest or provenance), unbound members, other bytes or missing environment leave AUTOMATED_BOOT, CAMPAIGN and SAVE_RELOAD NOT_TESTED with the reason. For a matching BOUND member: boot PASS when the main menu was reached with no FATAL, MOD-ERROR, JVM crash or non-zero exit (FAIL on a FAIL verdict or those signs), CAMPAIGN PASS when a campaign loaded, SAVE_RELOAD PASS only with a save and an explicit `milestones.reload_after_save` (the log counters alone cannot show a reload). The record is copied verbatim beside the ledger as the hashed log of a schema-2 runtime capture (`runtime-<TESTID>.json`), so `AssuranceLedgerReader` verifies it. Caveats: R1 is specified but not built in BridgeForge, so the field names `manifest_id`, `members[].provenance`, `milestones`, `environment` are this side's reading contract and must be reconciled when R1 lands; no real BOUND record exists to test against. Tests: `BridgeForgeShippedHashTest`, `RunRecordImportTest`, `AssuranceImportRunCommandTest`.
 - **G4.3 Done 2026-10-18 (harness; owner marks the rows).** `GuiChecklistTest` + `gradlew :ssmt-gui:guiChecklist`: the real `TranslationWorkflowPane` in a real JavaFX window, one screenshot per step in `ssmt-gui/build/gui-checklist/`, `checklist.json` with what was asserted. Run here on 2026-10-18 on a Windows desktop: 10 rows AUTOMATED_PASS (drops of folder/ZIP/mod_info.json, Unicode folder, renamed response, malformed response keeps the project, changed source held for review, first install remembers its destination, a different destination, quality plus a later edit named, a missing remembered destination falls back, and the unreadable-input checkbox), 5 NOT_AUTOMATED with reasons. Deviation: plain JavaFX `Node.snapshot` instead of TestFX/Monocle: no new dependency, and Monocle's latest build (21.0.2) targets JavaFX 21, not the 25 used here; so no headless CI run (Ubuntu runners have no display). Production change: the pane takes an injectable controller and a few methods are package-private for the harness. Not covered: native file choosers, the error dialog (it writes a diagnostic into the user's app data), Explorer drops, cancellation timing.
+
+## Recommendations (2026-10-18; proposed, not approved)
+
+Written after the automation plan (G0-G4) merged and CI went green on Windows and Ubuntu. The owner asked for
+recommendations and long-term recommendations. None is scheduled until the owner picks it; `AGENTS.md` and the
+`ARCHITECTURE.md` boundaries bind all of them.
+
+### Near term: close the cross-project loops and get real-mod evidence
+
+1. **Schema-v1 alignment with BridgeForge.** Project Go now exports unit kinds `text-line` and `class` and fields
+   `role`/`role_rule`/`group`; BridgeForge's `translate-apply` must accept them, with shared conformance fixtures, before the two
+   tools can exchange such documents (recorded in BridgeForge's `docs/ROADMAP_STATUS.md`). Agree the schema change once,
+   in both repositories, rather than each side extending v1 alone; consider calling it schema 2.
+2. **Runtime evidence from BridgeForge.** `assurance --import-run` reads BridgeForge's real run record, but every gate stays
+   NOT_TESTED until BridgeForge records `manifest.java_version` and a `process_exit_code` (BridgeForge follow-up). Once it
+   does, one bound BridgeForge live run of a translated mod closes AUTOMATED_BOOT and CAMPAIGN for that candidate.
+3. **One real translation end to end with the new rules**: a Chinese mod through roles, glossary, policy approval and the
+   candidate audit, including a `zgrstuff.csv`-shaped file and `translate bytecode-audit` on its jars. Record how many units
+   policy approval took and how many went to review: that ratio is the measure of the automation's worth.
+4. **Owner GUI pass** over the 15 checklist rows using the screenshots `guiChecklist` produces, then mark them; then decide
+   rc.4 (or 0.8.0 final), since `main` now carries 20+ feature commits beyond `v0.8.0-rc.3`.
+5. **Close P8.10** (JSON key labels vs identifiers) together with BridgeForge, using `bare_json_keys` in `unit-roles.json`.
+
+### Long term: what Project Go should become
+
+1. **A translation memory that compounds.** Each approved translation should make the next mod cheaper: shared glossary
+   terms by faction and mod family, ranked reuse, and a measured review rate that falls over time. Track that rate per mod.
+2. **Identifier safety as a proven property.** Grow `unit-roles.json` from real-mod evidence (each rule with its fixture) until
+   no translated build changes a lookup key; make "no identifier changed" a release gate checked against the source build.
+3. **One translation method with BridgeForge, two front ends.** Keep a single versioned exchange schema and shared
+   conformance fixtures; Project Go is the player-facing GUI/Auto tool, BridgeForge the revival pipeline. Neither should
+   drift into the other's job.
+4. **Translated builds that survive mod updates.** When a mod updates, re-apply approved translations by stable identity and
+   send only changed units for review, with the save-safety rules of the translated copy kept.
+5. **Optional AI, never required.** Keep extraction, validation and builds offline; AI stays an opt-in draft source behind
+   policy approval and owner review.
