@@ -236,6 +236,11 @@ public final class BridgeForgeTranslationApply {
             if (snapshotStamp != null) {
                 report.put("snapshot", snapshotStamp);
             }
+            var leftoverItems = LeftoverClassifier.classify(target, remaining, document,
+                    java.util.stream.StreamSupport.stream(problems.spliterator(), false).map(JsonNode::asText).toList());
+            if (leftoverItems.path("total").asInt() > 0) {
+                report.set("leftover", leftoverItems);
+            }
             report.set("applied", applied);
             report.set("problems", problems);
             report.set("format_slots_reindexed", reindexed);

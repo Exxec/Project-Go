@@ -34,6 +34,8 @@ public final class BridgeForgeTranslationCommand implements Callable<Integer> {
     @Option(names = "--accept-unreadable",
             description = "check: do not fail only because some inputs were unreadable (they are still listed).")
     private boolean acceptUnreadable;
+    @Option(names = "--json", description = "check: write the leftover report with a reason per item to this file.")
+    private Path jsonReport;
     @Option(names = "--record", description = "Author zh/en record file or directory.")
     private List<Path> records = new java.util.ArrayList<>();
     @Option(names = "--reference", description = "English mod for prefill, or BridgeForge export JSON for compare.")
@@ -43,8 +45,8 @@ public final class BridgeForgeTranslationCommand implements Callable<Integer> {
         try {
             var exchange = new BridgeForgeTranslationDocument();
             var service = new BridgeForgeTranslationService();
-            if (acceptUnreadable && !action.equals("check")) {
-                throw new IllegalArgumentException("--accept-unreadable is only valid for check");
+            if ((acceptUnreadable || jsonReport != null) && !action.equals("check")) {
+                throw new IllegalArgumentException("--accept-unreadable and --json are only valid for check");
             }
             if (!action.equals("apply") && inPlace) {
                 throw new IllegalArgumentException("--in-place is only valid for apply");
@@ -96,6 +98,13 @@ public final class BridgeForgeTranslationCommand implements Callable<Integer> {
                             result.path("unreadable").size());
                     for (var diagnostic : result.path("unreadable")) {
                         LOG.warn("Unreadable: {}", diagnostic.asText());
+                    }
+                    if (jsonReport != null) {
+                        var report = com.ssmt.project.LeftoverClassifier.classify(
+                                source, result, null, java.util.List.of());
+                        report.put("schema_version", 1).put("mode", "LEFTOVER_CHECK");
+                        new com.fasterxml.jackson.databind.ObjectMapper().writerWithDefaultPrettyPrinter()
+                                .writeValue(jsonReport.toFile(), report);
                     }
                     boolean unreadableOk = result.path("unreadable").isEmpty() || acceptUnreadable;
                     return result.path("entry_count").asInt() == 0 && unreadableOk ? 0 : 2;

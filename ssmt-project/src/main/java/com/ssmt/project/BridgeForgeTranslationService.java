@@ -136,6 +136,12 @@ public final class BridgeForgeTranslationService {
         entry.set("context", context);
     }
 
+    /** True when the shared method reads this file kind (jar archives are further limited to the mod's jar list). */
+    static boolean covers(String file) {
+        String suffix = suffix(file);
+        return suffix.equals("jar") || suffix.equals("csv") || suffix.equals("java") || JSON_SUFFIXES.contains(suffix);
+    }
+
     static List<BridgeForgeTextUnits.Unit> units(String file, String text) {
         return switch (suffix(file)) {
             case "csv" -> BridgeForgeTextUnits.csv(file, text);

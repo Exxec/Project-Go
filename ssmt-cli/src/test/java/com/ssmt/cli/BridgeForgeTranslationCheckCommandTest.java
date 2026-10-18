@@ -42,4 +42,17 @@ class BridgeForgeTranslationCheckCommandTest {
                 "--patch-id", "p", "--patch-name", "P", "--accept-unreadable")).isZero();
         assertThat(Files.readString(accepted)).contains("unreadable_acknowledged");
     }
+
+    @Test void checkJsonGivesEachLeftoverItemItsReason() throws Exception {
+        Path mod = modWithUnreadableFileOnly();
+        Files.writeString(mod.resolve("data/good.csv"), "id,name\nx,中文\n");
+        Files.writeString(mod.resolve("readme.md"), "中文");
+        Path report = temporary.resolve("leftover.json");
+        assertThat(new CommandLine(new BridgeForgeTranslationCommand())
+                .execute("check", mod.toString(), "--json", report.toString())).isEqualTo(2);
+        var tree = new com.fasterxml.jackson.databind.ObjectMapper().readTree(report.toFile());
+        assertThat(tree.path("by_reason").path("UNTRANSLATED").asInt()).isEqualTo(1);
+        assertThat(tree.path("by_reason").path("UNREADABLE").asInt()).isEqualTo(1);
+        assertThat(tree.path("by_reason").path("UNSUPPORTED_TYPE").asInt()).isEqualTo(1);
+    }
 }
