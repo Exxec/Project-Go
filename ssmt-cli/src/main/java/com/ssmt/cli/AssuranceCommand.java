@@ -26,13 +26,47 @@ public final class AssuranceCommand implements Callable<Integer> {
     private boolean template;
     @Option(names = "--json", description = "Emit machine-readable checked results.")
     private boolean json;
+    @Option(names = "--import-run",
+            description = "BridgeForge live run record (<queue>/_live/<TESTID>.json): record AUTOMATED_BOOT, CAMPAIGN and "
+                    + "SAVE_RELOAD from it, only for a BOUND member whose shipped hash matches the candidate.")
+    private Path importRun;
+    @Option(names = "--ledger-out",
+            description = "With --import-run: the ledger to create or merge into; evidence files are written beside it.")
+    private Path ledgerOut;
     @Spec private CommandSpec spec;
 
     /** Structural/hash checks do not interpret scenario semantics. */
     public record Checked(AssuranceSummary.Summary recordedSummary, boolean evidenceSemanticsVerified) { }
 
+    private Integer importRun() throws java.io.IOException, com.ssmt.core.exception.SsmtParseException,
+            com.ssmt.project.ProjectException {
+        if (ledgerOut == null || template || ledger != null) {
+            throw new IllegalArgumentException("--import-run needs --ledger-out and no ledger argument or --template");
+        }
+        new com.ssmt.scanner.ModInfoReader().read(candidate);
+        var before = new CandidateInventory().capture(candidate);
+        var service = new com.ssmt.project.RunRecordImport();
+        var imported = service.read(importRun, candidate);
+        service.writeLedger(imported, ledgerOut);
+        if (!before.equals(new CandidateInventory().capture(candidate))) {
+            throw new java.io.IOException("Candidate changed during run-record import");
+        }
+        imported.results().forEach(result -> spec.commandLine().getOut().println(result.gate() + " "
+                + result.disposition() + ": " + result.reason()));
+        imported.notes().forEach(note -> spec.commandLine().getOut().println("note: " + note));
+        spec.commandLine().getOut().println("Ledger written: " + ledgerOut
+                + " (a record is evidence only for the exact bytes it tested)");
+        return 0;
+    }
+
     @Override public Integer call() {
         try {
+            if (importRun != null) {
+                return importRun();
+            }
+            if (ledgerOut != null) {
+                throw new IllegalArgumentException("--ledger-out is only valid with --import-run");
+            }
             if (template == (ledger != null)) {
                 throw new IllegalArgumentException("Supply either a ledger or --template, not both");
             }
@@ -61,6 +95,9 @@ public final class AssuranceCommand implements Callable<Integer> {
                 summary.results().forEach(spec.commandLine().getOut()::println);
             }
             return summary.status().equals("READY") ? 0 : 1;
+        } catch (com.ssmt.project.ProjectException exception) {
+            spec.commandLine().getErr().println("Assurance inspection failed: " + exception.getMessage());
+            return 1;
         } catch (java.io.IOException | com.ssmt.core.exception.SsmtParseException
                 | IllegalArgumentException | java.io.UncheckedIOException exception) {
             spec.commandLine().getErr().println("Assurance inspection failed: " + exception.getMessage());

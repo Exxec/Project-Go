@@ -10,7 +10,6 @@ import com.ssmt.scanner.ModInfoReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -139,50 +138,24 @@ public final class CandidateArchiveAudit {
      */
     public AssuranceLedgerReader.Ledger writeLedger(Result result, Path ledgerFile) throws ProjectException {
         try {
-            Path directory = java.util.Objects.requireNonNull(ledgerFile.toAbsolutePath().getParent());
-            Files.createDirectories(directory);
             byte[] evidenceBytes = JSON.writerWithDefaultPrettyPrinter().writeValueAsBytes(result.evidence());
-            Path evidenceFile = directory.resolve(EVIDENCE_FILE);
             String evidenceHash = java.util.HexFormat.of().formatHex(
                     java.security.MessageDigest.getInstance("SHA-256").digest(evidenceBytes));
-            java.util.List<AssuranceSummary.Result> results = new java.util.ArrayList<>();
-            java.util.List<AssuranceLedgerReader.Reference> references = new java.util.ArrayList<>();
-            if (Files.isRegularFile(ledgerFile)) {
-                var existing = JSON.readValue(ledgerFile.toFile(), AssuranceLedgerReader.Ledger.class);
-                if (!existing.candidateSha256().equals(result.candidateSha256())) {
-                    throw new ProjectException("The existing ledger belongs to a different candidate");
-                }
-                existing.results().stream().filter(item -> !ours(item.gate())).forEach(results::add);
-                existing.references().stream().filter(reference -> !reference.path().equals(EVIDENCE_FILE))
-                        .forEach(references::add);
-                boolean othersUseEvidence = results.stream().anyMatch(item -> EVIDENCE_FILE.equals(item.evidence()));
-                if (othersUseEvidence) {
-                    throw new ProjectException("Another gate already references " + EVIDENCE_FILE);
-                }
-            } else {
-                Arrays.stream(AssuranceSummary.Gate.values()).filter(gate -> !ours(gate)).forEach(gate ->
-                        results.add(new AssuranceSummary.Result(gate, AssuranceSummary.Disposition.NOT_TESTED,
-                                result.candidateSha256(), gate.name(), "", "Pending evidence; no completion claim")));
-            }
-            results.add(gateResult(AssuranceSummary.Gate.PACKAGE_IDENTITY, result.packageIdentity(),
-                    result.candidateSha256(), result.packageReason()));
-            results.add(gateResult(AssuranceSummary.Gate.STATIC_VALIDATION, result.staticValidation(),
-                    result.candidateSha256(), result.staticReason()));
-            if (results.stream().anyMatch(item -> EVIDENCE_FILE.equals(item.evidence()))) {
-                references.add(new AssuranceLedgerReader.Reference(EVIDENCE_FILE, evidenceHash));
-            }
-            var ledger = new AssuranceLedgerReader.Ledger(1, result.candidateSha256(), results, references);
-            TranslationSnapshot.writeAtomic(evidenceFile, evidenceBytes);
-            TranslationSnapshot.writeAtomic(ledgerFile.toAbsolutePath(),
-                    JSON.writerWithDefaultPrettyPrinter().writeValueAsBytes(ledger));
+            Path directory = java.util.Objects.requireNonNull(ledgerFile.toAbsolutePath().getParent());
+            Files.createDirectories(directory);
+            var ledger = AssuranceLedgerWriter.merge(ledgerFile, result.candidateSha256(),
+                    java.util.Set.of(AssuranceSummary.Gate.PACKAGE_IDENTITY, AssuranceSummary.Gate.STATIC_VALIDATION),
+                    java.util.List.of(
+                            gateResult(AssuranceSummary.Gate.PACKAGE_IDENTITY, result.packageIdentity(),
+                                    result.candidateSha256(), result.packageReason()),
+                            gateResult(AssuranceSummary.Gate.STATIC_VALIDATION, result.staticValidation(),
+                                    result.candidateSha256(), result.staticReason())),
+                    java.util.Map.of(EVIDENCE_FILE, evidenceHash));
+            TranslationSnapshot.writeAtomic(directory.resolve(EVIDENCE_FILE), evidenceBytes);
             return ledger;
         } catch (IOException | java.security.NoSuchAlgorithmException exception) {
             throw new ProjectException("Could not write the ledger: " + exception.getMessage(), exception);
         }
-    }
-
-    private static boolean ours(AssuranceSummary.Gate gate) {
-        return gate == AssuranceSummary.Gate.PACKAGE_IDENTITY || gate == AssuranceSummary.Gate.STATIC_VALIDATION;
     }
 
     private static AssuranceSummary.Result gateResult(AssuranceSummary.Gate gate,
