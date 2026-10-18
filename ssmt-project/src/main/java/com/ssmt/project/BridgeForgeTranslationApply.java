@@ -17,6 +17,8 @@ import java.util.Set;
 
 /** Preflight all protected fields and all rewritten bytes before publishing any translation. */
 public final class BridgeForgeTranslationApply {
+    /** Prefix of the problem raised for an input the leftover check could not read. */
+    static final String UNREADABLE_PROBLEM = "Unreadable leftover-check input: ";
     private static final ObjectMapper JSON = new ObjectMapper();
     private record Edit(int start, int end, String replacement) { }
 
@@ -226,7 +228,7 @@ public final class BridgeForgeTranslationApply {
             var remaining = new BridgeForgeTranslationService().export(target);
             int leftover = remaining.path("entry_count").asInt();
             for (JsonNode diagnostic : remaining.path("unreadable")) {
-                problems.add("Unreadable leftover-check input: " + diagnostic.asText());
+                problems.add(UNREADABLE_PROBLEM + diagnostic.asText());
             }
             ObjectNode report = JSON.createObjectNode().put("schema_version", 1).put("mode", "TRANSLATION_APPLY")
                     .put("target", target.toString()).put("entries", document.path("entries").size())

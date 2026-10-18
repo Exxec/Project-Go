@@ -18,6 +18,12 @@ final class BridgeForgeProjectAdapter {
         if (document == null) {
             throw new ProjectException("Missing persisted translation method snapshot");
         }
+        boolean acknowledged = document.path(LocalizationProjectService.UNREADABLE_ACKNOWLEDGED).asBoolean();
+        if (!document.path("unreadable").isEmpty() && !acknowledged) {
+            throw new ProjectException("Build refused: " + document.path("unreadable").size()
+                    + " input file(s) could not be read and the list is not acknowledged: "
+                    + document.path("unreadable"));
+        }
         Map<String, ProjectEntry> entries = new HashMap<>();
         for (ProjectEntry entry : project.entries()) {
             if (!entry.key().startsWith("bf:")) {
@@ -41,8 +47,15 @@ final class BridgeForgeProjectAdapter {
         try {
             Path clone = scratch.resolve("clone");
             var report = new BridgeForgeTranslationApply().apply(source, document, clone, false);
-            if (!report.path("problems").isEmpty()) {
-                throw new ProjectException("Translation method refused artifact: " + report.path("problems"));
+            // The acknowledged unreadable inputs also fail the clone's own leftover check; they are not new problems.
+            var problems = new java.util.ArrayList<String>();
+            report.path("problems").forEach(problem -> {
+                if (!problem.asText().startsWith(BridgeForgeTranslationApply.UNREADABLE_PROBLEM)) {
+                    problems.add(problem.asText());
+                }
+            });
+            if (!problems.isEmpty()) {
+                throw new ProjectException("Translation method refused artifact: " + problems);
             }
             List<PatchArtifact> result = new ArrayList<>();
             var files = document.path("file_hashes").fieldNames();

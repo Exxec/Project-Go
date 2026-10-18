@@ -62,15 +62,33 @@ public final class LocalizationProjectService {
     private final ClassFileInjector classInjector = new ClassFileInjector();
     private final PatchBuilder patchBuilder = new PatchBuilder();
 
+    /** Document field recording that the user accepted the listed unreadable inputs. */
+    public static final String UNREADABLE_ACKNOWLEDGED = "unreadable_acknowledged";
+
     /** Normal CJK workflows use the shared method; existing non-CJK extraction remains compatible. */
     public LocalizationProject createUsingBridgeForge(Path sourceRoot, String patchId, String patchName)
             throws ProjectException {
+        return createUsingBridgeForge(sourceRoot, patchId, patchName, false);
+    }
+
+    /**
+     * Creates the project from every readable file. Unreadable files no longer stop creation: each is listed with its
+     * parser error in the project's method document ({@code unreadable}). A build refuses until the list is
+     * acknowledged, which this overload does up front.
+     */
+    public LocalizationProject createUsingBridgeForge(Path sourceRoot, String patchId, String patchName,
+            boolean acknowledgeUnreadable) throws ProjectException {
         ObjectNode document = new BridgeForgeTranslationService().export(sourceRoot);
-        if (!document.path("unreadable").isEmpty()) {
-            throw new ProjectException("Translation discovery has unreadable inputs: " + document.path("unreadable"));
-        }
+        boolean unreadable = !document.path("unreadable").isEmpty();
         if (document.path("entries").isEmpty()) {
+            if (unreadable && !acknowledgeUnreadable) {
+                throw new ProjectException("Translation discovery has unreadable inputs and no readable text: "
+                        + document.path("unreadable") + " (acknowledge them to continue)");
+            }
             return create(sourceRoot, patchId, patchName);
+        }
+        if (unreadable && acknowledgeUnreadable) {
+            document.put(UNREADABLE_ACKNOWLEDGED, true);
         }
         List<ProjectEntry> entries = new ArrayList<>();
         for (JsonNode entry : document.path("entries")) {
@@ -79,6 +97,17 @@ public final class LocalizationProjectService {
         }
         return new LocalizationProject(LocalizationProject.CURRENT_SCHEMA_VERSION, document.path("mod_id").asText(),
                 patchId, patchName, entries, document);
+    }
+
+    /** Returns the project with its unreadable-input list acknowledged; a project without such a list is unchanged. */
+    public LocalizationProject acknowledgeUnreadable(LocalizationProject project) {
+        ObjectNode document = project.methodDocument();
+        if (document == null || document.path("unreadable").isEmpty()) {
+            return project;
+        }
+        document.put(UNREADABLE_ACKNOWLEDGED, true);
+        return new LocalizationProject(project.schemaVersion(), project.sourceModId(), project.patchId(),
+                project.patchName(), project.entries(), document);
     }
 
     /**
@@ -387,7 +416,8 @@ public final class LocalizationProjectService {
         }
         cancellation.throwIfCancellationRequested();
         LocalizationProject extracted = project.methodDocument() != null
-                ? createUsingBridgeForge(sourceRoot, project.patchId(), project.patchName())
+                ? createUsingBridgeForge(sourceRoot, project.patchId(), project.patchName(),
+                        project.methodDocument().path(UNREADABLE_ACKNOWLEDGED).asBoolean())
                 : create(
                         sourceRoot,
                         project.patchId(),

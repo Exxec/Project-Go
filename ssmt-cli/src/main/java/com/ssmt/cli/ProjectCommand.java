@@ -154,6 +154,11 @@ public final class ProjectCommand implements Runnable {
                 description = "Optional versioned custom CSV extraction schema.")
         private Optional<Path> csvSchema = Optional.empty();
 
+        @Option(
+                names = "--accept-unreadable",
+                description = "Accept the list of unreadable input files; a build refuses until it is accepted.")
+        private boolean acceptUnreadable;
+
         @Override
         public Integer call() {
             LocalizationProjectService service = new LocalizationProjectService();
@@ -161,10 +166,16 @@ public final class ProjectCommand implements Runnable {
                 LocalizationProject project = jsonSchema.isPresent() || csvSchema.isPresent()
                         ? service.createWithSchemas(
                                 source, patchId, patchName, jsonSchema, csvSchema)
-                        : service.createUsingBridgeForge(source, patchId, patchName);
+                        : service.createUsingBridgeForge(source, patchId, patchName, acceptUnreadable);
                 service.write(destination, project);
                 LOG.info("Created project with {} translation(s): {}",
                         project.entries().size(), destination);
+                if (project.methodDocument() != null && !project.methodDocument().path("unreadable").isEmpty()) {
+                    LOG.warn("PARTIAL: {} unreadable input file(s): {}{}",
+                            project.methodDocument().path("unreadable").size(),
+                            project.methodDocument().path("unreadable"),
+                            acceptUnreadable ? " (accepted)" : "; a build refuses until accepted");
+                }
                 return 0;
             } catch (ProjectException exception) {
                 LOG.error(CliDiagnostics.explain("Project creation", exception));

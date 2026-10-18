@@ -31,6 +31,9 @@ public final class BridgeForgeTranslationCommand implements Callable<Integer> {
     private Path out;
     @Option(names = "--in-place", description = "Apply only to the explicitly selected mod working copy.")
     private boolean inPlace;
+    @Option(names = "--accept-unreadable",
+            description = "check: do not fail only because some inputs were unreadable (they are still listed).")
+    private boolean acceptUnreadable;
     @Option(names = "--record", description = "Author zh/en record file or directory.")
     private List<Path> records = new java.util.ArrayList<>();
     @Option(names = "--reference", description = "English mod for prefill, or BridgeForge export JSON for compare.")
@@ -40,6 +43,9 @@ public final class BridgeForgeTranslationCommand implements Callable<Integer> {
         try {
             var exchange = new BridgeForgeTranslationDocument();
             var service = new BridgeForgeTranslationService();
+            if (acceptUnreadable && !action.equals("check")) {
+                throw new IllegalArgumentException("--accept-unreadable is only valid for check");
+            }
             if (!action.equals("apply") && inPlace) {
                 throw new IllegalArgumentException("--in-place is only valid for apply");
             }
@@ -88,7 +94,11 @@ public final class BridgeForgeTranslationCommand implements Callable<Integer> {
                     var result = service.export(source);
                     LOG.info("Leftover CJK units: {}; unreadable diagnostics: {}", result.path("entry_count"),
                             result.path("unreadable").size());
-                    return result.path("entry_count").asInt() == 0 && result.path("unreadable").isEmpty() ? 0 : 2;
+                    for (var diagnostic : result.path("unreadable")) {
+                        LOG.warn("Unreadable: {}", diagnostic.asText());
+                    }
+                    boolean unreadableOk = result.path("unreadable").isEmpty() || acceptUnreadable;
+                    return result.path("entry_count").asInt() == 0 && unreadableOk ? 0 : 2;
                 }
                 case "prefill" -> {
                     requireDocument();
