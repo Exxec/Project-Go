@@ -90,6 +90,10 @@ public final class BridgeForgeTranslationApply {
                     problems.add(id + ": placeholders differ");
                     continue;
                 }
+                if (!BridgeForgePlaceholders.optionsPreserved(entry.path("source").asText(), resolved)) {
+                    problems.add(id + ": option syntax differs (ids, order or | separators changed)");
+                    continue;
+                }
                 if (!resolved.equals(target)) {
                     reindexed.add(id);
                 }

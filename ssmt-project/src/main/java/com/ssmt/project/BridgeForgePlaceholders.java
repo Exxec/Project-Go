@@ -14,6 +14,30 @@ final class BridgeForgePlaceholders {
     private static final Pattern FORMAT = Pattern.compile("%(?:(\\d+)\\$)?[-#+0,(]*\\d*(?:\\.\\d+)?([sdfxXeEgGcbhno%])");
     private record Slot(int argument, String conversion, int start, int end, String token, boolean explicit) { }
 
+    private static final Pattern OPTION = Pattern.compile("^\\s*(\\$?[A-Za-z_][A-Za-z0-9_.]*)\\s*:.*$", Pattern.DOTALL);
+
+    /** Option ids of a {@code id:label|id:label} list, or null when the text is not option syntax. */
+    static List<String> optionIds(String text) {
+        if (text.indexOf('|') < 0) {
+            return null;
+        }
+        List<String> ids = new ArrayList<>();
+        for (String segment : text.split("\\|", -1)) {
+            var matcher = OPTION.matcher(segment);
+            if (!matcher.matches()) {
+                return null;
+            }
+            ids.add(matcher.group(1));
+        }
+        return ids;
+    }
+
+    /** True when a source in option syntax keeps the same ids, order and separators in its translation. */
+    static boolean optionsPreserved(String source, String target) {
+        List<String> expected = optionIds(source);
+        return expected == null || expected.equals(optionIds(target));
+    }
+
     static Map<String, Integer> tokens(String text) {
         Map<String, Integer> result = new HashMap<>();
         var matcher = Pattern.compile(FORMAT.pattern() + "|" + VARIABLE.pattern()).matcher(text);
