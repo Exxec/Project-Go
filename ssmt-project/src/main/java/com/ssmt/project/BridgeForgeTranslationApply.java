@@ -112,6 +112,14 @@ public final class BridgeForgeTranslationApply {
                     }
                     replacement = BridgeForgeJarRewrite.rewrite(original, classes);
                     applied.put("jar", applied.path("jar").asInt() + file.getValue().size());
+                } else if (BridgeForgeTranslationService.suffix(file.getKey()).equals("class")) {
+                    Map<Integer, String> literals = new HashMap<>();
+                    for (String id : file.getValue().keySet()) {
+                        literals.put(discovered.get(id).path("context").path("cp_index").asInt(),
+                                file.getValue().get(id));
+                    }
+                    replacement = BridgeForgeClassFile.rewrite(BridgeForgeTranslationService.readLimited(path), literals);
+                    applied.put("class", applied.path("class").asInt() + literals.size());
                 } else {
                     String text = BridgeForgeTranslationService.readText(path);
                     var units = BridgeForgeTranslationService.units(file.getKey(), text);

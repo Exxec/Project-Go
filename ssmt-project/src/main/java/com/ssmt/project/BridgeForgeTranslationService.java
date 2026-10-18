@@ -104,6 +104,19 @@ public final class BridgeForgeTranslationService {
                     } catch (IOException exception) {
                         unreadable.add(file + ": " + exception.getMessage());
                     }
+                } else if (suffix.equals("class")) {
+                    try {
+                        byte[] bytes = readLimited(path);
+                        for (var literal : new java.util.TreeMap<>(BridgeForgeClassFile.parse(bytes).literals()).entrySet()) {
+                            if (BridgeForgeTextUnits.cjk(literal.getValue())) {
+                                add(entries, "class:" + file + "#" + literal.getKey(), file, "class",
+                                        JSON.createObjectNode().put("cp_index", literal.getKey()), literal.getValue());
+                                sources.add(literal.getValue());
+                            }
+                        }
+                    } catch (IOException exception) {
+                        unreadable.add(file + ": " + exception.getMessage());
+                    }
                 } else if (covers(file) && !suffix.equals("jar")) {
                     try {
                         String text = readText(path);
@@ -139,7 +152,7 @@ public final class BridgeForgeTranslationService {
     /** True when the shared method reads this file kind (jar archives are further limited to the mod's jar list). */
     static boolean covers(String file) {
         String suffix = suffix(file);
-        return textLines(file) || suffix.equals("jar") || suffix.equals("csv") || suffix.equals("java") || JSON_SUFFIXES.contains(suffix);
+        return textLines(file) || suffix.equals("class") || suffix.equals("jar") || suffix.equals("csv") || suffix.equals("java") || JSON_SUFFIXES.contains(suffix);
     }
 
     /**
@@ -170,6 +183,14 @@ public final class BridgeForgeTranslationService {
             case "txt" -> BridgeForgeTextUnits.textLines(file, text);
             default -> BridgeForgeTextUnits.json(file, text);
         };
+    }
+
+    /** Reads a loose class file under the same size cap as jar entries. */
+    static byte[] readLimited(Path path) throws IOException {
+        if (Files.size(path) > MAX_TEXT_BYTES) {
+            throw new IOException("Class exceeds size limit");
+        }
+        return Files.readAllBytes(path);
     }
 
     static String readText(Path path) throws IOException {
