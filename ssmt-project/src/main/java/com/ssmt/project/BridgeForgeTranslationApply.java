@@ -63,6 +63,7 @@ public final class BridgeForgeTranslationApply {
             for (JsonNode entry : current.path("entries")) {
                 discovered.put(entry.path("id").asText(), entry);
             }
+            var roles = UnitRoleClassifier.withDefaultRules().classify(current);
             Map<String, Map<String, String>> byFile = new LinkedHashMap<>();
             var problems = JSON.createArrayNode();
             var reindexed = JSON.createArrayNode();
@@ -85,6 +86,10 @@ public final class BridgeForgeTranslationApply {
                 if (target.isEmpty()) {
                     continue;
                 }
+                if (roles.role(id) == UnitRoleClassifier.Role.IDENTIFIER) {
+                    problems.add(id + ": protected identifier is not translated (" + roles.rules().get(id) + ")");
+                    continue;
+                }
                 String resolved = BridgeForgePlaceholders.resolve(entry.path("source").asText(), target);
                 if (resolved == null) {
                     problems.add(id + ": placeholders differ");
@@ -99,6 +104,7 @@ public final class BridgeForgeTranslationApply {
                 }
                 byFile.computeIfAbsent(entry.path("file").asText(), ignored -> new LinkedHashMap<>()).put(id, resolved);
             }
+            LinkedGroupEnforcer.enforce(roles, discovered, byFile, problems);
             Map<Path, byte[]> originals = new LinkedHashMap<>();
             Map<Path, byte[]> rewritten = new LinkedHashMap<>();
             ObjectNode applied = JSON.createObjectNode();
@@ -259,7 +265,8 @@ public final class BridgeForgeTranslationApply {
                 report.put("snapshot", snapshotStamp);
             }
             var leftoverItems = LeftoverClassifier.classify(target, remaining, document,
-                    java.util.stream.StreamSupport.stream(problems.spliterator(), false).map(JsonNode::asText).toList());
+                    java.util.stream.StreamSupport.stream(problems.spliterator(), false).map(JsonNode::asText).toList(),
+                    UnitRoleClassifier.withDefaultRules().protectedUnitKeys(current));
             if (leftoverItems.path("total").asInt() > 0) {
                 report.set("leftover", leftoverItems);
             }

@@ -78,7 +78,7 @@ public final class LocalizationProjectService {
      */
     public LocalizationProject createUsingBridgeForge(Path sourceRoot, String patchId, String patchName,
             boolean acknowledgeUnreadable) throws ProjectException {
-        ObjectNode document = new BridgeForgeTranslationService().export(sourceRoot);
+        ObjectNode document = new BridgeForgeTranslationService().exportWithRoles(sourceRoot);
         boolean unreadable = !document.path("unreadable").isEmpty();
         if (document.path("entries").isEmpty()) {
             if (unreadable && !acknowledgeUnreadable) {
@@ -92,6 +92,9 @@ public final class LocalizationProjectService {
         }
         List<ProjectEntry> entries = new ArrayList<>();
         for (JsonNode entry : document.path("entries")) {
+            if (entry.path("role").asText().equals("IDENTIFIER")) {
+                continue; // protected identifiers are never offered for translation
+            }
             entries.add(new ProjectEntry(Path.of(entry.path("file").asText()),
                     "bf:" + entry.path("id").asText(), entry.path("source").asText(), ""));
         }

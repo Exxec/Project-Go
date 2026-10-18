@@ -23,7 +23,7 @@ import java.util.TreeMap;
  * Gives every leftover CJK item of a mod a reason, so nobody triages by hand:
  * {@code UNSUPPORTED_TYPE} (a text file kind the method does not cover), {@code UNREADABLE},
  * {@code UNTRANSLATED} (no translation supplied) and {@code REJECTED} (apply refused the supplied translation).
- * {@code PROTECTED_IDENTIFIER} is reserved for the identifier classifier (plan G2) and is not produced yet.
+ * {@code PROTECTED_IDENTIFIER} marks a unit the unit-role rules classify as an identifier or lookup key.
  */
 public final class LeftoverClassifier {
     /** Reason codes, in report order. */
@@ -49,10 +49,24 @@ public final class LeftoverClassifier {
      */
     public static ObjectNode classify(Path mod, JsonNode remaining, JsonNode document, List<String> problems)
             throws IOException {
+        return classify(mod, remaining, document, problems,
+                UnitRoleClassifier.withDefaultRules().protectedUnitKeys(remaining));
+    }
+
+    /**
+     * Same, with the protected identifiers decided by the caller (an apply classifies the original source, whose
+     * link evidence the partly translated output no longer has).
+     *
+     * @param protectedUnits {@link UnitRoleClassifier#unitKey} of every identifier unit
+     */
+    public static ObjectNode classify(Path mod, JsonNode remaining, JsonNode document, List<String> problems,
+            Set<String> protectedUnits) throws IOException {
         Map<String, JsonNode> supplied = new TreeMap<>();
+        Map<String, JsonNode> suppliedByUnit = new TreeMap<>();
         if (document != null) {
             for (JsonNode entry : document.path("entries")) {
                 supplied.put(entry.path("id").asText(), entry);
+                suppliedByUnit.putIfAbsent(UnitRoleClassifier.unitKey(entry), entry);
             }
         }
         Set<String> rejected = new HashSet<>();
@@ -65,7 +79,15 @@ public final class LeftoverClassifier {
         ArrayNode items = JSON.createArrayNode();
         for (JsonNode unit : remaining.path("entries")) {
             String id = unit.path("id").asText();
+            if (protectedUnits.contains(UnitRoleClassifier.unitKey(unit))) {
+                add(items, unit.path("file").asText(), id, "PROTECTED_IDENTIFIER",
+                        "identifier or lookup key: never translated");
+                continue;
+            }
             JsonNode given = supplied.get(id);
+            if (given == null || !given.path("source").asText().equals(unit.path("source").asText())) {
+                given = suppliedByUnit.get(UnitRoleClassifier.unitKey(unit));
+            }
             String translation = given == null ? "" : given.path("translation").asText();
             boolean refused = rejected.contains(id) || !translation.isEmpty() && !BridgeForgeTextUnits.cjk(translation);
             String detail = refused ? "translation supplied but not applied" : "no translation supplied";

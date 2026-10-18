@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "rules_version": "2026-10-18.1",
+  "comment": "Data rules for UnitRoleClassifier. Patterns are full-match and case-insensitive. IDENTIFIER units are never translated. A unit whose value is also used as a map key or in code is LINKED and is translated together with every unit sharing that value, or not at all. linkable marks identifiers that become LINKED when a key or code literal uses the same value.",
+  "csv_columns": [
+    {"id": "csv-id", "pattern": "id", "linkable": false},
+    {"id": "csv-suffix-id", "pattern": ".*_id", "linkable": false},
+    {"id": "csv-tags", "pattern": "tags", "linkable": false},
+    {"id": "csv-hints", "pattern": "hints", "linkable": false},
+    {"id": "csv-groupTag", "pattern": "groupTag", "linkable": true},
+    {"id": "csv-designType", "pattern": "design ?type", "linkable": true}
+  ],
+  "json_fields": [
+    {"id": "json-id", "pattern": "id"},
+    {"id": "json-suffix-Id", "pattern": ".*Id"},
+    {"id": "json-tags", "pattern": "tags"}
+  ],
+  "bare_json_keys": "UNKNOWN",
+  "bare_json_keys_comment": "UNKNOWN keeps the shared-method behaviour (keys are translated after review; BridgeForge conformance). Set to IDENTIFIER to protect every key that no value or code literal uses.",
+  "values_are_ids": true
+}

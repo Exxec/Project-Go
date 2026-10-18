@@ -39,13 +39,14 @@ public record WorkflowReview(List<Finding> findings) {
         return new WorkflowReview(findings);
     }
 
-    /** Object keys remain role-unknown until candidate-specific evidence establishes their use. */
+    /** Object keys no other value or code literal uses remain role-unknown until a reviewer decides. */
     public static List<Finding> jsonKeys(LocalizationProject project) {
         var document = project.methodDocument();
         if (document == null) { return List.of(); }
         var findings = new ArrayList<Finding>();
         for (var unit : document.path("entries")) {
-            if (unit.path("kind").asText().equals("json-key")) {
+            String role = unit.path("role").asText("UNKNOWN");
+            if (unit.path("kind").asText().equals("json-key") && role.equals("UNKNOWN")) {
                 findings.add(new Finding(unit.path("file").asText(), "bf:" + unit.path("id").asText(),
                         "JSON key role UNKNOWN: verify displayed label versus lookup identifier before use",
                         unit.path("source").asText(), "", ""));

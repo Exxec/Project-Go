@@ -142,6 +142,11 @@ public final class BridgeForgeTranslationService {
         }
     }
 
+    /** The shared-method export plus the unit-role fields ({@code role}, {@code group}) of non-text units. */
+    public ObjectNode exportWithRoles(Path source) throws ProjectException {
+        return UnitRoleClassifier.withDefaultRules().annotate(export(source));
+    }
+
     private static void add(com.fasterxml.jackson.databind.node.ArrayNode entries, String id,
             String file, String kind, ObjectNode context, String source) {
         ObjectNode entry = entries.addObject().put("id", id).put("file", file).put("kind", kind)

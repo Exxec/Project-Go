@@ -68,7 +68,8 @@ class WorkflowEnhancementsTest {
         Path source = Path.of("../fixtures/translation-conformance/input");
         var project = new LocalizationProjectService().createUsingBridgeForge(source, "translated", "Translated");
         var before = project.methodDocument();
-        assertThat(WorkflowReview.jsonKeys(project)).hasSize(2)
+        // One of the two keys repeats a value ("中文厂商"), so it is LINKED with it; only the bare key stays UNKNOWN.
+        assertThat(WorkflowReview.jsonKeys(project)).hasSize(1)
                 .allMatch(finding -> finding.reason().contains("role UNKNOWN"));
         assertThat(project.methodDocument()).isEqualTo(before);
     }

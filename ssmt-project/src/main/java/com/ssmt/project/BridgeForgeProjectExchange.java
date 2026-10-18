@@ -23,8 +23,10 @@ final class BridgeForgeProjectExchange {
             if (original == null) {
                 throw new ProjectException("Export contains an unknown method identity");
             }
-            for (String field : java.util.Set.of("file", "kind", "context")) {
-                entry.set(field, original.path(field).deepCopy());
+            for (String field : java.util.Set.of("file", "kind", "context", "role", "role_rule", "group")) {
+                if (original.has(field)) {
+                    entry.set(field, original.path(field).deepCopy());
+                }
             }
         }
         root.put("entry_count", root.path("entries").size());
@@ -63,6 +65,7 @@ final class BridgeForgeProjectExchange {
                 entry.remove("provenance");
             }
         }
+        linkedGroups(normalized, originals);
         if (!nativeResponse) {
             normalized.put("schemaVersion", 1).put("sourceModId", project.sourceModId())
                     .put("sourceLanguage", normalized.path("source_language").asText())
@@ -70,6 +73,38 @@ final class BridgeForgeProjectExchange {
                     .put("originalModName", project.patchName()).put("entryCount", normalized.path("entries").size());
         }
         return normalized;
+    }
+
+    /** Linked units are translated together or not at all: one text per group, no two groups with the same text. */
+    private static void linkedGroups(ObjectNode response, Map<String, JsonNode> originals) throws ProjectException {
+        Map<String, java.util.List<ObjectNode>> groups = new java.util.TreeMap<>();
+        for (JsonNode node : response.path("entries")) {
+            String group = originals.get(node.path("id").asText()).path("group").asText("");
+            if (!group.isEmpty()) {
+                groups.computeIfAbsent(group, ignored -> new java.util.ArrayList<>()).add((ObjectNode) node);
+            }
+        }
+        Map<String, String> textOwner = new HashMap<>();
+        for (var group : groups.entrySet()) {
+            java.util.Set<String> texts = new java.util.LinkedHashSet<>();
+            group.getValue().stream().map(entry -> entry.path("translation").asText())
+                    .filter(text -> !text.isEmpty()).forEach(texts::add);
+            if (texts.size() > 1) {
+                throw new ProjectException("Linked units " + group.getKey() + " ("
+                        + group.getValue().getFirst().path("source").asText()
+                        + ") must share one translation but received " + texts);
+            }
+            if (texts.isEmpty()) {
+                continue;
+            }
+            String text = texts.iterator().next();
+            String previous = textOwner.putIfAbsent(text, group.getKey());
+            if (previous != null) {
+                throw new ProjectException("Linked groups " + previous + " and " + group.getKey()
+                        + " would both become '" + text + "' and collide");
+            }
+            group.getValue().forEach(entry -> entry.put("translation", text));
+        }
     }
 
     private static Map<String, JsonNode> originals(ObjectNode document) {

@@ -34,6 +34,9 @@ final class BridgeForgeProjectAdapter {
         for (JsonNode node : document.path("entries")) {
             ObjectNode unit = (ObjectNode) node;
             ProjectEntry entry = entries.remove(unit.path("id").asText());
+            if (entry == null && unit.path("role").asText().equals("IDENTIFIER")) {
+                continue;
+            }
             if (entry == null || !entry.originalText().equals(unit.path("source").asText())
                     || !entry.sourceFile().toString().replace('\\', '/').equals(unit.path("file").asText())) {
                 throw new ProjectException("Project differs from protected method snapshot");
