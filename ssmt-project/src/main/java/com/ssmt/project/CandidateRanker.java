@@ -35,7 +35,11 @@ public final class CandidateRanker {
      *
      * @param breakdown the weighted contribution of each measured feature
      */
-    public record Ranked(String text, String origin, double score, Map<String, Double> breakdown) { }
+    public record Ranked(String text, String origin, double score, Map<String, Double> breakdown) {
+        public Ranked {
+            breakdown = java.util.Collections.unmodifiableMap(new LinkedHashMap<>(breakdown));
+        }
+    }
 
     private static final ObjectMapper JSON = new ObjectMapper();
     private final Map<String, Double> weights = new LinkedHashMap<>();

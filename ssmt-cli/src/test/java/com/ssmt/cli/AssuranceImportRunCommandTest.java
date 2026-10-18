@@ -28,7 +28,7 @@ class AssuranceImportRunCommandTest {
         Path candidate = Files.createDirectory(root.resolve("candidate"));
         Files.writeString(candidate.resolve("mod_info.json"), "{\"id\":\"cli\",\"name\":\"Cli\",\"version\":\"1\"}");
         Path matching = root.resolve("_live/CLI-1.json");
-        Files.createDirectories(matching.getParent());
+        Files.createDirectories(java.util.Objects.requireNonNull(matching.getParent()));
         Files.writeString(matching, record(BridgeForgeShippedHash.of(candidate)));
         Path ledger = root.resolve("out/ledger.json");
         var command = new CommandLine(new Main());

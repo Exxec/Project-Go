@@ -47,7 +47,7 @@ class RunRecordImportTest {
 
     private Path write(ObjectNode record) throws IOException {
         Path file = temporary.resolve("_live/" + record.path("test_id").asText("x") + ".json");
-        Files.createDirectories(file.getParent());
+        Files.createDirectories(java.util.Objects.requireNonNull(file.getParent()));
         JSON.writerWithDefaultPrettyPrinter().writeValue(file.toFile(), record);
         return file;
     }

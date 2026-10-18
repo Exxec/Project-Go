@@ -57,7 +57,7 @@ final class TranslationWorkflowPane extends VBox {
     private Path attemptedInput;
     private String lastOperation = "Workflow status";
     private String lastDiagnostic = "No failure recorded in this session.";
-    private boolean busy;
+    private volatile boolean busy;
     private final java.util.concurrent.atomic.AtomicBoolean cancelRequested = new java.util.concurrent.atomic.AtomicBoolean();
     private final java.util.concurrent.atomic.AtomicBoolean cancellable = new java.util.concurrent.atomic.AtomicBoolean();
     private final Button cancel = new Button(GuiText.get("normal.cancel"));

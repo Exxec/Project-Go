@@ -103,7 +103,7 @@ class AiRoundTripAutoTest {
         assertThat(result.status()).isEqualTo(AutoRunResult.Status.MASTER_LIBRARY_NEEDED);
         assertThat(Files.readString(result.workspace().resolve("ai-review.json"))).contains("equals the source").contains("\"approved_by_rules\" : 41");
         try (var paths = Files.list(temporary)) {
-            assertThat(paths.filter(path -> path.getFileName().toString().endsWith("Translate to English.json")))
+            assertThat(paths.filter(path -> String.valueOf(path.getFileName()).endsWith("Translate to English.json")))
                     .hasSize(1);
         }
     }

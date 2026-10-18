@@ -36,7 +36,15 @@ public final class CandidateArchiveAudit {
      */
     public record Result(String candidateSha256, AssuranceSummary.Disposition packageIdentity,
             AssuranceSummary.Disposition staticValidation, String packageReason, String staticReason,
-            ObjectNode evidence) { }
+            ObjectNode evidence) {
+        public Result {
+            evidence = evidence.deepCopy();
+        }
+
+        @Override public ObjectNode evidence() {
+            return evidence.deepCopy();
+        }
+    }
 
     /**
      * Audits one candidate archive.

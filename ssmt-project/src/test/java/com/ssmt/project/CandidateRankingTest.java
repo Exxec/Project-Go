@@ -142,12 +142,12 @@ class CandidateRankingTest {
         Files.writeString(mod.resolve("data/ships.csv"),
                 "id,name\na,前面\nb,统帅\nc,后面\n");
         Path records = temporary.resolve("records/ships.json");
-        Files.createDirectories(records.getParent());
+        Files.createDirectories(java.util.Objects.requireNonNull(records.getParent()));
         Files.writeString(records, "[{\"zh\":\"前面\",\"en\":\"Before\"},{\"zh\":\"统帅\",\"en\":\"Commander\"},"
                 + "{\"zh\":\"后面\",\"en\":\"After\"},{\"zh\":\"其他\",\"en\":\"Other\"},"
                 + "{\"zh\":\"统帅\",\"en\":\"Marshal\"},{\"zh\":\"别处\",\"en\":\"Elsewhere\"}]");
         ObjectNode document = new BridgeForgeTranslationService().export(mod);
-        var result = new BridgeForgeTranslationPrefill().records(document, List.of(records.getParent()));
+        var result = new BridgeForgeTranslationPrefill().records(document, List.of(java.util.Objects.requireNonNull(records.getParent())));
         assertThat(result.path("ambiguous").asInt()).isEqualTo(1);
         assertThat(result.path("ranked_applied").asInt()).isEqualTo(1);
         var commander = java.util.stream.StreamSupport.stream(document.path("entries").spliterator(), false)

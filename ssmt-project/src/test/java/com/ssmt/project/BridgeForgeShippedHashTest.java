@@ -38,7 +38,7 @@ class BridgeForgeShippedHashTest {
         files.put("Thumbs.db", "root junk");
         for (var file : files.entrySet()) {
             Path path = root.resolve(file.getKey());
-            Files.createDirectories(path.getParent());
+            Files.createDirectories(java.util.Objects.requireNonNull(path.getParent()));
             Files.write(path, file.getValue().getBytes(StandardCharsets.UTF_8));
         }
         return root;

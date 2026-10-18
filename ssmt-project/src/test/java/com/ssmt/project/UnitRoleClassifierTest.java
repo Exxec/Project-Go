@@ -26,7 +26,7 @@ class UnitRoleClassifierTest {
     }
 
     private static void write(Path mod, String file, String text) throws IOException {
-        Files.createDirectories(mod.resolve(file).getParent());
+        Files.createDirectories(java.util.Objects.requireNonNull(mod.resolve(file).getParent()));
         Files.writeString(mod.resolve(file), text);
     }
 

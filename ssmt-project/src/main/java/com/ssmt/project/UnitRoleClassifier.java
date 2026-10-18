@@ -40,6 +40,12 @@ public final class UnitRoleClassifier {
      */
     public record Result(Map<String, Role> roles, Map<String, String> groups, Map<String, String> rules,
             String rulesVersion) {
+        public Result {
+            roles = Map.copyOf(roles);
+            groups = Map.copyOf(groups);
+            rules = Map.copyOf(rules);
+        }
+
         public Role role(String id) {
             return roles.getOrDefault(id, Role.TEXT);
         }

@@ -61,7 +61,7 @@ public final class BridgeForgeShippedHash {
                     .sorted().toList();
         }
         for (Path directory : topDirectories) {
-            String name = directory.getFileName().toString();
+            String name = String.valueOf(directory.getFileName());
             String lower = name.toLowerCase(Locale.ROOT);
             boolean included = INCLUDED_DIRS.contains(lower);
             if (!included && (name.startsWith(".") || EXCLUDED_TOP_DIRS.contains(lower) || matches(EXCLUDED_DIR_GLOBS, name))) {
@@ -78,8 +78,8 @@ public final class BridgeForgeShippedHash {
         }
         try (Stream<Path> children = Files.list(root)) {
             for (Path item : children.filter(path -> Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)).toList()) {
-                if (!excluded(item.getFileName().toString())) {
-                    files.put(item.getFileName().toString(), item);
+                if (!excluded(String.valueOf(item.getFileName()))) {
+                    files.put(String.valueOf(item.getFileName()), item);
                 }
             }
         }

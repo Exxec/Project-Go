@@ -36,7 +36,11 @@ public final class MemoryMatchSuggester {
      * @param note why it was or was not applied
      */
     public record Suggestion(String sourceFile, String key, String source, String text, double score,
-            boolean exactSource, Map<String, Double> breakdown, boolean applied, String note) { }
+            boolean exactSource, Map<String, Double> breakdown, boolean applied, String note) {
+        public Suggestion {
+            breakdown = java.util.Collections.unmodifiableMap(new LinkedHashMap<>(breakdown));
+        }
+    }
 
     private static final Set<TranslationProvenance> TRUSTED = Set.of(TranslationProvenance.HUMAN_EDITED,
             TranslationProvenance.AUTHOR_LOCALIZATION, TranslationProvenance.MANUAL_IMPORT);

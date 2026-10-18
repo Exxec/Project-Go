@@ -135,7 +135,7 @@ class GuiChecklistTest {
 
         /** Exports the request, fills every translation with English text, saves it under an unrelated name. */
         Path answeredRequest(String fileName) throws Exception {
-            Path request = source.getParent().resolve("request.json");
+            Path request = java.util.Objects.requireNonNull(source.getParent()).resolve("request.json");
             onFx(() -> {
                 pane.exportRequestFile(request);
                 return null;
@@ -146,7 +146,7 @@ class GuiChecklistTest {
             for (var entry : document.path("entries")) {
                 ((ObjectNode) entry).put("translation", "English text " + (++number));
             }
-            Path answer = source.getParent().resolve(fileName);
+            Path answer = java.util.Objects.requireNonNull(source.getParent()).resolve(fileName);
             JSON.writeValue(answer.toFile(), document);
             return answer;
         }
@@ -210,7 +210,7 @@ class GuiChecklistTest {
             first.drop(first.source);
             shots.add(first.shot("drop-folder"));
             boolean folder = first.controller.session().orElseThrow().modName().equals("Checklist Mod");
-            Path archive = first.source.getParent().resolve("Checklist Mod.zip");
+            Path archive = java.util.Objects.requireNonNull(first.source.getParent()).resolve("Checklist Mod.zip");
             zip(first.source, archive);
             first.drop(archive);
             shots.add(first.shot("drop-zip"));
@@ -232,7 +232,7 @@ class GuiChecklistTest {
         try {
             unicode.drop(unicode.source);
             String shot = unicode.shot("unicode-folder");
-            boolean exact = unicode.controller.session().orElseThrow().source().getFileName().toString()
+            boolean exact = String.valueOf(unicode.controller.session().orElseThrow().source().getFileName())
                     .equals(unicodeName);
             row("Unicode chooser/drop", "Exact selected source loads without an ASCII copy.",
                     verdict(exact, failures, "unicode source name"), List.of(shot),
@@ -255,7 +255,7 @@ class GuiChecklistTest {
                     "every entry translated: " + translated);
 
             var active = response.controller.session().orElseThrow();
-            Path broken = response.source.getParent().resolve("broken.json");
+            Path broken = java.util.Objects.requireNonNull(response.source.getParent()).resolve("broken.json");
             Files.writeString(broken, "{ not json", StandardCharsets.UTF_8);
             boolean refused = false;
             try {

@@ -21,7 +21,7 @@ class RankedMatchAutoTest {
         Files.writeString(source.resolve("mod_info.json"), "{\"id\":\"rk\",\"name\":\"Rk\",\"version\":\"1\"}");
         Files.writeString(source.resolve("data/ships.csv"), "id,name\nship1," + SOURCE + "\n");
         Path catalog = temporary.resolve("internal/catalog.db");
-        Files.createDirectories(catalog.getParent());
+        Files.createDirectories(java.util.Objects.requireNonNull(catalog.getParent()));
         try (var memory = SqliteTranslationMemory.open(catalog)) {
             memory.upsertAll(List.of(
                     new TranslationDraft(SOURCE, "zh", "en", "Advanced armor",

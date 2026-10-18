@@ -48,7 +48,22 @@ public final class RunRecordImport {
      * @param recordFile ledger-relative name of the verbatim record copy the capture lists as its log
      */
     public record Imported(String candidateSha256, List<AssuranceSummary.Result> results, String profileFile,
-            byte[] profileBytes, String recordFile, byte[] recordBytes, List<String> notes) { }
+            byte[] profileBytes, String recordFile, byte[] recordBytes, List<String> notes) {
+        public Imported {
+            results = List.copyOf(results);
+            notes = List.copyOf(notes);
+            profileBytes = profileBytes == null ? null : profileBytes.clone();
+            recordBytes = recordBytes == null ? null : recordBytes.clone();
+        }
+
+        @Override public byte[] profileBytes() {
+            return profileBytes == null ? null : profileBytes.clone();
+        }
+
+        @Override public byte[] recordBytes() {
+            return recordBytes == null ? null : recordBytes.clone();
+        }
+    }
 
     /** Reads the record and decides the three gates for the candidate directory. */
     public Imported read(Path record, Path candidate) throws ProjectException {

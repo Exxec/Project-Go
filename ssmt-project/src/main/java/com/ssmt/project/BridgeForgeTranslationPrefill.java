@@ -51,7 +51,7 @@ public final class BridgeForgeTranslationPrefill {
                                         .add(target.asText());
                                 seen.computeIfAbsent(item.path("zh").asText(), ignored -> new HashMap<>())
                                         .computeIfAbsent(target.asText(), ignored -> new java.util.ArrayList<>())
-                                        .add(new Occurrence(file.getFileName().toString(),
+                                        .add(new Occurrence(String.valueOf(file.getFileName()),
                                                 index > 0 ? items.get(index - 1).path("zh").asText("") : "",
                                                 index + 1 < items.size()
                                                         ? items.get(index + 1).path("zh").asText("") : ""));

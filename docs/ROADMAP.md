@@ -660,7 +660,7 @@ Source: BridgeForge `ROADMAP.md` item 70, `docs/HARDENING_PLAN.md`, `docs/RC8_BE
 - **Long runs** should print one progress line per item, offer `--quiet`, and resume from a checkpoint (BridgeForge rule since 2026-09-27); `translate-batch` should follow it.
 - **Conformance fixtures keep their own line endings.** BridgeForge's LF policy exempts `fixtures/translation-conformance` through its own attributes; do the same here so the golden files do not change.
 
-## Automation plan (2026-10-14; in progress on branch `automation-plan`)
+## Automation plan (2026-10-14; implemented on branch `automation-plan`, 2026-10-18)
 
 Owner request 2026-10-14: further automation, fixes, checks and less hand work, written so any AI can implement it. Spec:
 `docs/AUTOMATION_PLAN.md`. Phases: G0 atomic in-place apply with a pre-apply snapshot and restore, the stale ASCII/`JAVA_HOME`
