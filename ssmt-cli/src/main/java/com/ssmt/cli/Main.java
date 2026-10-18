@@ -19,6 +19,7 @@ import picocli.CommandLine.IVersionProvider;
             ScanCommand.class,
             AssessCommand.class,
             AssuranceCommand.class,
+            AuditCandidateCommand.class,
             RuntimeEvidenceCommand.class,
             BuildEvidenceCommand.class,
             AttemptFeedbackCommand.class,
