@@ -144,7 +144,26 @@ public final class BridgeForgeTranslationService {
 
     /** The shared-method export plus the unit-role fields ({@code role}, {@code group}) of non-text units. */
     public ObjectNode exportWithRoles(Path source) throws ProjectException {
-        return UnitRoleClassifier.withDefaultRules().annotate(export(source));
+        ObjectNode document = export(source);
+        return UnitRoleClassifier.withDefaultRules().annotate(document, callEvidence(source, document));
+    }
+
+    /** Lookup-only class literals proven by call sites; empty when the mod has no CJK class literal. */
+    static java.util.Map<String, String> callEvidence(Path source, ObjectNode document) throws ProjectException {
+        boolean classes = false;
+        for (var entry : document.path("entries")) {
+            String kind = entry.path("kind").asText();
+            classes |= kind.equals("jar") || kind.equals("class");
+        }
+        if (!classes) {
+            return java.util.Map.of();
+        }
+        try {
+            var audit = BytecodeCallSites.withDefaultRules();
+            return audit.protectedLiterals(audit.scan(source.toRealPath(), new java.util.ArrayList<>()));
+        } catch (IOException exception) {
+            throw new ProjectException("Could not audit bytecode call sites: " + exception.getMessage(), exception);
+        }
     }
 
     private static void add(com.fasterxml.jackson.databind.node.ArrayNode entries, String id,

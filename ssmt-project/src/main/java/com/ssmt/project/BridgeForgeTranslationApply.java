@@ -63,7 +63,8 @@ public final class BridgeForgeTranslationApply {
             for (JsonNode entry : current.path("entries")) {
                 discovered.put(entry.path("id").asText(), entry);
             }
-            var roles = UnitRoleClassifier.withDefaultRules().classify(current);
+            var callEvidence = BridgeForgeTranslationService.callEvidence(root, current);
+            var roles = UnitRoleClassifier.withDefaultRules().classify(current, callEvidence);
             Map<String, Map<String, String>> byFile = new LinkedHashMap<>();
             var problems = JSON.createArrayNode();
             var reindexed = JSON.createArrayNode();
@@ -266,7 +267,7 @@ public final class BridgeForgeTranslationApply {
             }
             var leftoverItems = LeftoverClassifier.classify(target, remaining, document,
                     java.util.stream.StreamSupport.stream(problems.spliterator(), false).map(JsonNode::asText).toList(),
-                    UnitRoleClassifier.withDefaultRules().protectedUnitKeys(current));
+                    UnitRoleClassifier.withDefaultRules().protectedUnitKeys(current, callEvidence));
             if (leftoverItems.path("total").asInt() > 0) {
                 report.set("leftover", leftoverItems);
             }

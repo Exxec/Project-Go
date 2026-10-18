@@ -19,7 +19,7 @@ import picocli.CommandLine.Parameters;
         description = "BridgeForge-compatible export, import, apply, prefill, or leftover check.")
 public final class BridgeForgeTranslationCommand implements Callable<Integer> {
     private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(BridgeForgeTranslationCommand.class);
-    @Parameters(index = "0", description = "Operation: export, import, apply, check, prefill, compare, restore.")
+    @Parameters(index = "0", description = "Operation: export, import, apply, check, prefill, compare, restore, bytecode-audit.")
     private String action;
     @Parameters(index = "1", description = "Source mod working copy (or JSON document for import).")
     private Path source;
@@ -34,7 +34,7 @@ public final class BridgeForgeTranslationCommand implements Callable<Integer> {
     @Option(names = "--accept-unreadable",
             description = "check: do not fail only because some inputs were unreadable (they are still listed).")
     private boolean acceptUnreadable;
-    @Option(names = "--json", description = "check: write the leftover report with a reason per item to this file.")
+    @Option(names = "--json", description = "check or bytecode-audit: write the JSON report to this file.")
     private Path jsonReport;
     @Option(names = "--record", description = "Author zh/en record file or directory.")
     private List<Path> records = new java.util.ArrayList<>();
@@ -45,8 +45,9 @@ public final class BridgeForgeTranslationCommand implements Callable<Integer> {
         try {
             var exchange = new BridgeForgeTranslationDocument();
             var service = new BridgeForgeTranslationService();
-            if ((acceptUnreadable || jsonReport != null) && !action.equals("check")) {
-                throw new IllegalArgumentException("--accept-unreadable and --json are only valid for check");
+            if (acceptUnreadable && !action.equals("check")
+                    || jsonReport != null && !action.equals("check") && !action.equals("bytecode-audit")) {
+                throw new IllegalArgumentException("--accept-unreadable is only valid for check, --json for check and bytecode-audit");
             }
             if (!action.equals("apply") && inPlace) {
                 throw new IllegalArgumentException("--in-place is only valid for apply");
@@ -83,6 +84,23 @@ public final class BridgeForgeTranslationCommand implements Callable<Integer> {
                     var result = new BridgeForgeTranslationApply().apply(source, exchange.read(document), out, inPlace);
                     LOG.info("{}", result);
                     return result.path("status").asText().equals("OK") ? 0 : 2;
+                }
+                case "bytecode-audit" -> {
+                    requireOut();
+                    var audit = com.ssmt.project.BytecodeCallSites.withDefaultRules();
+                    var unreadable = new java.util.ArrayList<String>();
+                    var sites = audit.scan(source.toRealPath(), unreadable);
+                    java.nio.file.Files.writeString(out, com.ssmt.project.BytecodeCallSites.proposal(sites),
+                            java.nio.charset.StandardCharsets.UTF_8, java.nio.file.StandardOpenOption.CREATE_NEW);
+                    long text = sites.stream().filter(site -> site.verdict()
+                            == com.ssmt.project.BytecodeCallSites.Verdict.TEXT).count();
+                    LOG.info("Bytecode audit: {} CJK literal(s), {} proposed as shown text (REVIEW before use), "
+                            + "{} unreadable class(es): {}", sites.size(), text, unreadable.size(), out);
+                    if (jsonReport != null) {
+                        new com.fasterxml.jackson.databind.ObjectMapper().writerWithDefaultPrettyPrinter()
+                                .writeValue(jsonReport.toFile(), java.util.Map.of("schema_version", 1,
+                                        "mode", "BYTECODE_AUDIT", "sites", sites, "unreadable", unreadable));
+                    }
                 }
                 case "restore" -> {
                     if (snapshot == null) {
@@ -122,7 +140,7 @@ public final class BridgeForgeTranslationCommand implements Callable<Integer> {
                     }
                     exchange.write(out, value);
                 }
-                default -> throw new IllegalArgumentException("Operation must be export, import, apply, check, prefill, compare, or restore");
+                default -> throw new IllegalArgumentException("Operation must be export, import, apply, check, prefill, compare, restore, or bytecode-audit");
             }
             return 0;
         } catch (ProjectException | IllegalArgumentException | java.io.IOException exception) {

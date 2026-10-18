@@ -95,9 +95,19 @@ public final class UnitRoleClassifier {
 
     /** Classifies every entry of a schema-v1 export. */
     public Result classify(JsonNode document) {
+        return classify(document, Map.of());
+    }
+
+    /**
+     * Classifies with bytecode call-site evidence.
+     *
+     * @param protectedLiterals {@code file|class|text} of every class literal that only lookups use (see
+     *     {@link BytecodeCallSites#protectedLiterals}) to the id of the deciding rule
+     */
+    public Result classify(JsonNode document, Map<String, String> protectedLiterals) {
         List<Cell> cells = new ArrayList<>();
         for (JsonNode entry : document.path("entries")) {
-            cells.add(base(entry));
+            cells.add(base(entry, protectedLiterals));
         }
         Set<String> identifierValues = new HashSet<>();
         for (Cell cell : cells) {
@@ -134,10 +144,17 @@ public final class UnitRoleClassifier {
         return new Result(Map.copyOf(roles), Map.copyOf(groups), Map.copyOf(rules), version);
     }
 
-    private Cell base(JsonNode entry) {
+    private Cell base(JsonNode entry, Map<String, String> protectedLiterals) {
         String id = entry.path("id").asText();
         String kind = entry.path("kind").asText();
         String source = entry.path("source").asText();
+        if (kind.equals("jar") || kind.equals("class")) {
+            String rule = protectedLiterals.get(entry.path("file").asText() + "|"
+                    + entry.path("context").path("class").asText("") + "|" + source);
+            if (rule != null) {
+                return new Cell(id, kind, source, Role.IDENTIFIER, false, rule);
+            }
+        }
         if (kind.equals("csv")) {
             String column = entry.path("context").path("column").asText().strip();
             for (ColumnRule rule : columns) {
@@ -236,7 +253,12 @@ public final class UnitRoleClassifier {
      * Plain text carries no field: absence means TEXT.
      */
     public ObjectNode annotate(ObjectNode document) {
-        Result result = classify(document);
+        return annotate(document, Map.of());
+    }
+
+    /** Same, with bytecode call-site evidence. */
+    public ObjectNode annotate(ObjectNode document, Map<String, String> protectedLiterals) {
+        Result result = classify(document, protectedLiterals);
         for (JsonNode node : document.path("entries")) {
             ObjectNode entry = (ObjectNode) node;
             String id = entry.path("id").asText();
@@ -260,7 +282,12 @@ public final class UnitRoleClassifier {
      * which can shift after a partial translation (JSON ordinals count only CJK values).
      */
     public Set<String> protectedUnitKeys(JsonNode document) {
-        Result result = classify(document);
+        return protectedUnitKeys(document, Map.of());
+    }
+
+    /** Same, with bytecode call-site evidence. */
+    public Set<String> protectedUnitKeys(JsonNode document, Map<String, String> protectedLiterals) {
+        Result result = classify(document, protectedLiterals);
         Set<String> keys = new HashSet<>();
         for (JsonNode entry : document.path("entries")) {
             if (result.role(entry.path("id").asText()) == Role.IDENTIFIER) {

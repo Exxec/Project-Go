@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.jackson.databind)
     implementation(libs.slf4j.api)
     runtimeOnly(libs.logback.classic)
+    testImplementation(libs.asm)
 }
 
 application {

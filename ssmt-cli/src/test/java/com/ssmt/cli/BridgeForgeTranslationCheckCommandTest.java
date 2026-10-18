@@ -55,4 +55,33 @@ class BridgeForgeTranslationCheckCommandTest {
         assertThat(tree.path("by_reason").path("UNREADABLE").asInt()).isEqualTo(1);
         assertThat(tree.path("by_reason").path("UNSUPPORTED_TYPE").asInt()).isEqualTo(1);
     }
+
+    @Test void bytecodeAuditWritesAnAllowlistProposalWithTextRowsAndAJsonReport() throws Exception {
+        Path mod = temporary.resolve("auditmod");
+        Files.createDirectories(mod.resolve("classes"));
+        Files.writeString(mod.resolve("mod_info.json"), "{\"id\":\"aud\",\"name\":\"Aud\",\"version\":\"1\"}");
+        var writer = new org.objectweb.asm.ClassWriter(org.objectweb.asm.ClassWriter.COMPUTE_MAXS);
+        writer.visit(org.objectweb.asm.Opcodes.V1_5, org.objectweb.asm.Opcodes.ACC_PUBLIC, "gen/Probe", null,
+                "java/lang/Object", null);
+        var method = writer.visitMethod(org.objectweb.asm.Opcodes.ACC_PUBLIC, "show", "()V", null, null);
+        method.visitCode();
+        method.visitInsn(org.objectweb.asm.Opcodes.ACONST_NULL);
+        method.visitLdcInsn("你好");
+        method.visitMethodInsn(org.objectweb.asm.Opcodes.INVOKEINTERFACE, "x/TooltipMakerAPI", "addPara",
+                "(Ljava/lang/String;)V", true);
+        method.visitInsn(org.objectweb.asm.Opcodes.RETURN);
+        method.visitMaxs(0, 0);
+        method.visitEnd();
+        writer.visitEnd();
+        Files.write(mod.resolve("classes/Probe.class"), writer.toByteArray());
+        Path proposal = temporary.resolve("proposal.tsv");
+        Path report = temporary.resolve("audit.json");
+        assertThat(new CommandLine(new BridgeForgeTranslationCommand()).execute("bytecode-audit", mod.toString(),
+                "--out", proposal.toString(), "--json", report.toString())).isZero();
+        assertThat(Files.readString(proposal)).startsWith("# ssmt-bytecode-allowlist-v1")
+                .contains("classes/Probe.class	class:gen/Probe#method:show()V:ldc:0	");
+        assertThat(new com.fasterxml.jackson.databind.ObjectMapper().readTree(report.toFile()).path("sites")).hasSize(1);
+        assertThat(new CommandLine(new BridgeForgeTranslationCommand()).execute("bytecode-audit", mod.toString(),
+                "--out", proposal.toString())).isEqualTo(1);
+    }
 }

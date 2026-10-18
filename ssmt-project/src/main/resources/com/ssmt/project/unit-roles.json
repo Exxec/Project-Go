@@ -17,5 +17,14 @@
   ],
   "bare_json_keys": "UNKNOWN",
   "bare_json_keys_comment": "UNKNOWN keeps the shared-method behaviour (keys are translated after review; BridgeForge conformance). Set to IDENTIFIER to protect every key that no value or code literal uses.",
-  "values_are_ids": true
+  "values_are_ids": true,
+  "call_sites_comment": "Bytecode: the first method call after a string literal is loaded decides what the literal is. PROTECT = lookup key (never translated, the unit becomes an IDENTIFIER), TEXT = shown to the player (proposed for the bytecode allowlist), REVIEW = a person decides. owner and name are full-match regexes over the internal class name (slashes) and the method name.",
+  "call_sites": [
+    {"id": "settings-lookup", "owner": ".*/SettingsAPI", "name": "get.*", "verdict": "PROTECT"},
+    {"id": "memory-key", "owner": ".*/MemoryAPI", "name": "(get.*|set.*|unset|contains|expire|is.*)", "verdict": "PROTECT"},
+    {"id": "map-key", "owner": "java/util/.*", "name": "(get|put|containsKey|remove|getOrDefault|putIfAbsent|computeIfAbsent)", "verdict": "PROTECT"},
+    {"id": "string-compare", "owner": "java/lang/String", "name": "(equals|equalsIgnoreCase|contains|startsWith|endsWith|indexOf|matches)", "verdict": "REVIEW"},
+    {"id": "display-text", "owner": ".*", "name": "(addPara|addTitle|addText|addTooltip|setText|setTitle|appendToTextPanel|addMessage|showMessage|addSectionHeading|addTextPanel|setNotes|setDescription|setName|setDisplayName|setDesc.*)", "verdict": "TEXT"}
+  ],
+  "default_call_verdict": "REVIEW"
 }
