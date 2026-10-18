@@ -15,6 +15,8 @@ public record AutoRunResult(Status status, java.nio.file.Path workspace, String 
         MASTER_LIBRARY_NEEDED,
         MASTER_LIBRARY_INCOMPLETE,
         UNREADABLE_INPUTS_NEED_ACCEPTANCE,
+        AI_SEND_NEEDS_CONFIRMATION,
+        AI_ROUND_TRIP_INTERRUPTED,
         PATCH_PUBLISHED,
         PATCH_UNCHANGED
     }

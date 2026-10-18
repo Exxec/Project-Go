@@ -126,6 +126,45 @@ public final class PolicyApproval {
         return count;
     }
 
+    /** The roles, kinds and glossary of one project, for deciding many of its entries. */
+    public final class ProjectContext {
+        private final Map<String, String> roles;
+        private final Map<String, String> kinds;
+        private final Map<String, String> glossary;
+
+        private ProjectContext(LocalizationProject project) {
+            roles = rolesOf(project);
+            kinds = kindsOf(project);
+            glossary = glossaryOf(project);
+        }
+
+        /** Decides whether a translation of this project entry may be approved by the rules. */
+        public Decision evaluate(ProjectEntry entry, String translation) {
+            if (!entry.key().startsWith("bf:")) {
+                return Decision.no("unit is not classified by the translation method");
+            }
+            String unit = entry.key().substring(3);
+            return PolicyApproval.this.evaluate(roles.getOrDefault(unit, "TEXT"), kinds.getOrDefault(unit, "csv"),
+                    entry.originalText(), translation, glossary);
+        }
+    }
+
+    /**
+     * The validators every import runs before approval: format arguments, {@code $variables}, markers and option
+     * syntax must survive.
+     *
+     * @return the translation (format slots renumbered when needed), or null when protected syntax differs
+     */
+    public static String validated(String source, String translation) {
+        String resolved = BridgeForgePlaceholders.resolve(source, translation);
+        return resolved == null || !BridgeForgePlaceholders.optionsPreserved(source, resolved) ? null : resolved;
+    }
+
+    /** Prepares the project-wide facts the rules need. */
+    public ProjectContext forProject(LocalizationProject project) {
+        return new ProjectContext(project);
+    }
+
     /** Unit ids to their role in a method document; units without a role field are TEXT. */
     static Map<String, String> rolesOf(LocalizationProject project) {
         var document = project.methodDocument();

@@ -3,6 +3,9 @@ package com.ssmt.auto;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.ssmt.ai.AiProviderSettings;
+import com.ssmt.ai.AiProviderType;
+import com.ssmt.ai.AiTranslationProvider;
 import com.ssmt.core.model.ModInfo;
 import com.ssmt.project.CandidateRanker;
 import com.ssmt.project.LocalizationProject;
@@ -39,11 +42,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Source-safe state machine that reuses and grows one master translation library.
  */
 public final class AutoWorkflow {
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(AutoWorkflow.class);
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final int STATE_VERSION = 2;
     private static final String CATALOG_FILE = MasterTranslationLibrary.DEFAULT_FILENAME;
@@ -62,6 +67,10 @@ public final class AutoWorkflow {
     private final Path sharedCatalog;
     private final Path workspaceRoot;
     private boolean acceptUnreadable;
+    private boolean confirmAiSend;
+    private AiTranslationProvider aiProvider;
+    private String aiLabel = "";
+    private Consumer<String> progress = line -> LOG.info("{}", line);
 
     /**
      * Creates a workflow using the persistent catalog shared by all auto projects.
@@ -89,6 +98,39 @@ public final class AutoWorkflow {
         this.sharedCatalog = sharedCatalog.toAbsolutePath().normalize();
         this.workspaceRoot = workspaceRoot.toAbsolutePath().normalize();
         this.persistence = Objects.requireNonNull(persistence, "persistence");
+    }
+
+    /**
+     * Uses this provider for the strings still untranslated instead of the file round trip. Off unless called or
+     * configured in {@code ai-provider.json} beside the master library; strings are sent only with
+     * {@link #confirmAiSend(boolean)}.
+     *
+     * @param provider draft-translation provider
+     * @param label provider description shown before anything is sent
+     * @return this workflow
+     */
+    public AutoWorkflow aiProvider(AiTranslationProvider provider, String label) {
+        this.aiProvider = provider;
+        this.aiLabel = label;
+        return this;
+    }
+
+    /**
+     * Confirms that strings may be sent to the configured provider on this run (command line
+     * {@code --confirm-ai-send}).
+     *
+     * @param confirm whether sending is confirmed
+     * @return this workflow
+     */
+    public AutoWorkflow confirmAiSend(boolean confirm) {
+        this.confirmAiSend = confirm;
+        return this;
+    }
+
+    /** Receives one progress line per finished AI chunk (default: the log). */
+    public AutoWorkflow progress(Consumer<String> sink) {
+        this.progress = sink;
+        return this;
     }
 
     /**
@@ -242,6 +284,31 @@ public final class AutoWorkflow {
                 .filter(entry -> !entry.originalText().isBlank())
                 .filter(entry -> entry.translatedText().isBlank())
                 .toList();
+        if (!untranslated.isEmpty() && configuredProvider() != null) {
+            if (!confirmAiSend) {
+                return new AutoRunResult(AutoRunResult.Status.AI_SEND_NEEDS_CONFIRMATION, workspace,
+                        "Provider " + aiLabel + " is configured. " + untranslated.size()
+                                + " string(s) would be sent to it. Nothing was sent. Run again with --confirm-ai-send "
+                                + "to send them (the provider's terms and cost apply).");
+            }
+            AiRoundTrip.Outcome outcome;
+            try {
+                outcome = new AiRoundTrip(configuredProvider(), aiLabel, progress, AiRoundTrip.CHUNK_SIZE)
+                        .run(project, untranslated, workspace.resolve("ai-checkpoint.jsonl"), glossaryText(project));
+            } catch (IOException exception) {
+                throw new ProjectException("AI round trip could not read or write its checkpoint", exception);
+            }
+            if (!outcome.complete()) {
+                return new AutoRunResult(AutoRunResult.Status.AI_ROUND_TRIP_INTERRUPTED, workspace, outcome.failure());
+            }
+            project = outcome.project();
+            prepared = workflow.bind(project, prepared.sourceAttestations());
+            writeAiReview(workspace, outcome);
+            untranslated = project.entries().stream()
+                    .filter(entry -> !entry.originalText().isBlank())
+                    .filter(entry -> entry.translatedText().isBlank())
+                    .toList();
+        }
         if (!untranslated.isEmpty()) {
             WorkflowTransitionContract.State pending = workflow.exportSelected(
                     missing,
@@ -287,6 +354,54 @@ public final class AutoWorkflow {
                         : AutoRunResult.Status.PATCH_UNCHANGED,
                 workspace,
                 "Translated copy: " + patch + "; master library: " + sharedCatalog);
+    }
+
+    /** The provider to use, or null when none is configured (the default: nothing is ever sent). */
+    private AiTranslationProvider configuredProvider() throws ProjectException {
+        if (aiProvider != null) {
+            return aiProvider;
+        }
+        Path file = sharedCatalog.resolveSibling("ai-provider.json");
+        if (!Files.isRegularFile(file)) {
+            return null;
+        }
+        try {
+            JsonNode node = JSON.readTree(file.toFile());
+            String variable = node.path("credentialEnvironmentVariable").asText("");
+            var settings = new AiProviderSettings(AiProviderType.valueOf(node.path("type").asText()),
+                    java.net.URI.create(node.path("baseUri").asText()), node.path("model").asText(),
+                    variable.isBlank() ? Optional.empty() : Optional.of(variable));
+            aiLabel = settings.type() + " " + settings.model() + " at " + settings.baseUri();
+            aiProvider = settings.create(System::getenv);
+            return aiProvider;
+        } catch (IOException | IllegalArgumentException exception) {
+            throw new ProjectException("ai-provider.json is not usable: " + exception.getMessage(), exception);
+        }
+    }
+
+    private static String glossaryText(LocalizationProject project) {
+        var document = project.methodDocument();
+        if (document == null) {
+            return "";
+        }
+        StringBuilder text = new StringBuilder();
+        document.path("glossary").fields().forEachRemaining(field -> text.append(field.getKey()).append(" = ")
+                .append(field.getValue().asText()).append('\n'));
+        return text.toString();
+    }
+
+    private static void writeAiReview(Path workspace, AiRoundTrip.Outcome outcome) throws ProjectException {
+        Path file = workspace.resolve("ai-review.json");
+        try {
+            if (outcome.review().isEmpty()) {
+                Files.deleteIfExists(file);
+                return;
+            }
+            Files.write(file, JSON.writerWithDefaultPrettyPrinter().writeValueAsBytes(Map.of("schema_version", 1,
+                    "approved_by_rules", outcome.approved(), "left_for_review", outcome.review())));
+        } catch (IOException exception) {
+            throw new ProjectException("Could not store the AI review list", exception);
+        }
     }
 
     private ModInfo readMod(Path source) throws ProjectException {

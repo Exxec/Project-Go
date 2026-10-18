@@ -127,6 +127,17 @@ If some input files cannot be read (for example bytes that are neither UTF-8 nor
 `UNREADABLE_INPUTS_NEED_ACCEPTANCE` and lists them. Nothing is built. Run Auto with `--accept-unreadable` after the mod path to
 translate the rest; the listed files are copied unchanged and stay untranslated.
 
+## Optional: let Auto call your AI provider
+
+Off by default. If a file `ai-provider.json` sits beside the master library (`{"type":"OLLAMA|OPENAI|GEMINI","baseUri":"...",
+"model":"...","credentialEnvironmentVariable":"NAME_OF_ENV_VAR"}`; the variable holds the key, the file never does) Auto uses that
+provider for the strings still untranslated instead of waiting for a response file. Nothing is sent until you run Auto with
+`--confirm-ai-send`; without it Auto only reports which provider and how many strings. Strings go out in chunks of 20 with one
+progress line per chunk and a checkpoint (`ai-checkpoint.jsonl` in the project folder), so a stopped run resumes where it
+stopped. A result is used only when its placeholders and option ids survived and every approval rule passes (unit kind TEXT,
+glossary terms used, no Chinese left, sensible length); it is then marked `POLICY_APPROVED`. Everything else stays untranslated
+and is listed in `ai-review.json`; the normal response-file round trip then handles it.
+
 ## Safety and recovery
 
 - Keep `%LOCALAPPDATA%\Project Go`; it contains the master library and internal

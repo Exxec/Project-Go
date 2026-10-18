@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":ssmt-ai"))
     implementation(project(":ssmt-core"))
     implementation(project(":ssmt-scanner"))
     implementation(project(":ssmt-project"))

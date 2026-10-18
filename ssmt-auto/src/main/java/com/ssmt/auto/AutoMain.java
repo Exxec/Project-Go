@@ -17,7 +17,7 @@ public final class AutoMain {
     /**
      * Runs one automation pass.
      *
-     * @param args dropped mod archive, mod_info.json, or mod directory, optionally followed by --accept-unreadable
+     * @param args dropped mod archive, mod_info.json, or mod directory, optionally followed by --accept-unreadable and/or --confirm-ai-send
      */
     public static void main(String[] args) {
         try {
@@ -37,13 +37,17 @@ public final class AutoMain {
         }
         int exit = 0;
         try {
-            boolean acceptUnreadable = args.length == 2 && "--accept-unreadable".equals(args[1]);
-            if (args.length != 1 && !acceptUnreadable) {
+            java.util.Set<String> flags = new java.util.HashSet<>(java.util.Arrays.asList(args)
+                    .subList(Math.min(1, args.length), args.length));
+            boolean acceptUnreadable = flags.remove("--accept-unreadable");
+            boolean confirmAiSend = flags.remove("--confirm-ai-send");
+            if (args.length < 1 || !flags.isEmpty()) {
                 throw new IllegalArgumentException(
                         "Drag one mod ZIP, mod_info.json, or mod folder onto Project Go Auto.exe");
             }
             Path supplied = Path.of(args[0]).toAbsolutePath().normalize();
-            AutoRunResult result = new AutoWorkflow().acceptUnreadable(acceptUnreadable).runDropped(supplied);
+            AutoRunResult result = new AutoWorkflow().acceptUnreadable(acceptUnreadable)
+                    .confirmAiSend(confirmAiSend).runDropped(supplied);
             LOG.info("{}: {}", result.status(), result.detail());
             LOG.info("Workspace: {}", result.workspace());
         } catch (Exception exception) {
