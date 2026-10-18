@@ -643,9 +643,9 @@ save/reload. This is recorded as owner-reported acceptance in
 hash were not supplied, so the historical per-candidate evidence gates remain
 separate from that confirmation. Version 0.8.0-rc.2 packages the current code.
 
-## Lessons carried over from BridgeForge's hardening (item 70) and regression pass (2026-10-12; proposed, not approved)
+## Lessons carried over from BridgeForge's hardening (item 70) and regression pass (2026-10-12; proposed 2026-10-12, not an owner-approved plan; the in-place item is now done, see below)
 
-Source: BridgeForge `ROADMAP.md` item 70, `docs/HARDENING_PLAN.md`, `docs/RC8_BEHAVIOUR.md` (RC8-30 to RC8-33). Each line says what it would change here and what it buys; none is started.
+Source: BridgeForge `ROADMAP.md` item 70, `docs/HARDENING_PLAN.md`, `docs/RC8_BEHAVIOUR.md` (RC8-30 to RC8-33). Each line says what it would change here and what it buys; only the in-place item below has since been built (automation plan G0.1).
 
 - **Atomic writes and guarded deletes.** Write through a temp file and `os.replace`; delete a tree only inside an allowed root and never through a junction (BridgeForge `safeio.py`, with a ratchet test whose baseline may only shrink). Benefit: an interrupted write or a wrong path cannot leave a half-written or vanished file.
 - **Bounded reads of untrusted archives.** Cap a zip or jar entry (200 MB; class files 32 MB) before reading it (`zipsafe.read_limited`); a hostile or corrupt archive then fails that entry instead of exhausting memory.
@@ -655,12 +655,12 @@ Source: BridgeForge `ROADMAP.md` item 70, `docs/HARDENING_PLAN.md`, `docs/RC8_BE
 - **Line endings and backups.** LF everywhere (`.gitattributes`; batch files CRLF). An append-only snapshot of the irreplaceable state is taken after each major new revision, not on a weekly clock (owner rule 2026-10-12).
 - **Say PREDICTED or OBSERVED.** BridgeForge keeps a prediction ledger: of two forecasts about a mod pair, one held live and one was refuted. Record the method, date and run id with each fact.
 - **Paths.** Fixed here: the launcher passes arguments through a UTF-8 argfile and quotes `JAVA_HOME`, so non-ASCII paths and a `JAVA_HOME` with spaces work (gates `verifyWindowsLauncher` and `verifyNativeUnicode`, `ssmt-cli/build.gradle.kts`). BridgeForge's `rig-doctor` still warns about non-ASCII paths and a disabled Windows long-path setting on its side; check both before an in-place run there.
-- **In-place translation (`translate-apply --in-place`) should use the atomic write and a pre-apply snapshot** of the target mod, and read mod archives through a size-capped reader.
+- **In-place translation (`translate-apply --in-place`) should use the atomic write and a pre-apply snapshot** of the target mod, and read mod archives through a size-capped reader. The atomic write, snapshot and `translate restore` are done (G0.1); the size-capped reader is not part of that change.
 - **Read a name or version with a JSON parser, not a regex over the whole file** (see above); use a lenient parser for `mod_info.json`.
 - **Long runs** should print one progress line per item, offer `--quiet`, and resume from a checkpoint (BridgeForge rule since 2026-09-27); `translate-batch` should follow it.
 - **Conformance fixtures keep their own line endings.** BridgeForge's LF policy exempts `fixtures/translation-conformance` through its own attributes; do the same here so the golden files do not change.
 
-## Automation plan (2026-10-14; implemented on branch `automation-plan`, 2026-10-18)
+## Automation plan (2026-10-14; implemented 2026-10-14 to 2026-10-18 and merged to `main`)
 
 Owner request 2026-10-14: further automation, fixes, checks and less hand work, written so any AI can implement it. Spec:
 `docs/AUTOMATION_PLAN.md`. Phases: G0 atomic in-place apply with a pre-apply snapshot and restore, the stale ASCII/`JAVA_HOME`
@@ -671,12 +671,12 @@ closes P8 item 10); G3 approval by rules (glossary from the mod and TM, per-unit
 round trip in Auto); G4 gates that run themselves (candidate ZIP audit, BridgeForge run records as runtime evidence, GUI checklist
 screenshots). Owner decisions 2026-10-14 ('follow your recommendations') are recorded in the plan. Same day: `AGENTS.md` (agent contract, version 1) and a pointer `CLAUDE.md` added.
 
-Status (branch `automation-plan`, one commit per item):
+Status (one commit per item on `main`):
 
 - **G0.1 Done 2026-10-14.** `TranslationSnapshot`, atomic writes in `BridgeForgeTranslationApply`, `translate restore`. Tests: `BridgeForgeInPlaceSnapshotTest`, `BridgeForgeTranslationRestoreCommandTest`.
 - **G0.2 Done 2026-10-14.** The stale ASCII/`JAVA_HOME` line above now states the fix.
 - **G0.3 Done 2026-10-14.** `CliGoldenHelpTest` pins a hash of every command's `--help` (`ssmt-cli/src/test/resources/golden-help.tsv`; accept a deliberate change with `gradlew :ssmt-cli:writeGoldenHelp` and review the diff). `.gitattributes`: LF everywhere, `.bat`/`.cmd` CRLF, `fixtures/translation-conformance/**` exempt. `config/known-failures.tsv` (`Class#method`, expiry date, reason) is read by `KnownFailureExtension`, auto-registered in every module through `config/test-support/`; a listed, unexpired failure is reported as aborted with its reason, an expired or unlisted one still fails. Tests: `CliGoldenHelpTest`, `KnownFailuresTest`, `KnownFailureExtensionTest`.
-- **G1.3 Done 2026-10-18.** `createUsingBridgeForge` continues with the readable files and lists each unreadable file with its error in the project's method document; a build refuses until the list is acknowledged (`LocalizationProjectService.acknowledgeUnreadable`, `project create --accept-unreadable`); `translate check` exits 2 until `--accept-unreadable`. No second "lenient retry" was added: the shared readers already are the lenient ones (raw CSV cells, comment/bareword JSON), and the remaining failures are undecodable bytes. GUI: no checkbox yet (NOT_TESTED, needs a live GUI session). Tests: `UnreadableInputProjectTest`, `BridgeForgeTranslationCheckCommandTest`.
+- **G1.3 Done 2026-10-18.** `createUsingBridgeForge` continues with the readable files and lists each unreadable file with its error in the project's method document; a build refuses until the list is acknowledged (`LocalizationProjectService.acknowledgeUnreadable`, `project create --accept-unreadable`); `translate check` exits 2 until `--accept-unreadable`. No second "lenient retry" was added: the shared readers already are the lenient ones (raw CSV cells, comment/bareword JSON), and the remaining failures are undecodable bytes. The GUI checkbox was added afterwards (see the GUI/Auto follow-up line below). Tests: `UnreadableInputProjectTest`, `BridgeForgeTranslationCheckCommandTest`.
 - **G1.4 Done 2026-10-18.** `LeftoverClassifier`: reasons UNSUPPORTED_TYPE, UNREADABLE, UNTRANSLATED, REJECTED in the apply report (`leftover`, only when non-empty) and `translate check --json FILE`. PROTECTED_IDENTIFIER stays reserved for G2. GUI Output quality view not changed (NOT_TESTED, needs a GUI session). Tests: `LeftoverClassifierTest`, `BridgeForgeTranslationCheckCommandTest`.
 - **G1.1 Done 2026-10-18.** Kind `text-line` (one unit per CJK line, id `text:<file>@<line>`) for `.txt` in `data/missions/<name>/` and under `data/strings/`; same decoding as the legacy plain-text extractor (UTF-8, GB18030 fallback, BOM kept). Deviation: the new kinds `text-line` and `class` are accepted by this repository's document validator only; BridgeForge must add them before it can read such exports, and the conformance fixture was left unchanged (no `.txt` in it) so both sides still agree. Tests: `TextLineUnitsTest`.
 - **G1.2 Done 2026-10-18.** Loose `.class` files are read like jar entries (kind `class`, id `class:<file>#<cp_index>`, referenced `CONSTANT_String` only, same 64 MiB cap via `BridgeForgeClassFile`); excluded folders (`src`, `build`, ...) still skipped. Tests: `LooseClassUnitsTest` (uses the conformance jar's synthetic `Fixture.class`).
