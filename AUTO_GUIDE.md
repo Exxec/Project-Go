@@ -1,6 +1,6 @@
 # Project Go Auto: Drag-and-Drop Workflow
 
-`Last updated: 2026-10-08 (native Unicode input arguments)`
+`Last updated: 2026-10-18 (unreadable inputs, optional AI provider, rule-based approval)`
 
 `Project Go Auto.exe` is the advanced headless compatibility helper for scripts
 and existing drag-to-executable habits. New desktop users can drop the same input
@@ -103,8 +103,11 @@ creates the translated copy beside it.
 7. Build one translated copy only when nothing remains.
 8. Report `PATCH_UNCHANGED` when identical clone outputs already exist.
 
-Fuzzy matches are not auto-applied. Conflicting exact catalog translations are
-also left untranslated for the AI/reviewer to resolve.
+Conflicting exact catalog translations and fuzzy matches are ranked (same file, same field, neighbouring ids, similarity).
+The leader of conflicting exact matches is applied, marked `POLICY_APPROVED`, only when its score passes the threshold, its
+margin over the runner-up holds and every approval rule passes. A fuzzy match (different source text) is only proposed. Every
+proposal with its score breakdown is written to `suggestions.json` in the project folder; whatever is not applied is left
+untranslated for the AI/reviewer.
 
 ## Headless command-line use
 

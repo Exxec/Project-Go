@@ -31,6 +31,18 @@ This document serves as the master glossary for Starsector-specific terminology.
 ## AI Prompting Integration
 When using an optional AI draft provider (Ollama, Gemini, or the OpenAI Responses API — the only adapters SSMT implements), the contents of this glossary must be automatically prepended to the system prompt to enforce domain accuracy on draft translations.
 
+## Per-mod approved terms (automation plan G3.1)
+
+Besides the fixed table above, each translation builds a glossary for the mod being translated (`GlossaryService`). Approved terms
+come from: your approvals (the mod's `glossary.json` in the workspace and a global `global-glossary.json`; the mod's file wins),
+names the mod itself spells in English in a parallel CSV row (same row id and column in another file), and library units with
+exactly one human-approved translation (read only). Sources that disagree become a conflict proposal; units repeated three or
+more times are only proposed. Approved terms that occur in the mod fill the glossary in the exchange document, so they reach the AI
+request and the approval rules for `POLICY_APPROVED` (a translation that drops an approved term is not approved by rules).
+Commands: `ssmt-cli translate glossary MOD --out PROPOSAL.json [--tm MEMORY] [--mod-glossary FILE] [--global-glossary FILE]` and
+`translate glossary-approve FILE --term SOURCE=TARGET`; the normal workflow offers **Glossary terms...** for one-click approval.
+The shareable files of `GLOSSARY_FORMAT.md` (used by Check Glossary, advisory) have a different format from these approval files.
+
 ## Offline Provider Lookup and Feedback
 
 The executable offline chain treats unambiguous exact entries in the local

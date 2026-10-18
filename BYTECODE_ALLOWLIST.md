@@ -12,6 +12,13 @@ mod-relative JAR/class path using forward slashes, the complete `class:` extract
 key, and lowercase SHA-256 of the exact original string encoded as UTF-8.
 The catalog is limited to 4 MiB; malformed, duplicate, and stale entries fail closed.
 
+`ssmt-cli translate bytecode-audit MOD --out PROPOSAL.tsv [--json REPORT.json]` writes a proposal in this format. It reads the
+classes without loading them and judges each Chinese literal by the first method call after it is loaded (rules in
+`unit-roles.json`, `call_sites`): lookups such as settings or memory keys are protected, display calls become active rows, and
+everything else (string compares, literals stored without a call) is a comment to review. Only the active rows take effect; the
+proposal is a starting point and must be reviewed by a person before it is copied to the mod as `ssmt-bytecode-allowlist.tsv`.
+The output file must not already exist.
+
 With a catalog present, unlisted bytecode locations are excluded from extraction.
 The patcher also rejects modifications to unlisted locations, including replacements
 from projects created before the catalog was added. Unchanged technical constants

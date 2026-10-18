@@ -62,6 +62,30 @@ disabled until you tick it. After installing, "Output quality" shows the remaini
 and `translate check --accept-unreadable --json report.json`; `translate restore <mod> [timestamp]` returns an in-place
 translated working copy to its pre-apply snapshot.
 
+## Unit roles, linked groups and approval by rules
+
+Every extracted text unit has a role, set by data rules
+(`ssmt-project/src/main/resources/com/ssmt/project/unit-roles.json`), not by hand:
+`TEXT` is shown to the player and can be translated; `IDENTIFIER` (ids, tags,
+lookup keys, strings passed to settings or memory lookups in class files) is never
+translated; `LINKED` units share a key with other units and are translated together
+or not at all; `UNKNOWN` is not yet classified. Applying refuses a translation of an
+`IDENTIFIER`.
+
+Drafts that come back from an AI are approved per unit by rules (`PolicyApproval`):
+only `TEXT` units, only when every validator and the glossary, no-Chinese-left and
+length checks pass. Those entries carry the provenance `POLICY_APPROVED`, rank like
+AI drafts in the translation memory (never as human-approved entries) and can be
+returned to drafts. The normal workflow's Import and Auto use this; the advanced
+**Import AI Response** keeps its explicit yes/no choice below.
+
+Approved glossary terms come from your own approvals (per mod `glossary.json` in the
+workspace and a global `global-glossary.json`), from names the mod itself spells in
+English in a parallel CSV row, and from library units with exactly one human-approved
+translation. Terms that disagree are proposed as conflicts; terms repeated three or
+more times are only proposed. **Glossary terms...** in the normal workflow shows the
+proposals for approval.
+
 ## Recommended first test
 
 If you do not want to begin with a real mod, select **Try a Practice Project**.
@@ -493,6 +517,7 @@ ssmt-cli validate "SOURCE TEXT" "TRANSLATED TEXT"
 ssmt-cli project create SOURCE PROJECT --patch-id ID --patch-name NAME
 ssmt-cli project create SOURCE PROJECT --patch-id ID --patch-name NAME --json-schema SCHEMA
 ssmt-cli project create SOURCE PROJECT --patch-id ID --patch-name NAME --csv-schema SCHEMA
+ssmt-cli project create SOURCE PROJECT --patch-id ID --patch-name NAME --accept-unreadable
 ssmt-cli project refresh SOURCE PROJECT
 ssmt-cli project refresh SOURCE PROJECT --apply
 ssmt-cli project refresh SOURCE PROJECT --tm MEMORY --source-language en --target-language zh --minimum-score 0.8
@@ -501,6 +526,14 @@ ssmt-cli project check-fonts PROJECT FONT.fnt
 ssmt-cli project coverage PROJECT
 ssmt-cli project import-ai-response PROJECT RESPONSE.json
 ssmt-cli project import-ai-response PROJECT RESPONSE.json --tm MEMORY --approve
+ssmt-cli project import-ai-response PROJECT RESPONSE.json --tm MEMORY --approve-by-rules
+ssmt-cli translate check MOD [--accept-unreadable] [--json REPORT.json]
+ssmt-cli translate restore MOD [TIMESTAMP]
+ssmt-cli translate bytecode-audit MOD --out PROPOSAL.tsv [--json REPORT.json]
+ssmt-cli translate glossary MOD --out PROPOSAL.json [--tm MEMORY] [--mod-glossary FILE] [--global-glossary FILE]
+ssmt-cli translate glossary-approve GLOSSARY.json --term SOURCE=TARGET [--term ...]
+ssmt-cli audit-candidate CANDIDATE.zip --manifest installed-copy.json --ledger LEDGER [--expect-id ID] [--expect-version V]
+ssmt-cli assurance --candidate DIR --import-run RUN_RECORD.json --ledger-out LEDGER
 ssmt-cli tm export DATABASE json OUTPUT
 ssmt-cli tm export DATABASE csv OUTPUT
 ssmt-cli tm import DATABASE json INPUT
@@ -517,7 +550,40 @@ application.
 the GUI's Import AI Response: unknown/duplicate ids, changed source text, or
 invalid protected syntax fail the whole import before anything is written.
 Results are always left as `AI_TRANSLATED` review drafts unless `--approve`
-is supplied.
+is supplied. With `--approve-by-rules` each result is checked on its own instead:
+a draft for a `TEXT` unit that passes every validator and approval rule (glossary
+terms used, no Chinese left, length ratio per unit kind, protected syntax intact)
+becomes `POLICY_APPROVED`; the others stay `AI_TRANSLATED` drafts with the failed
+rule recorded. `--approve` and `--approve-by-rules` cannot be combined.
+
+### Other `translate` operations
+
+- `translate check MOD` lists the Chinese text still left in a translated working
+  copy. It exits 2 while anything is left, or while some inputs were unreadable
+  unless `--accept-unreadable` is given. `--json REPORT.json` writes every leftover
+  with its reason (`UNSUPPORTED_TYPE`, `UNREADABLE`, `UNTRANSLATED`, `REJECTED`).
+- `translate apply --in-place` first copies the files it will change to
+  `MOD/.ssmt-backup/<timestamp>/` with a SHA-256 manifest and writes each file
+  atomically. `translate restore MOD` lists the snapshots; `translate restore MOD
+  TIMESTAMP` puts the files back and verifies the hashes.
+- `translate glossary MOD --out PROPOSAL.json` writes approved and proposed
+  glossary terms (see Glossary below); `translate glossary-approve FILE --term
+  SOURCE=TARGET` records approvals in a per-mod or global glossary file.
+- `translate bytecode-audit MOD --out PROPOSAL.tsv` reads the mod's class files
+  (never runs them) and proposes a [bytecode allowlist](BYTECODE_ALLOWLIST.md).
+  The output file must not already exist.
+- `audit-candidate ZIP --manifest installed-copy.json --ledger LEDGER` extracts a
+  finished candidate ZIP safely, compares every file hash with the manifest the
+  build wrote (`installed-copy.json` in the workspace) and writes the
+  `PACKAGE_IDENTITY` and `STATIC_VALIDATION` gates to the assurance ledger. Exit 0
+  means both passed, 2 means review is needed, 1 a failure. It claims nothing about
+  game behaviour.
+- `assurance --candidate DIR --import-run RECORD.json --ledger-out LEDGER` reads a
+  BridgeForge live run record (`<queue>/_live/<TESTID>.json`). It sets
+  `AUTOMATED_BOOT`, `CAMPAIGN` and `SAVE_RELOAD` only when the record names the
+  candidate's exact bytes (a `BOUND` member whose `shipped_sha256` matches) and
+  carries the launch environment; otherwise those gates stay `NOT_TESTED` with the
+  reason. Records in BridgeForge's older format never count.
 
 On Windows, use the GUI file choosers for paths containing non-ASCII characters
 until the native PowerShell/batch argument-boundary limitation is resolved.

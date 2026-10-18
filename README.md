@@ -48,6 +48,25 @@ Ollama, Gemini, and the OpenAI Responses API.
 The versioned workflow connects extraction, editing, checking, and making a
 personal-use copy.
 
+## Automation features (2026-10-18)
+
+The automation plan ([docs/AUTOMATION_PLAN.md](docs/AUTOMATION_PLAN.md), status in
+[docs/ROADMAP.md](docs/ROADMAP.md)) is implemented on `main`. In short:
+
+- In-place apply is atomic and takes a snapshot first; `ssmt-cli translate restore MOD [TIMESTAMP]` returns to it.
+- Mission and strings `.txt`, loose `.class` files and custom option CSVs are extracted; unreadable files no longer stop a
+  project (`project create --accept-unreadable`, `translate check --accept-unreadable --json REPORT.json`), and every leftover
+  Chinese unit gets a reason.
+- Units have roles (`TEXT`, `IDENTIFIER`, `LINKED`, `UNKNOWN`); identifiers are never translated and linked groups move together.
+  `translate bytecode-audit` proposes a [bytecode allowlist](BYTECODE_ALLOWLIST.md).
+- Approval by rules: `translate glossary` / `glossary-approve`, `project import-ai-response --approve-by-rules`, provenance
+  `POLICY_APPROVED`, ranked translation-memory suggestions in Auto.
+- Gates: `ssmt-cli audit-candidate ZIP --manifest FILE --ledger FILE`, `ssmt-cli assurance --candidate DIR --import-run RECORD
+  --ledger-out FILE` (BridgeForge run records; live side pending) and `gradlew :ssmt-gui:guiChecklist` (screenshots; the owner
+  marks the rows, so GUI rows stay `NOT_TESTED` until then).
+
+See [USER_GUIDE.md](USER_GUIDE.md) for the command details.
+
 ## Requirements
 
 - JDK 25
