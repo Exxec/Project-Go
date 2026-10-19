@@ -257,16 +257,22 @@ public final class BytecodeCallSites {
      * PROTECT and REVIEW locations appear as comment lines so a reviewer sees what was left out and why.
      */
     public static String proposal(List<Site> sites) {
+        Set<String> protectedConstants = new HashSet<>();
+        for (Site site : sites) {
+            if (site.verdict() == Verdict.PROTECT) {
+                protectedConstants.add(literalKey(site));
+            }
+        }
         StringBuilder text = new StringBuilder("# ssmt-bytecode-allowlist-v1\n");
         text.append("# PROPOSAL (REVIEW): generated from call sites; check before use. Only TEXT rows are active.\n");
         for (Site site : sites) {
-            if (site.verdict() == Verdict.TEXT) {
+            if (site.verdict() == Verdict.TEXT && !protectedConstants.contains(literalKey(site))) {
                 text.append(site.file()).append('\t').append(site.key()).append('\t')
                         .append(com.ssmt.core.BytecodeTextAllowlist.sha256(site.text())).append('\n');
             }
         }
         for (Site site : sites) {
-            if (site.verdict() != Verdict.TEXT) {
+            if (site.verdict() != Verdict.TEXT || protectedConstants.contains(literalKey(site))) {
                 text.append("# ").append(site.verdict()).append('\t').append(site.file()).append('\t')
                         .append(site.key()).append('\t').append(site.rule()).append('\t').append(site.callee())
                         .append('\n');
@@ -276,21 +282,20 @@ public final class BytecodeCallSites {
     }
 
     /**
-     * Literals that every call site proves to be lookup keys: {@code file|class|text} to the deciding rule id.
-     * A literal used anywhere else (or not followed to a call) is not listed.
+     * Literals with any lookup-key use: {@code file|class|text} to the deciding rule id.
+     * A shared constant cannot be translated independently of that use, even when other sites display it.
      */
     public Map<String, String> protectedLiterals(List<Site> sites) {
         Map<String, String> rulesByLiteral = new HashMap<>();
-        Set<String> mixed = new HashSet<>();
         for (Site site : sites) {
-            String literal = site.file() + "|" + site.className() + "|" + site.text();
-            if (site.verdict() == Verdict.PROTECT && !mixed.contains(literal)) {
-                rulesByLiteral.putIfAbsent(literal, "call:" + site.rule());
-            } else {
-                mixed.add(literal);
-                rulesByLiteral.remove(literal);
+            if (site.verdict() == Verdict.PROTECT) {
+                rulesByLiteral.putIfAbsent(literalKey(site), "call:" + site.rule());
             }
         }
         return rulesByLiteral;
+    }
+
+    private static String literalKey(Site site) {
+        return site.file() + "|" + site.className() + "|" + site.text();
     }
 }

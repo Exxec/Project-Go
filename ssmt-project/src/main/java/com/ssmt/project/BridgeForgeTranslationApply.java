@@ -105,6 +105,7 @@ public final class BridgeForgeTranslationApply {
                 }
                 byFile.computeIfAbsent(entry.path("file").asText(), ignored -> new LinkedHashMap<>()).put(id, resolved);
             }
+            rejectLinkedProblems(roles, problems);
             LinkedGroupEnforcer.enforce(roles, discovered, byFile, problems);
             Map<Path, byte[]> originals = new LinkedHashMap<>();
             Map<Path, byte[]> rewritten = new LinkedHashMap<>();
@@ -151,11 +152,17 @@ public final class BridgeForgeTranslationApply {
                         if (unit.kind().equals("json-key")) {
                             String sibling = parent(unit.context().path("path")) + "\0" + target;
                             if (!siblingKeys.add(sibling)) {
+                                if (roles.groups().containsKey(unit.id())) {
+                                    throw new IOException(unit.id() + ": linked translation rejected because translated key already exists in the same object");
+                                }
                                 problems.add(unit.id() + ": translated key already exists in the same object");
                                 continue;
                             }
                         }
                         if (unit.kind().equals("text-line") && (target.indexOf(10) >= 0 || target.indexOf(13) >= 0)) {
+                            if (roles.groups().containsKey(unit.id())) {
+                                throw new IOException(unit.id() + ": linked translation rejected because a text line must not contain a line break");
+                            }
                             problems.add(unit.id() + ": translation of a text line must not contain a line break");
                             continue;
                         }
@@ -301,6 +308,16 @@ public final class BridgeForgeTranslationApply {
         var copy = path.deepCopy();
         ((com.fasterxml.jackson.databind.node.ArrayNode) copy).remove(copy.size() - 1);
         return copy.toString();
+    }
+
+    private static void rejectLinkedProblems(UnitRoleClassifier.Result roles, JsonNode problems) throws IOException {
+        for (JsonNode problem : problems) {
+            String text = problem.asText();
+            int separator = text.indexOf(": ");
+            if (separator > 0 && roles.groups().containsKey(text.substring(0, separator))) {
+                throw new IOException("Linked translation rejected: " + text);
+            }
+        }
     }
 
     private static String csvQuote(String value, boolean quoted) {

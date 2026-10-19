@@ -107,7 +107,7 @@ public final class UnitRoleClassifier {
     /**
      * Classifies with bytecode call-site evidence.
      *
-     * @param protectedLiterals {@code file|class|text} of every class literal that only lookups use (see
+     * @param protectedLiterals {@code file|class|text} of every class literal with a lookup use (see
      *     {@link BytecodeCallSites#protectedLiterals}) to the id of the deciding rule
      */
     public Result classify(JsonNode document, Map<String, String> protectedLiterals) {
