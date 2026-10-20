@@ -87,6 +87,45 @@ class ModInputPreparationServiceTest {
         }
     }
 
+    @Test void refusesChangedMissingAndExtraCachedFilesWithoutDeletingWork() throws Exception {
+        Path archive = zip("cache-check.zip", Map.of(
+                "mod/mod_info.json", "{}", "mod/text.txt", "original"));
+        byte[] originalArchive = Files.readAllBytes(archive);
+        var service = new ModInputPreparationService();
+        Path cache = directory.resolve("cache-check");
+        Path root = service.prepare(archive, cache).modRoot();
+        Path text = root.resolve("text.txt");
+        Files.writeString(text, "modified");
+        assertThatThrownBy(() -> service.prepare(archive, cache))
+                .isInstanceOf(ProjectException.class).hasMessageContaining("cached archive differs");
+        assertThat(text).hasContent("modified");
+        Files.delete(text);
+        assertThatThrownBy(() -> service.prepare(archive, cache))
+                .isInstanceOf(ProjectException.class).hasMessageContaining("cached archive differs");
+        Files.writeString(text, "original");
+        Path extra = Files.writeString(java.util.Objects.requireNonNull(root.getParent()).resolve("extra.txt"),
+                "outside selected root");
+        assertThatThrownBy(() -> service.prepare(archive, cache))
+                .isInstanceOf(ProjectException.class).hasMessageContaining("cached archive differs");
+        assertThat(extra).hasContent("outside selected root");
+        Files.delete(extra);
+        assertThat(service.prepare(archive, cache).modRoot()).isEqualTo(root);
+        assertThat(Files.readAllBytes(archive)).isEqualTo(originalArchive);
+        try (var children = Files.list(cache)) {
+            assertThat(children).hasSize(1);
+        }
+    }
+
+    @Test void cacheReuseDoesNotBypassCurrentArchiveLimits() throws Exception {
+        Path archive = zip("bounded-cache.zip", Map.of("mod_info.json", "{}", "text.txt", "original"));
+        Path cache = directory.resolve("bounded-cache");
+        new ModInputPreparationService().prepare(archive, cache);
+        assertThatThrownBy(() -> new ModInputPreparationService(1, 100).prepare(archive, cache))
+                .isInstanceOf(ProjectException.class).hasMessageContaining("too many entries");
+        assertThatThrownBy(() -> new ModInputPreparationService(10, 3).prepare(archive, cache))
+                .isInstanceOf(ProjectException.class).hasMessageContaining("safety limit");
+    }
+
     @Test void requiresExactlyOneArchiveMetadataFile() throws Exception {
         Path missing = zip("missing.zip", Map.of("readme.txt", "none"));
         Path ambiguous = zip("ambiguous.zip", Map.of(

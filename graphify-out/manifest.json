@@ -1,0 +1,3674 @@
+{
+  "build.gradle.kts": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.255646,
+    "ast_hash": "9aa8b5a3b3a76d6465fb94c7aba68199",
+    "semantic_hash": ""
+  },
+  "config/test-support/java/com/ssmt/testsupport/KnownFailureExtension.java": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.255657,
+    "ast_hash": "45765f68f9ea25e4b8ed234b1b1156f5",
+    "semantic_hash": ""
+  },
+  "config/test-support/java/com/ssmt/testsupport/KnownFailures.java": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.2556612,
+    "ast_hash": "7f8ed16857a10f1b2280753d4b826b52",
+    "semantic_hash": ""
+  },
+  "docs/evidence/p7/build-validation.json": {
+    "mtime": 1791237371.7019336,
+    "seen": 1792503682.255664,
+    "ast_hash": "990508fcc7fb49df2a5e8c77879ef1e0",
+    "semantic_hash": ""
+  },
+  "docs/evidence/p7/flowergod-apply-parity-v2.json": {
+    "mtime": 1791237333.6938746,
+    "seen": 1792503682.2556665,
+    "ast_hash": "b725abb5d959067d6b3c8577f2d4e82b",
+    "semantic_hash": ""
+  },
+  "docs/evidence/p7/flowergod-discovery-parity.json": {
+    "mtime": 1791237333.6928744,
+    "seen": 1792503682.2556684,
+    "ast_hash": "935550e6664f27df925fd47a02299445",
+    "semantic_hash": ""
+  },
+  "docs/evidence/p7/nightcross-prefill-parity.json": {
+    "mtime": 1791237333.6948743,
+    "seen": 1792503682.2556705,
+    "ast_hash": "d4a6bce3fed12a14dcfd941c3fa76c85",
+    "semantic_hash": ""
+  },
+  "docs/evidence/p7/package-acceptance.json": {
+    "mtime": 1791237393.2859473,
+    "seen": 1792503682.2556727,
+    "ast_hash": "1531f8b74c59563a06d52b082fcb0745",
+    "semantic_hash": ""
+  },
+  "fixtures/p3/mod/locales/en/p3_greeting.json": {
+    "mtime": 1792451894.4193976,
+    "seen": 1792503682.2556744,
+    "ast_hash": "4f98138fe3404d3d45593896fb69c7f4",
+    "semantic_hash": ""
+  },
+  "fixtures/p3/mod/locales/zh/p3_greeting.json": {
+    "mtime": 1792451894.4203973,
+    "seen": 1792503682.2556758,
+    "ast_hash": "4f98138fe3404d3d45593896fb69c7f4",
+    "semantic_hash": ""
+  },
+  "fixtures/p3/mod/mod_info.json": {
+    "mtime": 1792451894.4162278,
+    "seen": 1792503682.2556775,
+    "ast_hash": "f437f06dc6c79e5deb7e3cbf8e4055b2",
+    "semantic_hash": ""
+  },
+  "fixtures/p3/mod/pack_info.json": {
+    "mtime": 1792451894.417385,
+    "seen": 1792503682.2556798,
+    "ast_hash": "56ee12450cc44da3df293b3ec8a219fb",
+    "semantic_hash": ""
+  },
+  "fixtures/p3/mod/script/p3dialogue.json": {
+    "mtime": 1792451894.4203973,
+    "seen": 1792503682.2556815,
+    "ast_hash": "95eb6d4757dc88925805ac70d765dadb",
+    "semantic_hash": ""
+  },
+  "fixtures/runtime-context/candidate/mod_info.json": {
+    "mtime": 1792367872.0,
+    "seen": 1792503682.2556834,
+    "ast_hash": "ef7b006fd89832f8f8b59e9c4afa8242",
+    "semantic_hash": ""
+  },
+  "fixtures/runtime-context/observed-zero.synthetic.json": {
+    "mtime": 1792449477.981435,
+    "seen": 1792503682.2556846,
+    "ast_hash": "7d8d546ac9bbfe7ff8bcf0fa212c1901",
+    "semantic_hash": ""
+  },
+  "fixtures/runtime-context/unknown-exit.synthetic.json": {
+    "mtime": 1792449478.0207272,
+    "seen": 1792503682.255686,
+    "ast_hash": "4e9dcd45887d17fe1a40e73f9b90b10e",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/expected-apply.json": {
+    "mtime": 1791235076.2983866,
+    "seen": 1792503682.2556877,
+    "ast_hash": "60315d0896859ac03e70b3d1a381bacb",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/expected-export.json": {
+    "mtime": 1791235742.6933897,
+    "seen": 1792503682.2556891,
+    "ast_hash": "63f0d3294689744a1df4c2f17dfee40d",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/expected-output/ai/en/record.json": {
+    "mtime": 1791233808.4425695,
+    "seen": 1792503682.2556908,
+    "ast_hash": "a28c9de655d71a5073fe8f95c8e4d242",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/expected-output/data/scripts/Test.java": {
+    "mtime": 1791234139.634869,
+    "seen": 1792503682.2556927,
+    "ast_hash": "0a3e3075d0bfc1c5f69703ec861dcb7c",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/expected-output/data/settings.json": {
+    "mtime": 1791235742.6949,
+    "seen": 1792503682.2556944,
+    "ast_hash": "2882bb1da78ba01173e5613905bf6163",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/expected-output/mod_info.json": {
+    "mtime": 1791233808.4575708,
+    "seen": 1792503682.255696,
+    "ast_hash": "ffc41e9d8cf8db92ad865cd4d1c2ea6c",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/expected-output/src-decompiled-old/Test.java": {
+    "mtime": 1791233808.3810327,
+    "seen": 1792503682.2556992,
+    "ast_hash": "ec542a7454afc92fea4c913afa09350f",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/expected-output/src/Test.java": {
+    "mtime": 1791233808.3810327,
+    "seen": 1792503682.2557008,
+    "ast_hash": "ec542a7454afc92fea4c913afa09350f",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/input/ai/en/record.json": {
+    "mtime": 1791233808.384037,
+    "seen": 1792503682.2557023,
+    "ast_hash": "537b78abc7989f4134bb01d257561c07",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/input/data/scripts/Test.java": {
+    "mtime": 1791233808.380032,
+    "seen": 1792503682.255704,
+    "ast_hash": "6df10ec590a4509dafea7bf66a096412",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/input/data/settings.json": {
+    "mtime": 1791235742.6773603,
+    "seen": 1792503682.2557054,
+    "ast_hash": "08065a81dd14ccc8aca48fdbadac9a3c",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/input/mod_info.json": {
+    "mtime": 1791233808.3790329,
+    "seen": 1792503682.255707,
+    "ast_hash": "1a12946b18969d3b647a84bd78205455",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/input/src-decompiled-old/Test.java": {
+    "mtime": 1791233808.3810327,
+    "seen": 1792503682.2557087,
+    "ast_hash": "ec542a7454afc92fea4c913afa09350f",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/input/src/Test.java": {
+    "mtime": 1791233808.3810327,
+    "seen": 1792503682.2557101,
+    "ast_hash": "ec542a7454afc92fea4c913afa09350f",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/schema-v1-extensions.json": {
+    "mtime": 1792448812.5157616,
+    "seen": 1792503682.2557123,
+    "ast_hash": "3793535ebc25af864db7879159ffdccb",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/schema-v1-roles.json": {
+    "mtime": 1792448812.6251073,
+    "seen": 1792503682.2557137,
+    "ast_hash": "57fd732b5aa07f6d4f53dc8a0ffe4cb6",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/translated.json": {
+    "mtime": 1791235742.6933897,
+    "seen": 1792503682.2557158,
+    "ast_hash": "9c14eab750e8d247c9dfe56a17977573",
+    "semantic_hash": ""
+  },
+  "gradlew": {
+    "mtime": 1785059576.086019,
+    "seen": 1792503682.2557173,
+    "ast_hash": "a9c88f55314c7a98c21fc81f0c5b5b00",
+    "semantic_hash": ""
+  },
+  "settings.gradle.kts": {
+    "mtime": 1788267744.469625,
+    "seen": 1792503682.2557187,
+    "ast_hash": "c7b7fbd4e15de4329a6bc0efcb59a787",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/build.gradle.kts": {
+    "mtime": 1785684437.0503879,
+    "seen": 1792503682.2557204,
+    "ast_hash": "006cc0495287900c78d921f00fdd3cab",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/AiAdjudicationPromptBuilder.java": {
+    "mtime": 1785687473.392909,
+    "seen": 1792503682.255722,
+    "ast_hash": "d34a8b8080320479a0a3381529f8808d",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/AiProviderException.java": {
+    "mtime": 1785680073.0183003,
+    "seen": 1792503682.2557237,
+    "ast_hash": "d07fc207b705ac027dc76dec74c55737",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/AiProviderLocation.java": {
+    "mtime": 1785687444.9728327,
+    "seen": 1792503682.2557256,
+    "ast_hash": "40617fb3550df159dfb24751db0e6edb",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/AiProviderSettings.java": {
+    "mtime": 1785076089.7466621,
+    "seen": 1792503682.255727,
+    "ast_hash": "6861aac2fe746ee962df2de05f9f31bd",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/AiProviderType.java": {
+    "mtime": 1785680073.386232,
+    "seen": 1792503682.2557287,
+    "ast_hash": "46d08cdd2746a7623266cf430871c218",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/AiRoutingAssessment.java": {
+    "mtime": 1785685738.4794888,
+    "seen": 1792503682.2557302,
+    "ast_hash": "4ae15accfe33e45fd8a91056c565199a",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/AiRoutingDecision.java": {
+    "mtime": 1785685737.9996705,
+    "seen": 1792503682.2557318,
+    "ast_hash": "5aa7cba6523c785102a46e79c53376e5",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/AiRoutingHeuristic.java": {
+    "mtime": 1785685738.8955567,
+    "seen": 1792503682.2557344,
+    "ast_hash": "9220745e56443ccc16077bef78cb0559",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/AiTranslationProvider.java": {
+    "mtime": 1785068060.5345807,
+    "seen": 1792503682.2557366,
+    "ast_hash": "546904a8e506f3e07fe1694c88ac07f4",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/AiTranslationRequest.java": {
+    "mtime": 1785685048.5490396,
+    "seen": 1792503682.255738,
+    "ast_hash": "59082f628abf57e5835dacecd1c6cdd2",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/ApprovedGlossary.java": {
+    "mtime": 1785685232.3468988,
+    "seen": 1792503682.2557402,
+    "ast_hash": "a89b1b575354396f3f2523585abed765",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/ArgosDevice.java": {
+    "mtime": 1785684132.6293204,
+    "seen": 1792503682.2557416,
+    "ast_hash": "5213334b92b9cd19d762783a74655e03",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/ArgosExecutionStatus.java": {
+    "mtime": 1785684848.2006183,
+    "seen": 1792503682.255743,
+    "ast_hash": "9f5d7a37e050e5f888747bb7b8eecfd8",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/ArgosTranslatePlugin.java": {
+    "mtime": 1785685214.8947775,
+    "seen": 1792503682.2557445,
+    "ast_hash": "5c8c02dcf1c035e21a821e2bb859b757",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/AttributedTranslationProvider.java": {
+    "mtime": 1785685214.0927823,
+    "seen": 1792503682.2557461,
+    "ast_hash": "bad0ff56e69cb2ef78cb1a30c5db4071",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/BoundedLocalTranslationProcess.java": {
+    "mtime": 1785684849.3853505,
+    "seen": 1792503682.2557478,
+    "ast_hash": "b5252fb8f5616a0a9cd128c1d10bfc83",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/ConservativeTranslationConfidenceEvaluator.java": {
+    "mtime": 1785684436.6270452,
+    "seen": 1792503682.2557497,
+    "ast_hash": "1255881c33a8fd9976f0c6bd02b4907c",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/FinalAiAdjudicationResult.java": {
+    "mtime": 1785687445.7990432,
+    "seen": 1792503682.2557514,
+    "ast_hash": "c3b42b51e781bebcdf6099b40c32caf8",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/FinalAiAdjudicationStatus.java": {
+    "mtime": 1785687445.4062023,
+    "seen": 1792503682.2557538,
+    "ast_hash": "fe9134e06a0c0da85bcb77991c2d2ad9",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/FinalAiAdjudicator.java": {
+    "mtime": 1785687473.7871735,
+    "seen": 1792503682.255755,
+    "ast_hash": "0fb942f0197836d616ab8aa2017f3022",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/GeminiTranslationProvider.java": {
+    "mtime": 1785068062.2337542,
+    "seen": 1792503682.2557566,
+    "ast_hash": "e2cfbdee8e42088faa139d51a65baa9e",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/JdkJsonHttpTransport.java": {
+    "mtime": 1785068137.7257576,
+    "seen": 1792503682.255758,
+    "ast_hash": "bdf8a9353c3c17f7dab75d6cb0a1b680",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/JsonHttpTransport.java": {
+    "mtime": 1785068061.394442,
+    "seen": 1792503682.2557597,
+    "ast_hash": "8f9390de5b1f7da5875bb13101aa7b5e",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/LocalProcessResult.java": {
+    "mtime": 1785680033.276797,
+    "seen": 1792503682.2557611,
+    "ast_hash": "cbf330f783d1b7dd9c71466a579818b1",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/LocalProviderPreflight.java": {
+    "mtime": 1785688698.0408754,
+    "seen": 1792503682.2557626,
+    "ast_hash": "08bb6cb11ba28de3bfbe3df9497e7d81",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/LocalTranslationProcess.java": {
+    "mtime": 1785684133.4358995,
+    "seen": 1792503682.2557666,
+    "ast_hash": "5376e85320241551234beb6c87996fed",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/OfflineTranslationAttempt.java": {
+    "mtime": 1785685215.6926687,
+    "seen": 1792503682.2557683,
+    "ast_hash": "948b69e4c7f80ce852727b5ee4eaef40",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/OfflineTranslationChain.java": {
+    "mtime": 1785688240.6549792,
+    "seen": 1792503682.2557702,
+    "ast_hash": "515850b06fc56fa442a7be72da6817cb",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/OfflineTranslationDraft.java": {
+    "mtime": 1785684437.4556067,
+    "seen": 1792503682.2557716,
+    "ast_hash": "2074f8f49badc8cc8f2332626cc05bc2",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/OfflineTranslationOrigin.java": {
+    "mtime": 1785680032.1552572,
+    "seen": 1792503682.255773,
+    "ast_hash": "3c5b5317bede76c38eed92ddda5226aa",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/OllamaTranslationProvider.java": {
+    "mtime": 1785068061.8046715,
+    "seen": 1792503682.255775,
+    "ast_hash": "f41c73efa33328b49ea8feddad1ba830",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/OpenAiTranslationProvider.java": {
+    "mtime": 1785069969.9382098,
+    "seen": 1792503682.2557771,
+    "ast_hash": "8a76442829de3c5561d37d00b9ad688f",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/ProviderGenerationMetadata.java": {
+    "mtime": 1785685213.6232567,
+    "seen": 1792503682.2557786,
+    "ast_hash": "5dd0150e21fab7350a8ecff1e3c717c8",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/ResourceAwareTranslationProvider.java": {
+    "mtime": 1785685214.4856286,
+    "seen": 1792503682.25578,
+    "ast_hash": "814316927adde2415f2f6f6fd52d33a2",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/RoutingEvidenceDetector.java": {
+    "mtime": 1785688698.5550883,
+    "seen": 1792503682.2557817,
+    "ast_hash": "8d8b0276539ab57a05d59f4caa6a32a2",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/TranslateLocallyPlugin.java": {
+    "mtime": 1785686239.9203725,
+    "seen": 1792503682.255783,
+    "ast_hash": "7783ddebffeccf756d6b4bb1ed261a14",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/TranslationAssessment.java": {
+    "mtime": 1785684435.3660061,
+    "seen": 1792503682.2557847,
+    "ast_hash": "82138fd5846de216612d598dfa5638bf",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/TranslationBackend.java": {
+    "mtime": 1785684846.9865162,
+    "seen": 1792503682.2557864,
+    "ast_hash": "3366eeec751e2f4d54ca8edb93bae859",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/TranslationConfidence.java": {
+    "mtime": 1785684434.9222383,
+    "seen": 1792503682.2557878,
+    "ast_hash": "068521af4519c69529a29c08276a5ced",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/TranslationConfidenceEvaluator.java": {
+    "mtime": 1785684436.2197976,
+    "seen": 1792503682.2557895,
+    "ast_hash": "c07eeb875aa4ed7e88f359b6769b6bb6",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/TranslationMode.java": {
+    "mtime": 1785685739.2995255,
+    "seen": 1792503682.2557912,
+    "ast_hash": "6d7c2ec1e89b75769cb788796636cce8",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/TranslationPromptBuilder.java": {
+    "mtime": 1785685048.9472342,
+    "seen": 1792503682.2557926,
+    "ast_hash": "ecebb6c88ac9e264e6ce8b672ec02314",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/TranslationProviderCapabilities.java": {
+    "mtime": 1785684847.3881662,
+    "seen": 1792503682.2557948,
+    "ast_hash": "8ce159870d85536ef0d91add6c19afdf",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/TranslationResourceLimits.java": {
+    "mtime": 1785684681.6037867,
+    "seen": 1792503682.2557962,
+    "ast_hash": "d94678838d90092dc8432d1e2e57269b",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/main/java/com/ssmt/ai/package-info.java": {
+    "mtime": 1785068059.2753377,
+    "seen": 1792503682.255798,
+    "ast_hash": "9c8c7e856b86e4f78bbc6c86baab344b",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/test/java/com/ssmt/ai/AiAdjudicationPromptBuilderTest.java": {
+    "mtime": 1785685049.7808647,
+    "seen": 1792503682.2557998,
+    "ast_hash": "3c3e6854ff775e290a7cad9297a4b7bc",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/test/java/com/ssmt/ai/AiProviderSettingsTest.java": {
+    "mtime": 1785075955.9460394,
+    "seen": 1792503682.2558014,
+    "ast_hash": "6f23a01e9fe17d5b0b6a2b927c299599",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/test/java/com/ssmt/ai/AiRoutingHeuristicTest.java": {
+    "mtime": 1785685737.6149874,
+    "seen": 1792503682.2558029,
+    "ast_hash": "c04739bbff83447335c545cfa1d5c671",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/test/java/com/ssmt/ai/FinalAiAdjudicatorTest.java": {
+    "mtime": 1785687559.6304586,
+    "seen": 1792503682.255804,
+    "ast_hash": "c5a53c4629a34353398640e688d8a3af",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/test/java/com/ssmt/ai/LocalProviderPreflightTest.java": {
+    "mtime": 1788119737.062615,
+    "seen": 1792503682.255806,
+    "ast_hash": "5036c8a50b30ff551be575616fd48889",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/test/java/com/ssmt/ai/LocalTranslationPluginTest.java": {
+    "mtime": 1785686231.3889318,
+    "seen": 1792503682.2558093,
+    "ast_hash": "f8648edaf5013e0cbd74253cb2f70ffc",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/test/java/com/ssmt/ai/OfflineTranslationChainTest.java": {
+    "mtime": 1785685517.5822084,
+    "seen": 1792503682.255811,
+    "ast_hash": "c94b8163ea68c2c54f7a8eec6ce2db3b",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/test/java/com/ssmt/ai/ProviderAdapterTest.java": {
+    "mtime": 1785069957.2953107,
+    "seen": 1792503682.2558126,
+    "ast_hash": "43f667ae4e89edf55968100d0cafbc58",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/test/java/com/ssmt/ai/RoutingEvidenceDetectorTest.java": {
+    "mtime": 1785688935.8129864,
+    "seen": 1792503682.255814,
+    "ast_hash": "fa4065334dd547744c04e7d33ddfb7e5",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/test/java/com/ssmt/ai/TranslationPromptBuilderTest.java": {
+    "mtime": 1785067986.992968,
+    "seen": 1792503682.2558155,
+    "ast_hash": "7c748926e4687fe89283740eb37c56e7",
+    "semantic_hash": ""
+  },
+  "ssmt-ai/src/test/java/com/ssmt/ai/TranslationResourceLimitsTest.java": {
+    "mtime": 1785684664.3753786,
+    "seen": 1792503682.2558172,
+    "ast_hash": "c9ce9e0f69b4fef1ddf44ae3c777e72d",
+    "semantic_hash": ""
+  },
+  "ssmt-auto/build.gradle.kts": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.2558188,
+    "ast_hash": "1b59760a8e3623db77d2e8b44202c0db",
+    "semantic_hash": ""
+  },
+  "ssmt-auto/src/main/java/com/ssmt/auto/AiRoundTrip.java": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.2558203,
+    "ast_hash": "4261e216d74af22d87e5bb540b2ce455",
+    "semantic_hash": ""
+  },
+  "ssmt-auto/src/main/java/com/ssmt/auto/AutoMain.java": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.2558217,
+    "ast_hash": "9706d321125bc6a5fba346690a450481",
+    "semantic_hash": ""
+  },
+  "ssmt-auto/src/main/java/com/ssmt/auto/AutoRunResult.java": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.2558234,
+    "ast_hash": "3bab54717d6a786dfb10fd64ff9538ff",
+    "semantic_hash": ""
+  },
+  "ssmt-auto/src/main/java/com/ssmt/auto/AutoWorkflow.java": {
+    "mtime": 1792367872.0,
+    "seen": 1792503682.2558246,
+    "ast_hash": "42b6dd57d101d06460cd86863d57559d",
+    "semantic_hash": ""
+  },
+  "ssmt-auto/src/main/java/com/ssmt/auto/WindowsNativeArguments.java": {
+    "mtime": 1791513228.6893377,
+    "seen": 1792503682.2558265,
+    "ast_hash": "e2c204658822a6af798979dd6543aff2",
+    "semantic_hash": ""
+  },
+  "ssmt-auto/src/test/java/com/ssmt/auto/AiRoundTripAutoTest.java": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.255828,
+    "ast_hash": "a1e70108ec02e8d828cce99eecb40937",
+    "semantic_hash": ""
+  },
+  "ssmt-auto/src/test/java/com/ssmt/auto/AutoWorkflowTest.java": {
+    "mtime": 1789884758.7503855,
+    "seen": 1792503682.2558298,
+    "ast_hash": "a8f6268e3376c9928b88145b91d23841",
+    "semantic_hash": ""
+  },
+  "ssmt-auto/src/test/java/com/ssmt/auto/BridgeForgeAutoWorkflowTest.java": {
+    "mtime": 1791235351.594619,
+    "seen": 1792503682.2558312,
+    "ast_hash": "7f3df668d98851c090cdbea59ea6f868",
+    "semantic_hash": ""
+  },
+  "ssmt-auto/src/test/java/com/ssmt/auto/RankedMatchAutoTest.java": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.2558331,
+    "ast_hash": "315a2b9509f00872d54b33b95d48ba96",
+    "semantic_hash": ""
+  },
+  "ssmt-auto/src/test/java/com/ssmt/auto/UnreadableInputAutoTest.java": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.2558343,
+    "ast_hash": "f21502705ae9f8731c4dfb3100215030",
+    "semantic_hash": ""
+  },
+  "ssmt-auto/src/test/java/com/ssmt/auto/WindowsNativeArgumentsTest.java": {
+    "mtime": 1791512830.6651156,
+    "seen": 1792503682.255836,
+    "ast_hash": "90d46e72ddecd1f87338082189a646c2",
+    "semantic_hash": ""
+  },
+  "ssmt-auto/src/test/scripts/verify-native-unicode.ps1": {
+    "mtime": 1791554089.980176,
+    "seen": 1792503682.2558372,
+    "ast_hash": "049fa9aa4ab8f406c8a05fc68ccf516d",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/build.gradle.kts": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.2558389,
+    "ast_hash": "518f652ac0bae214ee1fdd851c020e08",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/AssessCommand.java": {
+    "mtime": 1790543925.162294,
+    "seen": 1792503682.2558405,
+    "ast_hash": "d70b4a903e0e74f6ff6118c31a69d8b3",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/AssuranceCommand.java": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.2558417,
+    "ast_hash": "272f0b3b47f88598fcac40ad78c5a2ca",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/AttemptFeedbackCommand.java": {
+    "mtime": 1789883620.9985204,
+    "seen": 1792503682.2558434,
+    "ast_hash": "e0144077722ae2be850f20b7efecbb02",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/AuditCandidateCommand.java": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.2558448,
+    "ast_hash": "667849ebf1ba56822d1f9492f8290151",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/BridgeForgeTranslationCommand.java": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.2558465,
+    "ast_hash": "6f94213d1778bf37a74fc33a6040b73b",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/BuildEvidenceCommand.java": {
+    "mtime": 1789867321.6912067,
+    "seen": 1792503682.255848,
+    "ast_hash": "e830f9989fae6170348f712963fa4552",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/CliDiagnostics.java": {
+    "mtime": 1785693190.1937933,
+    "seen": 1792503682.2558494,
+    "ast_hash": "06579b92fae4e0929a19bcc07e9b8f15",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/ExtractCommand.java": {
+    "mtime": 1791235193.329665,
+    "seen": 1792503682.255851,
+    "ast_hash": "835448ca651ea42cfba3d79c3524b3cb",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/FinalizeEvidenceCommand.java": {
+    "mtime": 1789883979.7722375,
+    "seen": 1792503682.2558525,
+    "ast_hash": "651dc23d2eeed6ed09ad51184310ecc0",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/Main.java": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.2558541,
+    "ast_hash": "fd012bf1d5159f88fbf95067d0e72278",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/OfflineTranslateCommand.java": {
+    "mtime": 1788264358.4700289,
+    "seen": 1792503682.2558553,
+    "ast_hash": "451f9e166e88537a7d9cf2e831ae90df",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/ProjectCommand.java": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.255857,
+    "ast_hash": "198bfcf32417fcf80b3444fe312d4e10",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/ProjectTranslateCommand.java": {
+    "mtime": 1788264359.214174,
+    "seen": 1792503682.2558584,
+    "ast_hash": "cfc81a1a840bc63376b50f46dfb42cb3",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/ReleaseChainCommand.java": {
+    "mtime": 1790543472.2122693,
+    "seen": 1792503682.2558599,
+    "ast_hash": "0649f0b07ea30eadab51509b762cb085",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/RuntimeEvidenceCommand.java": {
+    "mtime": 1792503262.5368352,
+    "seen": 1792503682.2558615,
+    "ast_hash": "23dcf17dd15f14210960a5a7e7f00765",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/ScanCommand.java": {
+    "mtime": 1785064042.525817,
+    "seen": 1792503682.2558627,
+    "ast_hash": "a880e94f6ad1159819f49865f671756b",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/StorageCommand.java": {
+    "mtime": 1789133179.9331362,
+    "seen": 1792503682.2558644,
+    "ast_hash": "1a079978050e120bcd4219cf6ac834f7",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/TranslationCommand.java": {
+    "mtime": 1789269732.8037858,
+    "seen": 1792503682.2558658,
+    "ast_hash": "314b57050ef3b9f1559295a5514f9ccd",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/TranslationMemoryCommand.java": {
+    "mtime": 1785693287.3187141,
+    "seen": 1792503682.2558672,
+    "ast_hash": "6bbe0a5b31e6e5387120013015cec87a",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/ValidateCommand.java": {
+    "mtime": 1785068246.898231,
+    "seen": 1792503682.2558687,
+    "ast_hash": "89a1c89e94bb348bd3a7c7be93e57f5f",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/java/com/ssmt/cli/package-info.java": {
+    "mtime": 1785062846.2565084,
+    "seen": 1792503682.25587,
+    "ast_hash": "2992d60831bf32e4a0fb155d449ae7e8",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/main/scripts/ssmt-cli.ps1": {
+    "mtime": 1791236848.2687507,
+    "seen": 1792503682.255872,
+    "ast_hash": "70028392a3bbbea2420ba05b521b6938",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/AssessCommandTest.java": {
+    "mtime": 1790544065.2737205,
+    "seen": 1792503682.2558732,
+    "ast_hash": "4d2fa0fc1fc9ed843b10066f5f10800b",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/AssuranceCommandTest.java": {
+    "mtime": 1792503213.2994702,
+    "seen": 1792503682.255875,
+    "ast_hash": "908c0b7098b308d5d6d37e69cc0461d1",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/AssuranceImportRunCommandTest.java": {
+    "mtime": 1792367852.4341679,
+    "seen": 1792503682.2558765,
+    "ast_hash": "4cf7b4e3df39b87fdf83d99c231ae178",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/AuditCandidateCommandTest.java": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.2558782,
+    "ast_hash": "e87cf45ffe2cf2045de64d977fb9b5f7",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/BackendCommandTest.java": {
+    "mtime": 1789082533.546042,
+    "seen": 1792503682.2558796,
+    "ast_hash": "b4821fe838bb959a38535179d274854b",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/BridgeForgeTranslationCheckCommandTest.java": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.2558813,
+    "ast_hash": "f1fb1c96b8561f7b8f855ef64f467e63",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/BridgeForgeTranslationComparisonCommandTest.java": {
+    "mtime": 1791509170.799615,
+    "seen": 1792503682.255883,
+    "ast_hash": "f0ab762de7d965490914dd5b00e93440",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/BridgeForgeTranslationRestoreCommandTest.java": {
+    "mtime": 1792365662.0550437,
+    "seen": 1792503682.2558846,
+    "ast_hash": "5a1e71f4f5e1a81d28e692d66fe717fe",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/CliDiagnosticsTest.java": {
+    "mtime": 1785693444.1283956,
+    "seen": 1792503682.2558858,
+    "ast_hash": "921d30a5d36213047c76de9a7daac3dd",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/CliGoldenHelpTest.java": {
+    "mtime": 1792365662.0550437,
+    "seen": 1792503682.2558873,
+    "ast_hash": "e017726e884e687cb59cf3719688eab4",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/ExtractCommandTest.java": {
+    "mtime": 1788619696.6183226,
+    "seen": 1792503682.255889,
+    "ast_hash": "e1a2f0f37cacbf743c7e85c3ded80526",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/KnownFailureExtensionTest.java": {
+    "mtime": 1792365662.0550437,
+    "seen": 1792503682.2558904,
+    "ast_hash": "7ae0890c12c0176ea8c9b91605384b42",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/KnownFailuresTest.java": {
+    "mtime": 1792365662.0563774,
+    "seen": 1792503682.2558937,
+    "ast_hash": "a7181e5426886b20800525a8a24aacdc",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/OfflineTranslateCommandTest.java": {
+    "mtime": 1785693503.5529444,
+    "seen": 1792503682.2558954,
+    "ast_hash": "97bae4a6e925b6470ffbbef6ee189b06",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/ProjectCommandTest.java": {
+    "mtime": 1789082534.060825,
+    "seen": 1792503682.2558966,
+    "ast_hash": "b4c9a063aea3e3e963eead8a0404d2b5",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/ReleaseChainCommandTest.java": {
+    "mtime": 1790543472.9282079,
+    "seen": 1792503682.2558985,
+    "ast_hash": "afd527275b79a9e6443aa3fe6292653e",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/ScanCommandTest.java": {
+    "mtime": 1785064102.682472,
+    "seen": 1792503682.2559,
+    "ast_hash": "3dc515d08e362fb5c4345d4efadf6c92",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/StorageCommandTest.java": {
+    "mtime": 1789133180.4394958,
+    "seen": 1792503682.2559013,
+    "ast_hash": "1e59b884e5200f76b8862d4ab7221543",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/TranslationCommandTest.java": {
+    "mtime": 1789269732.8047855,
+    "seen": 1792503682.255903,
+    "ast_hash": "e24c336fedca45d77bab3d4792ce7b5c",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/java/com/ssmt/cli/package-info.java": {
+    "mtime": 1785062846.2624116,
+    "seen": 1792503682.2559044,
+    "ast_hash": "a4b83896a97ae4da653ad6362cec0750",
+    "semantic_hash": ""
+  },
+  "ssmt-cli/src/test/scripts/verify-windows-launcher.ps1": {
+    "mtime": 1791554089.8086226,
+    "seen": 1792503682.255908,
+    "ast_hash": "50960e54343d7341f2b6df2513395445",
+    "semantic_hash": ""
+  },
+  "ssmt-core/build.gradle.kts": {
+    "mtime": 1785063912.7325716,
+    "seen": 1792503682.25591,
+    "ast_hash": "c33f3e2105284d226b518863e38dd324",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/BytecodeTextAllowlist.java": {
+    "mtime": 1788662400.8463943,
+    "seen": 1792503682.2559114,
+    "ast_hash": "906e40c6abe43ba1784971a3292a5f54",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/CancellationToken.java": {
+    "mtime": 1785075313.8298113,
+    "seen": 1792503682.255915,
+    "ast_hash": "8875bb71f787e59d778124a08ff385d9",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/OperationCancelledException.java": {
+    "mtime": 1785075318.7380242,
+    "seen": 1792503682.2559166,
+    "ast_hash": "00e5fcff7a28b7d151b6803bece71d09",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/RuntimeBudgets.java": {
+    "mtime": 1785075313.4054642,
+    "seen": 1792503682.255918,
+    "ast_hash": "5d40c17b1b0388e2ccbb1b7b40d91114",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/evidence/LedgerWriter.java": {
+    "mtime": 1792503099.0511577,
+    "seen": 1792503682.25592,
+    "ast_hash": "3b7cfce87d3cb2d3a16dbac712db1c01",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/evidence/RuntimeEvidence.java": {
+    "mtime": 1792503099.048157,
+    "seen": 1792503682.2559211,
+    "ast_hash": "9800e391caf8af21dc90b5d77375728b",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/evidence/SchemaValidator.java": {
+    "mtime": 1792503099.0501578,
+    "seen": 1792503682.2559223,
+    "ast_hash": "ad84880fa48bddb717f8d84bead4d826",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/exception/SsmtException.java": {
+    "mtime": 1785063958.6986074,
+    "seen": 1792503682.2559245,
+    "ast_hash": "2c25a8cf8fc2207cc76d69d71d6eb72e",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/exception/SsmtParseException.java": {
+    "mtime": 1785095073.2979903,
+    "seen": 1792503682.2559261,
+    "ast_hash": "cc93e4c626a2b5e0bf2edb9bc33f6cfd",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/exception/SsmtValidationException.java": {
+    "mtime": 1785063960.078028,
+    "seen": 1792503682.2559273,
+    "ast_hash": "947973789b9109b28b3e48b03993bd70",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/exception/package-info.java": {
+    "mtime": 1788267952.2575226,
+    "seen": 1792503682.2559288,
+    "ast_hash": "424e399a7e5bf2318d0690a35f1b8e65",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/model/ExtractedString.java": {
+    "mtime": 1785063958.277491,
+    "seen": 1792503682.2559304,
+    "ast_hash": "da34f2a565a3f74bd8798cee24897c63",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/model/ModDependency.java": {
+    "mtime": 1785063957.4298732,
+    "seen": 1792503682.255932,
+    "ast_hash": "13a6c07ea97b715b7ec89fa46023b509",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/model/ModInfo.java": {
+    "mtime": 1785063957.8580372,
+    "seen": 1792503682.2559338,
+    "ast_hash": "1ebbf087474a4bec3000b4a39b262880",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/model/TranslationProvenance.java": {
+    "mtime": 1792365662.0575001,
+    "seen": 1792503682.255937,
+    "ast_hash": "94050effb1fac067042f80460bf63926",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/model/package-info.java": {
+    "mtime": 1785062846.2565084,
+    "seen": 1792503682.2559385,
+    "ast_hash": "5f39daf73c1f113ce7439bbf2cbe064c",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/package-info.java": {
+    "mtime": 1785062846.2624116,
+    "seen": 1792503682.2559404,
+    "ast_hash": "b53c55ef3f0caa7f24d9b4ac6d349be9",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/plugin/ExtractionRequest.java": {
+    "mtime": 1785064864.7318108,
+    "seen": 1792503682.2559419,
+    "ast_hash": "f113311505ca9799a219bc2b70a68c2d",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/plugin/FileExtractor.java": {
+    "mtime": 1785064865.1168945,
+    "seen": 1792503682.2559435,
+    "ast_hash": "851b94f0e99a830d6508e49b38a8da82",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/main/java/com/ssmt/core/plugin/package-info.java": {
+    "mtime": 1788267951.5481915,
+    "seen": 1792503682.2559452,
+    "ast_hash": "1b516064f2dcc1ef6c03e7693ba2dc1d",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/test/java/com/ssmt/core/RuntimeBudgetsTest.java": {
+    "mtime": 1785075314.7005396,
+    "seen": 1792503682.2559464,
+    "ast_hash": "b9d7720ec3b24eadd44c7f76da9a7d03",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/test/java/com/ssmt/core/evidence/LedgerWriterTest.java": {
+    "mtime": 1792503127.3394103,
+    "seen": 1792503682.255952,
+    "ast_hash": "e3aec03e1c812d93becaf01df3f7b92c",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/test/java/com/ssmt/core/exception/SsmtParseExceptionTest.java": {
+    "mtime": 1785064101.455248,
+    "seen": 1792503682.2559536,
+    "ast_hash": "33b6aae470b4184ed0340076fd9d3a99",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/test/java/com/ssmt/core/model/ExtractedStringTest.java": {
+    "mtime": 1785064100.7875817,
+    "seen": 1792503682.2559552,
+    "ast_hash": "ef25cdaf7b6402f7963e66890589f69d",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/test/java/com/ssmt/core/model/ModInfoTest.java": {
+    "mtime": 1785064100.3690858,
+    "seen": 1792503682.2559566,
+    "ast_hash": "fb4e6c0135524d90a154453d533830d7",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/test/java/com/ssmt/core/package-info.java": {
+    "mtime": 1785062846.2522998,
+    "seen": 1792503682.2559583,
+    "ast_hash": "36489e599c58aa1335148bcd3b0d001c",
+    "semantic_hash": ""
+  },
+  "ssmt-core/src/test/java/com/ssmt/core/plugin/ExtractionRequestTest.java": {
+    "mtime": 1785064779.3835597,
+    "seen": 1792503682.25596,
+    "ast_hash": "4aa394e420facdf000f71254aafa3ad3",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/build.gradle.kts": {
+    "mtime": 1785066060.3474555,
+    "seen": 1792503682.2559617,
+    "ast_hash": "6255e3e78601416a35374998f27c5c73",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/AuditWorkflow.java": {
+    "mtime": 1792503071.959574,
+    "seen": 1792503682.2559628,
+    "ast_hash": "fb511de284ae44cd485bac3a6e3fb5be",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/CoverageGapAuditor.java": {
+    "mtime": 1788662112.9114602,
+    "seen": 1792503682.2559648,
+    "ast_hash": "aace4d84dc5c10adbdca6edd1e959d95",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/CoverageGapFinding.java": {
+    "mtime": 1785717844.4416685,
+    "seen": 1792503682.2559664,
+    "ast_hash": "98265bdd2ad2000eb10dac971934f364",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/CsvGapSchemaSuggester.java": {
+    "mtime": 1788662113.6723502,
+    "seen": 1792503682.255968,
+    "ast_hash": "5c593f851b901211c212572a9ea6d2d8",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/CsvStructureAuditor.java": {
+    "mtime": 1789886633.4987938,
+    "seen": 1792503682.2559698,
+    "ast_hash": "66d00dd245b527a68de22d81aeb19b62",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/CsvTextEvidence.java": {
+    "mtime": 1788662112.1634839,
+    "seen": 1792503682.255971,
+    "ast_hash": "7979a78bc8ba8dc4ddb738d166e5e180",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/ExtractionCoordinator.java": {
+    "mtime": 1789316344.1381044,
+    "seen": 1792503682.2559726,
+    "ast_hash": "66c0294b1f2be0847e3b9a03464f08a8",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/ExtractionReport.java": {
+    "mtime": 1789316343.4670658,
+    "seen": 1792503682.2559738,
+    "ast_hash": "09d36bf1474b93edf99fc12c19e7c009",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/FileCoverage.java": {
+    "mtime": 1789316342.7878275,
+    "seen": 1792503682.255976,
+    "ast_hash": "3b1e6fef2de74f755275cc8010655242",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/GapSchemaStatus.java": {
+    "mtime": 1788663278.4674609,
+    "seen": 1792503682.2559774,
+    "ast_hash": "1a538f51a12db24856a6b0704cd60799",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/GapSchemaSuggestion.java": {
+    "mtime": 1788619307.7180405,
+    "seen": 1792503682.255979,
+    "ast_hash": "91332b748bc07e213d92c6c37c4c59b0",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/JarEntryCoverage.java": {
+    "mtime": 1790195204.49859,
+    "seen": 1792503682.2559805,
+    "ast_hash": "11e5b4456e99679466ad3dacce9f883a",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/StandardCsvGapAuditor.java": {
+    "mtime": 1790217752.5732236,
+    "seen": 1792503682.255982,
+    "ast_hash": "5042f878a8dc1994ef708c0a3f0c6ae2",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/StandardJsonGapAuditor.java": {
+    "mtime": 1789867725.8549056,
+    "seen": 1792503682.2559834,
+    "ast_hash": "161e956dd5ec969050a74ebd7f9539b6",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/bytecode/ClassStringExtractor.java": {
+    "mtime": 1790195186.3716142,
+    "seen": 1792503682.2559848,
+    "ast_hash": "72c6ab82d13c697208d3e5d79f340365",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/bytecode/package-info.java": {
+    "mtime": 1785066107.2974372,
+    "seen": 1792503682.2559865,
+    "ast_hash": "9c80a06ee51b1dcd88bcc5bc90d08cb2",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/csv/ConfiguredCsvFileExtractor.java": {
+    "mtime": 1785620749.3149188,
+    "seen": 1792503682.2559876,
+    "ast_hash": "336fee5e83e27abb8a24fe38141d401e",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/csv/CsvExtractionSpec.java": {
+    "mtime": 1785620684.8356285,
+    "seen": 1792503682.2559893,
+    "ast_hash": "357bc1fba38e8f4cb7cb9f08b04ca604",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/csv/CsvExtractor.java": {
+    "mtime": 1785073361.2895732,
+    "seen": 1792503682.2559905,
+    "ast_hash": "e122eceb993d9664165ca62e40ab7e13",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/csv/OptInCsvFileSchema.java": {
+    "mtime": 1785620707.4652169,
+    "seen": 1792503682.2559922,
+    "ast_hash": "5e69dcd9fcc80cd05045a009abacfbd8",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/csv/OptInCsvSchema.java": {
+    "mtime": 1785620725.3783557,
+    "seen": 1792503682.2559934,
+    "ast_hash": "4109ab9a2ca4be76e5054d67985ac146",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/csv/OptInCsvSchemaCatalog.java": {
+    "mtime": 1785620740.8998008,
+    "seen": 1792503682.2559948,
+    "ast_hash": "f7d566ce8058436a85970fab0d2a8076",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/csv/StandardCsvFileExtractor.java": {
+    "mtime": 1785065430.13682,
+    "seen": 1792503682.2559962,
+    "ast_hash": "b922a3445b1ba4696ac533572f049e19",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/csv/StandardCsvSchemas.java": {
+    "mtime": 1789335875.4281414,
+    "seen": 1792503682.2559974,
+    "ast_hash": "4a4b2cfe6bdd1fc70eff7409371704c3",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/csv/package-info.java": {
+    "mtime": 1785064866.3730164,
+    "seen": 1792503682.255999,
+    "ast_hash": "898425cb0dbb58574a5d6da46639ca37",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/json/ConfiguredJsonFileExtractor.java": {
+    "mtime": 1785071175.1681077,
+    "seen": 1792503682.2560005,
+    "ast_hash": "8336f8972171650fc0bc09bf32a28c14",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/json/JsonExtractionSpec.java": {
+    "mtime": 1789344247.4016705,
+    "seen": 1792503682.2560017,
+    "ast_hash": "4a3bfe3aa32063380fa51a4f208e1d8b",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/json/JsonExtractor.java": {
+    "mtime": 1789344261.961046,
+    "seen": 1792503682.2560034,
+    "ast_hash": "376130b5790b16dceed148a50d3b10a5",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/json/OptInJsonFileSchema.java": {
+    "mtime": 1788577473.9842925,
+    "seen": 1792503682.2560048,
+    "ast_hash": "57f981b98e08046a70fa456980fbbc00",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/json/OptInJsonSchema.java": {
+    "mtime": 1785071174.3159187,
+    "seen": 1792503682.2560065,
+    "ast_hash": "9f56cd186e2459e708006655477461a5",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/json/OptInJsonSchemaCatalog.java": {
+    "mtime": 1785075968.5293946,
+    "seen": 1792503682.256008,
+    "ast_hash": "b0e495806fc0b6d1356c4eeb365377c0",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/json/StandardJsonFileExtractor.java": {
+    "mtime": 1789344273.430726,
+    "seen": 1792503682.256009,
+    "ast_hash": "b0d6fba2fb94fefed7f7dfd34f96bacd",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/json/package-info.java": {
+    "mtime": 1785065780.2933848,
+    "seen": 1792503682.2560108,
+    "ast_hash": "84c6f42bf295f9fe122590c352b12d0f",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/package-info.java": {
+    "mtime": 1785064865.7317238,
+    "seen": 1792503682.256012,
+    "ast_hash": "2a1b864b3e5f67fcd6f091e7245327bd",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/text/MissionTextExtractor.java": {
+    "mtime": 1789884269.203493,
+    "seen": 1792503682.2560136,
+    "ast_hash": "d0242ba5291c80126924e7c4f6385d56",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/main/java/com/ssmt/extractor/text/package-info.java": {
+    "mtime": 1788268416.403234,
+    "seen": 1792503682.2560148,
+    "ast_hash": "bab28e7dc26e5dad0947f322356d453d",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/CoverageGapAuditorTest.java": {
+    "mtime": 1790217762.1331792,
+    "seen": 1792503682.256016,
+    "ast_hash": "15f2f7f69487686200d468defdcb265b",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/CsvGapSchemaSuggesterTest.java": {
+    "mtime": 1788662298.8632493,
+    "seen": 1792503682.2560174,
+    "ast_hash": "4260d7e936fcfd2a4ae10ff707c98d46",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/CsvStructureAuditorTest.java": {
+    "mtime": 1789391579.1007023,
+    "seen": 1792503682.256019,
+    "ast_hash": "7903196bc0c2cf498776b535dfd9fcc8",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/ExtractionCoordinatorTest.java": {
+    "mtime": 1785084674.935459,
+    "seen": 1792503682.2560205,
+    "ast_hash": "a3c8edcbd71093248ca22ad69d7d3014",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/FileCoverageTest.java": {
+    "mtime": 1789316344.7868547,
+    "seen": 1792503682.256022,
+    "ast_hash": "156ae4c2c2671e3ebf60958ee96ad78d",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/JarEntryCoverageTest.java": {
+    "mtime": 1789883912.0483854,
+    "seen": 1792503682.2560234,
+    "ast_hash": "8ee0e73837bdefc5d10ef41f03cc83b0",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/StandardJsonGapAuditorTest.java": {
+    "mtime": 1789867726.3717048,
+    "seen": 1792503682.2560248,
+    "ast_hash": "5912aa860fca78f732847f552e4d45cf",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/bytecode/ClassStringExtractorTest.java": {
+    "mtime": 1788662116.7496881,
+    "seen": 1792503682.256026,
+    "ast_hash": "6b4207ffb4cbc6929fc1476e2501932e",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/csv/CsvExtractionSpecTest.java": {
+    "mtime": 1785620696.5212934,
+    "seen": 1792503682.2560277,
+    "ast_hash": "d3c5da8225b8ad0e50b29098e93ecafb",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/csv/CsvExtractorTest.java": {
+    "mtime": 1788119829.9790697,
+    "seen": 1792503682.256029,
+    "ast_hash": "44890449cfbb746ccc3035b2a4583f34",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/csv/OptInCsvFileSchemaTest.java": {
+    "mtime": 1785620794.6091025,
+    "seen": 1792503682.2560306,
+    "ast_hash": "d226f78d4edac8668d8ae08520f504c9",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/csv/OptInCsvSchemaCatalogTest.java": {
+    "mtime": 1785620777.3718247,
+    "seen": 1792503682.2560334,
+    "ast_hash": "c6216c229a3e45cbdd1d69eb580fbdb9",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/csv/StandardCsvSchemasTest.java": {
+    "mtime": 1789335875.9532466,
+    "seen": 1792503682.256035,
+    "ast_hash": "c07625b783a9ced6c833ed396e2e4d69",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/csv/WeaponTooltipCoverageTest.java": {
+    "mtime": 1789335876.4707508,
+    "seen": 1792503682.2560365,
+    "ast_hash": "4888c46ec4b29cc5a07951efc6f07d55",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/json/JsonExtractionSpecTest.java": {
+    "mtime": 1789344467.5495343,
+    "seen": 1792503682.2560382,
+    "ast_hash": "d806aef734966d9c315b67cef7ebe1fd",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/json/JsonExtractorTest.java": {
+    "mtime": 1788577573.251906,
+    "seen": 1792503682.2560396,
+    "ast_hash": "c9d78242c9008eb44371015d9349531c",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/json/OptInJsonSchemaCatalogTest.java": {
+    "mtime": 1788577575.5935674,
+    "seen": 1792503682.2560458,
+    "ast_hash": "5ad71b44a4934ab256b7091b6ce9644a",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/json/StandardJsonFileExtractorTest.java": {
+    "mtime": 1789344396.0295627,
+    "seen": 1792503682.2560472,
+    "ast_hash": "4f528adacf392c9558af1d4e88f703a2",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/java/com/ssmt/extractor/text/MissionTextExtractorTest.java": {
+    "mtime": 1789884302.360169,
+    "seen": 1792503682.2560487,
+    "ast_hash": "d7bf19c077b0e85c193c1e27292799e8",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/resources/fixtures/json/malformed.json": {
+    "mtime": 1785065710.5316143,
+    "seen": 1792503682.25605,
+    "ast_hash": "afffb7783ba07388e9a9f484850b4f47",
+    "semantic_hash": ""
+  },
+  "ssmt-extractor/src/test/resources/fixtures/json/nested.json": {
+    "mtime": 1785065709.4169478,
+    "seen": 1792503682.2560515,
+    "ast_hash": "23c54d3501c6fe4fe709023f24370367",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/build.gradle.kts": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.256053,
+    "ast_hash": "d4b32e0e3e68eb2c1442d301d1a42a35",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/AiProviderSettingsViewModel.java": {
+    "mtime": 1785083600.1061993,
+    "seen": 1792503682.2560546,
+    "ast_hash": "9c080227fded3d6858048bea7bda9155",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/DefaultTranslationMemoryLocator.java": {
+    "mtime": 1788264345.679977,
+    "seen": 1792503682.2560558,
+    "ast_hash": "ffc8947f194d728b36aba283658abc40",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/ExtractorComparisonPane.java": {
+    "mtime": 1791513403.8714197,
+    "seen": 1792503682.2560573,
+    "ast_hash": "d79c1d411e790d1420fa2afe326fb363",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/GuiLauncher.java": {
+    "mtime": 1788699419.5327418,
+    "seen": 1792503682.256059,
+    "ast_hash": "9b6b2d91d2dd1f3ed2170df343e9d0c4",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/GuiText.java": {
+    "mtime": 1785084731.6897366,
+    "seen": 1792503682.2560601,
+    "ast_hash": "11b19a4ec3cc41fb7e7fbdde702dbe2e",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/JsonSchemaEditorViewModel.java": {
+    "mtime": 1785076001.979828,
+    "seen": 1792503682.2560616,
+    "ast_hash": "39cdbe6999e60aefb58534331ee6b038",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/LegacyProjectsFoundException.java": {
+    "mtime": 1789246331.132445,
+    "seen": 1792503682.256063,
+    "ast_hash": "4040da1037798dcb6e7c59d4903f65eb",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/LogDashboardViewModel.java": {
+    "mtime": 1785069075.8183799,
+    "seen": 1792503682.2560642,
+    "ast_hash": "890c04f0b189b3d082b5cf50191bb8ff",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/LogEntry.java": {
+    "mtime": 1785069075.3635757,
+    "seen": 1792503682.256066,
+    "ast_hash": "81bcc55a645e91523eadb573bc79463e",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/LogLevel.java": {
+    "mtime": 1785069074.9141235,
+    "seen": 1792503682.2560673,
+    "ast_hash": "23522b4b969a28059fcdc6673353bc12",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/ProjectWorkspaceController.java": {
+    "mtime": 1788665155.3356884,
+    "seen": 1792503682.2560692,
+    "ast_hash": "04ecab13a7dd1e31b75789c30ae77411",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/ProjectWorkspaceInfo.java": {
+    "mtime": 1785678867.31805,
+    "seen": 1792503682.2560706,
+    "ast_hash": "6e66dd69fff933533a0e2c6f68f4d17d",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/SsmtApplication.java": {
+    "mtime": 1791513014.5815158,
+    "seen": 1792503682.2560723,
+    "ast_hash": "9ac39943dd498371f9446bbd0a8d3aa2",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/SyntheticSampleProject.java": {
+    "mtime": 1785678074.3863368,
+    "seen": 1792503682.2560735,
+    "ast_hash": "96c35e5126d1238ee61d6c53d6f8e9fa",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/TranslationEditorController.java": {
+    "mtime": 1785688650.780805,
+    "seen": 1792503682.256075,
+    "ast_hash": "248e7f22a05e4f0bb2deb1c22fb1c1c5",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/TranslationEditorViewModel.java": {
+    "mtime": 1785076090.1687608,
+    "seen": 1792503682.2560766,
+    "ast_hash": "8bab8898c9f057da3ae62f7a842f3bc0",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/TranslationRow.java": {
+    "mtime": 1785069074.0499616,
+    "seen": 1792503682.2560797,
+    "ast_hash": "ad1d3f52ea79fb4774f332357aa708eb",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/TranslationRowId.java": {
+    "mtime": 1785069073.5880332,
+    "seen": 1792503682.2560813,
+    "ast_hash": "fe882e85e03b40c0d8c2c69134ad0cad",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/TranslationStatus.java": {
+    "mtime": 1785075209.1298554,
+    "seen": 1792503682.256083,
+    "ast_hash": "b074efc637072fad36362a1974877dfa",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/TranslationWorkflowController.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.2560844,
+    "ast_hash": "e7201a783e8389f5afd244d1b43a3d86",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/TranslationWorkflowPane.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.256086,
+    "ast_hash": "cca2ce6f79e52ae29863125fb2f168ae",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/TranslationWorkflowPresentation.java": {
+    "mtime": 1791512731.12086,
+    "seen": 1792503682.2560875,
+    "ast_hash": "060c3f21c3bb8115bd4b004011f3d61f",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/UserDiagnostic.java": {
+    "mtime": 1789313818.779172,
+    "seen": 1792503682.256089,
+    "ast_hash": "d9c99e3881b5a7585c0ccbf56890419e",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/WorkflowFailureReport.java": {
+    "mtime": 1789313818.7811718,
+    "seen": 1792503682.2560906,
+    "ast_hash": "784f2762c38402aca02fe70336f3f9e7",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/WorkflowMaintenanceController.java": {
+    "mtime": 1789162858.0078137,
+    "seen": 1792503682.2560918,
+    "ast_hash": "f37381d84ffceb779bce85fb8ed3fa7b",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/java/com/ssmt/gui/package-info.java": {
+    "mtime": 1785069073.1666243,
+    "seen": 1792503682.2560933,
+    "ast_hash": "2ea14d41543c6bb2310b3ce9638e44d9",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/resources/sample-project/data/strings/strings.json": {
+    "mtime": 1785677777.6642678,
+    "seen": 1792503682.2560968,
+    "ast_hash": "94d516bb0604b21e7701d9301e5571c2",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/resources/sample-project/mod_info.json": {
+    "mtime": 1788116242.9667604,
+    "seen": 1792503682.2560983,
+    "ast_hash": "6918a21ed4d47b528ed18425a21b5502",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/AiProviderSettingsViewModelTest.java": {
+    "mtime": 1785083600.5551274,
+    "seen": 1792503682.2561,
+    "ast_hash": "a25b88537a75fccbb16f6b96287235c4",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/CatalogRestartResumeRegressionTest.java": {
+    "mtime": 1788265023.8188612,
+    "seen": 1792503682.2561014,
+    "ast_hash": "cb9ffe6dd1e6bf167e83f39d5523b926",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/DefaultTranslationMemoryLocatorTest.java": {
+    "mtime": 1788116319.535622,
+    "seen": 1792503682.2561033,
+    "ast_hash": "6ac8603b54618303cd2c1c957cec009d",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/EdmundCorpusWorkflowTest.java": {
+    "mtime": 1789336020.0869272,
+    "seen": 1792503682.2561047,
+    "ast_hash": "4b04d7e20126b2a81d919d88e7d06337",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/ExistingProjectAiExportWorkflowTest.java": {
+    "mtime": 1788663275.9762762,
+    "seen": 1792503682.2561061,
+    "ast_hash": "7c4df46c47f9d90977de39db520d811c",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/GuiChecklistTest.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.2561078,
+    "ast_hash": "7352969fef04e5b8d831ee41f144ead3",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/GuiTextCompletenessTest.java": {
+    "mtime": 1788698650.2619996,
+    "seen": 1792503682.2561092,
+    "ast_hash": "915b1646ce52f0cb51ad2f00d10bf508",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/GuiTextTest.java": {
+    "mtime": 1788117646.8070626,
+    "seen": 1792503682.2561107,
+    "ast_hash": "feb54cbd80c41828a99d2e13bacff497",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/JsonSchemaEditorViewModelTest.java": {
+    "mtime": 1785076002.4216712,
+    "seen": 1792503682.256112,
+    "ast_hash": "deb143da902decb982e74b3a3c88a07f",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/LogDashboardViewModelTest.java": {
+    "mtime": 1785068999.3669212,
+    "seen": 1792503682.2561138,
+    "ast_hash": "38d4a4dc8a7416ab9bdb707eb6c00912",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/ProjectWorkspaceControllerTest.java": {
+    "mtime": 1785678931.0351067,
+    "seen": 1792503682.2561154,
+    "ast_hash": "0c058a2d091fdd1fa4bb4b6184871068",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/SsmtApplicationArtifactPathTest.java": {
+    "mtime": 1788116321.3788114,
+    "seen": 1792503682.256117,
+    "ast_hash": "db3d26a6f5f461e4196bfab72eec6cdf",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/SsmtApplicationTest.java": {
+    "mtime": 1788116320.441159,
+    "seen": 1792503682.2561183,
+    "ast_hash": "b7b5cb1454f053dadcb1f24e0dd87342",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/SyntheticSampleProjectTest.java": {
+    "mtime": 1785677778.0795834,
+    "seen": 1792503682.2561197,
+    "ast_hash": "6d23a1f5b59611914e4b3b0b53ecdc72",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/TranslationEditorControllerTest.java": {
+    "mtime": 1785076338.6037197,
+    "seen": 1792503682.2561212,
+    "ast_hash": "63c16d3b8176ec6f732737864e50e7a7",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/TranslationEditorViewModelTest.java": {
+    "mtime": 1785076058.240803,
+    "seen": 1792503682.2561226,
+    "ast_hash": "a16d7ef00becb71fb0f9a1a7189cf538",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/TranslationWorkflowControllerTest.java": {
+    "mtime": 1791512830.4856613,
+    "seen": 1792503682.2561243,
+    "ast_hash": "df60a51d69e31707689b44d0b53c1f77",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/TranslationWorkflowPresentationTest.java": {
+    "mtime": 1791513187.0833151,
+    "seen": 1792503682.2561255,
+    "ast_hash": "07568c1da9e54b39adc67d311ecab8cb",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/UnreadableAcknowledgementTest.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.2561426,
+    "ast_hash": "ab4f8512615ee7d3a4760aec33003f01",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/UserDiagnosticTest.java": {
+    "mtime": 1789313818.779172,
+    "seen": 1792503682.256144,
+    "ast_hash": "d46119d7099db8007d37563405d15ab0",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/WorkflowFailureReportTest.java": {
+    "mtime": 1789313818.7811718,
+    "seen": 1792503682.2561457,
+    "ast_hash": "994c09fbbd11e45e8dbad16eefc760df",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/java/com/ssmt/gui/WorkflowMaintenanceControllerTest.java": {
+    "mtime": 1789162858.98014,
+    "seen": 1792503682.2561474,
+    "ast_hash": "430194615d8b3e02203574a325c83e62",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/build.gradle.kts": {
+    "mtime": 1785069237.000338,
+    "seen": 1792503682.2561493,
+    "ast_hash": "606a15b3cec4a27cc530ee34a9dd8e00",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/main/java/com/ssmt/patcher/ClassFileInjector.java": {
+    "mtime": 1788662027.6120176,
+    "seen": 1792503682.2561505,
+    "ast_hash": "ece759af772e971a65d4a4a52dd0d561",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/main/java/com/ssmt/patcher/CsvTokenPatch.java": {
+    "mtime": 1789318279.2259824,
+    "seen": 1792503682.2561522,
+    "ast_hash": "6bc56e736c9cf09b39552dd10981c7c6",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/main/java/com/ssmt/patcher/JsonTokenPatch.java": {
+    "mtime": 1789344527.4443357,
+    "seen": 1792503682.2561536,
+    "ast_hash": "6a5ab83c90bb81e2e4dc497999742f0e",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/main/java/com/ssmt/patcher/PatchArtifact.java": {
+    "mtime": 1791234799.9509034,
+    "seen": 1792503682.2561548,
+    "ast_hash": "1773cc21ef39888ee4acd3b698c5b912",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/main/java/com/ssmt/patcher/PatchBuildResult.java": {
+    "mtime": 1785067637.0468671,
+    "seen": 1792503682.2561564,
+    "ast_hash": "b74336e8b61572c241572da3e7db6626",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/main/java/com/ssmt/patcher/PatchBuilder.java": {
+    "mtime": 1789390562.2518475,
+    "seen": 1792503682.2561576,
+    "ast_hash": "d9f561965af3d1a968cc05b157ad0f8d",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/main/java/com/ssmt/patcher/PatchBuilderException.java": {
+    "mtime": 1785067388.7554657,
+    "seen": 1792503682.2561595,
+    "ast_hash": "3c8b8f4860ed12437477baaf0bee90b1",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/main/java/com/ssmt/patcher/PatchRecoveryService.java": {
+    "mtime": 1789133088.4147818,
+    "seen": 1792503682.256161,
+    "ast_hash": "dfbc0592c0867e9ad485295ca47cf39c",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/main/java/com/ssmt/patcher/PatchRequest.java": {
+    "mtime": 1785679406.644601,
+    "seen": 1792503682.256163,
+    "ast_hash": "aea733fd0fdb80dda328fa308cd48417",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/main/java/com/ssmt/patcher/StandardFileInjector.java": {
+    "mtime": 1789884268.6959994,
+    "seen": 1792503682.256164,
+    "ast_hash": "c5d84063ed2af1c773403ed6c1aebfaa",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/main/java/com/ssmt/patcher/TranslatedCloneAudit.java": {
+    "mtime": 1789390751.4571083,
+    "seen": 1792503682.2561657,
+    "ast_hash": "5c6ab0b651729af3a709bbf8fe9128b9",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/main/java/com/ssmt/patcher/TranslationReplacement.java": {
+    "mtime": 1785067518.6964939,
+    "seen": 1792503682.2561672,
+    "ast_hash": "371ae63c44627118726b73d52cc9ca87",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/main/java/com/ssmt/patcher/package-info.java": {
+    "mtime": 1785067388.342582,
+    "seen": 1792503682.2561686,
+    "ast_hash": "b87aba8c5f77163cbdb041bc78790a66",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/test/java/com/ssmt/patcher/ClassFileInjectorTest.java": {
+    "mtime": 1788662117.679927,
+    "seen": 1792503682.2561703,
+    "ast_hash": "7b91a55677fa4dd8c5f3791f01092807",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/test/java/com/ssmt/patcher/CsvTokenPatchTest.java": {
+    "mtime": 1789318255.0088239,
+    "seen": 1792503682.2561717,
+    "ast_hash": "9b0d0cc18f7413d532d50425ad3bf94c",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/test/java/com/ssmt/patcher/JsonTokenPatchTest.java": {
+    "mtime": 1789317855.0435717,
+    "seen": 1792503682.2561731,
+    "ast_hash": "d7c381fdb6eb3871d64b827f843bc525",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/test/java/com/ssmt/patcher/PatchBuilderTest.java": {
+    "mtime": 1789390457.0535078,
+    "seen": 1792503682.2561746,
+    "ast_hash": "058f4559bf6ff545afadb4db433564e3",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/test/java/com/ssmt/patcher/PatchRecoveryServiceTest.java": {
+    "mtime": 1789133088.8968692,
+    "seen": 1792503682.2561762,
+    "ast_hash": "37abdecfd30a4f6a8170b9e0ad4a4007",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/test/java/com/ssmt/patcher/PublicationRetryTest.java": {
+    "mtime": 1789297038.2056277,
+    "seen": 1792503682.2561777,
+    "ast_hash": "34d3c89bad1649f98d930210bc0d4d79",
+    "semantic_hash": ""
+  },
+  "ssmt-patcher/src/test/java/com/ssmt/patcher/StandardFileInjectorTest.java": {
+    "mtime": 1789884269.7133498,
+    "seen": 1792503682.256179,
+    "ast_hash": "407a674a30748d63bed39ae49a9b3b41",
+    "semantic_hash": ""
+  },
+  "ssmt-project/build.gradle.kts": {
+    "mtime": 1792449387.0243516,
+    "seen": 1792503682.2561808,
+    "ast_hash": "ca791448344439ffb20c785a6e9a8946",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/AiImportDiagnostic.java": {
+    "mtime": 1785093803.433736,
+    "seen": 1792503682.256182,
+    "ast_hash": "91706964c96f4bb633267ede3591a1c0",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/AiImportPolicy.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.2561834,
+    "ast_hash": "04339d0e2cc990079b9d4cf3eba1b4e1",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/AiImportValidationException.java": {
+    "mtime": 1785093824.2179184,
+    "seen": 1792503682.256185,
+    "ast_hash": "422ae0889af0262e2033df0ddc641518",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/AiTranslationExchangeService.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.2561867,
+    "ast_hash": "0a6e5123d859b7a62ddf4ef940e94b29",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/AiTranslationImportResult.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.256188,
+    "ast_hash": "837ebabced056ffaa99d397f47c8e8f4",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/AssuranceLedgerReader.java": {
+    "mtime": 1789931363.2999456,
+    "seen": 1792503682.256189,
+    "ast_hash": "8d65d53b8f13727572148ba1fd33147c",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/AssuranceLedgerWriter.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.256191,
+    "ast_hash": "61157031992474ca97de1ac3efd0cc88",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/AssuranceSummary.java": {
+    "mtime": 1789315807.6213503,
+    "seen": 1792503682.2561924,
+    "ast_hash": "c3724d2f05333858d1905a442d94d1e8",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/AttemptFeedbackReader.java": {
+    "mtime": 1789887118.1412728,
+    "seen": 1792503682.256194,
+    "ast_hash": "d196f10a6f8c740c925bcdaa792a0ca1",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/AuthorLocalizationDetector.java": {
+    "mtime": 1785093291.5009239,
+    "seen": 1792503682.2561955,
+    "ast_hash": "abde6da976e629948863bcbaf0c520fe",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/AuthorLocalizationPair.java": {
+    "mtime": 1785093290.783388,
+    "seen": 1792503682.2561972,
+    "ast_hash": "eaef19569055c84b793f22a52ffc0c01",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/AuthorLocalizationReport.java": {
+    "mtime": 1785093291.1338775,
+    "seen": 1792503682.2561984,
+    "ast_hash": "407174aae71ef420e7b9afe63dd3a259",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/BridgeForgeClassFile.java": {
+    "mtime": 1791233759.7642896,
+    "seen": 1792503682.2561998,
+    "ast_hash": "430eaa078f770eb902323f4424704b08",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/BridgeForgeJarRewrite.java": {
+    "mtime": 1791235682.9044094,
+    "seen": 1792503682.2562015,
+    "ast_hash": "0195e0caa2366703d79f4a9827ebd90b",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/BridgeForgePlaceholders.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.256203,
+    "ast_hash": "4cb9a2dac73af672fc5f263278213f02",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/BridgeForgeProjectAdapter.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.2562044,
+    "ast_hash": "91e6794db4ed1c4159a0d629c8a469cb",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/BridgeForgeProjectExchange.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.2562058,
+    "ast_hash": "c3a91c59cda709590aa3b76735e002ac",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/BridgeForgeShippedHash.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.2562077,
+    "ast_hash": "6e11bcb7966c1d337606bf1489ad534d",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/BridgeForgeTextUnits.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.256209,
+    "ast_hash": "dd7c292a13378532ce68e63cad00da27",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/BridgeForgeTranslationApply.java": {
+    "mtime": 1792448230.2559643,
+    "seen": 1792503682.2562103,
+    "ast_hash": "036e78da0f78ea822e2f9f9e14e53792",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/BridgeForgeTranslationComparison.java": {
+    "mtime": 1791509397.1569824,
+    "seen": 1792503682.256212,
+    "ast_hash": "4ebefefd0e8881ef70214647ac19f16e",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/BridgeForgeTranslationDocument.java": {
+    "mtime": 1792448719.4134338,
+    "seen": 1792503682.2562134,
+    "ast_hash": "1a07d3ba25a8ee33ed755e23f62a3d6b",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/BridgeForgeTranslationPrefill.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.2562149,
+    "ast_hash": "bfdcfa555547b48547a5d22d44239d4a",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/BridgeForgeTranslationService.java": {
+    "mtime": 1792448231.6315846,
+    "seen": 1792503682.2562163,
+    "ast_hash": "4b799a5cabdf2ce692b658bfa47f52f8",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/BrowserAiReviewExport.java": {
+    "mtime": 1785686342.0503097,
+    "seen": 1792503682.2562177,
+    "ast_hash": "3c37c9fca9bc6e654f38e48038b73e20",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/BrowserAiReviewService.java": {
+    "mtime": 1788663448.370355,
+    "seen": 1792503682.2562194,
+    "ast_hash": "68b6aa629ba45cfe7dc3978bf10a21ef",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/BuildEvidenceReader.java": {
+    "mtime": 1789931362.7215466,
+    "seen": 1792503682.2562208,
+    "ast_hash": "f09d5009e92e3a0ee6d9fb304ff6c650",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/BytecodeCallSites.java": {
+    "mtime": 1792448202.6459513,
+    "seen": 1792503682.2562222,
+    "ast_hash": "54d6a68b29d7c5ce7c950a76de6fd16c",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/CandidateArchiveAudit.java": {
+    "mtime": 1792503555.5146933,
+    "seen": 1792503682.256224,
+    "ast_hash": "d026a5317bb59754cdeff61cb4095563",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/CandidateRanker.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.2562256,
+    "ast_hash": "fa4b4cbd918807912f12cc49437daa98",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ChainedProjectTranslationEngine.java": {
+    "mtime": 1785692296.8776512,
+    "seen": 1792503682.256227,
+    "ast_hash": "78db10547d79ffbdacf15cde6422a4de",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ConsistencyFinding.java": {
+    "mtime": 1785093320.1113515,
+    "seen": 1792503682.2562284,
+    "ast_hash": "1335d4ac2c6b9c24f04e5f92295806eb",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ConsistencyFindingType.java": {
+    "mtime": 1785093319.761367,
+    "seen": 1792503682.2562299,
+    "ast_hash": "5b82270b6747f003518d0bcf43d9e2f1",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/FileTranslationCoverage.java": {
+    "mtime": 1785641577.511378,
+    "seen": 1792503682.256231,
+    "ast_hash": "3c2092f2d73f52dc6c5653a4ad25e358",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/FinalEvidenceService.java": {
+    "mtime": 1789883771.007183,
+    "seen": 1792503682.256246,
+    "ast_hash": "3011b70237b4bd00aec250b1ee649cb1",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/FontCoverageAuditor.java": {
+    "mtime": 1785641538.6070387,
+    "seen": 1792503682.2562475,
+    "ast_hash": "cd98b1dd23a4bd7422dc633e94b5a690",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/FontCoverageFinding.java": {
+    "mtime": 1785641529.8607593,
+    "seen": 1792503682.2562492,
+    "ast_hash": "d888c7b19cbfaaf9f52e08e487262a1b",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/GlossaryConflict.java": {
+    "mtime": 1785689426.7199254,
+    "seen": 1792503682.2562506,
+    "ast_hash": "6cedacba2973b6cc615ea49ac39049f0",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/GlossaryConflictAuditor.java": {
+    "mtime": 1785689427.1570413,
+    "seen": 1792503682.2562518,
+    "ast_hash": "2ff55405d60fc081382a53ea2170e011",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/GlossaryDocument.java": {
+    "mtime": 1785689425.8084836,
+    "seen": 1792503682.2562535,
+    "ast_hash": "dc7e6af2c91674956d4760d7a4fc6b83",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/GlossaryInterchangeService.java": {
+    "mtime": 1785689619.7708063,
+    "seen": 1792503682.256255,
+    "ast_hash": "2f3ee6bb04b6969106de61a2ce5bd4af",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/GlossaryService.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.2562568,
+    "ast_hash": "3c6670f63f2bb916240189c42acd0267",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/GlossaryTerm.java": {
+    "mtime": 1785689425.3690352,
+    "seen": 1792503682.2562582,
+    "ast_hash": "c82f53c4f1dc426ac132bfd6e36b35d7",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/InstalledCopyEvidence.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.25626,
+    "ast_hash": "3813fc31e6bd811fcae5dbe0d3b07297",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/LeftoverClassifier.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.256261,
+    "ast_hash": "c5babefe69869d1f65f89c6f30957c2b",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/LegacyProjectCandidate.java": {
+    "mtime": 1789177035.7582705,
+    "seen": 1792503682.2562625,
+    "ast_hash": "1aef3d26c62f206b759f335289c35bf9",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/LinkedGroupEnforcer.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.2562642,
+    "ast_hash": "023f74ecd1639142d966aa91e6244647",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/LocalizationProject.java": {
+    "mtime": 1791234799.9388983,
+    "seen": 1792503682.2562656,
+    "ast_hash": "ecaa7b0248af02069e332c4730c84b6a",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/LocalizationProjectService.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.256267,
+    "ast_hash": "1e969e4c1a8d357b19f910442cb0745c",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/MemoryMatchSuggester.java": {
+    "mtime": 1792365662.0578606,
+    "seen": 1792503682.2562685,
+    "ast_hash": "7856b43760d31edfbe2d2a51508deb79",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ModInputPreparationService.java": {
+    "mtime": 1792503097.9340518,
+    "seen": 1792503682.2562702,
+    "ast_hash": "f7c8a0cc24b7b67e5b758bf23e6f8322",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/PolicyApproval.java": {
+    "mtime": 1792365662.0731452,
+    "seen": 1792503682.2562718,
+    "ast_hash": "8105f2d60705e52af72ec3a5b13ae60f",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/PreferredLocalProvider.java": {
+    "mtime": 1785687758.888515,
+    "seen": 1792503682.2562735,
+    "ast_hash": "09120d95254f67c23603ad329b3720b9",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/PresentationNames.java": {
+    "mtime": 1789245888.0141304,
+    "seen": 1792503682.2562747,
+    "ast_hash": "d3236ffb68e25a1ec952cb2710e102d7",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ProjectBuildPreview.java": {
+    "mtime": 1788117605.1918488,
+    "seen": 1792503682.2562761,
+    "ast_hash": "f82363a5165c0ddc7c97625e1f359b43",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ProjectBuildResult.java": {
+    "mtime": 1785069805.5918937,
+    "seen": 1792503682.2562776,
+    "ast_hash": "5bd3077cf0c956583112a8adbf4ac8ba",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ProjectDiagnosticExporter.java": {
+    "mtime": 1785075363.5672407,
+    "seen": 1792503682.2562788,
+    "ast_hash": "70573fe86833e92993701ee677261a4f",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ProjectEntry.java": {
+    "mtime": 1785093227.6998024,
+    "seen": 1792503682.2562804,
+    "ast_hash": "08b4085d90d7d0afb9979f5b209f4031",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ProjectEntryTranslation.java": {
+    "mtime": 1785687759.7183945,
+    "seen": 1792503682.2562819,
+    "ast_hash": "2bf211a75d4a03dd379dd628715e0dc3",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ProjectEntryTranslationEngine.java": {
+    "mtime": 1785688198.579989,
+    "seen": 1792503682.256283,
+    "ast_hash": "131f8950044624c7f6841a81a2bfb751",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ProjectException.java": {
+    "mtime": 1785093756.9680302,
+    "seen": 1792503682.2562847,
+    "ast_hash": "03234611a7465d7fcbf596f11a3e9dcb",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ProjectRecoveryService.java": {
+    "mtime": 1785075467.0129025,
+    "seen": 1792503682.2562861,
+    "ast_hash": "b65c2a7a79a31cf59aafe025e2c68513",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ProjectRefreshResult.java": {
+    "mtime": 1785074682.1093721,
+    "seen": 1792503682.2562878,
+    "ast_hash": "7ab1861d70b68c7cd63604b430b1e625",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ProjectRestorePointService.java": {
+    "mtime": 1788123035.1356828,
+    "seen": 1792503682.2562892,
+    "ast_hash": "c5f97addab75117a326d520f49e2835a",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ProjectSourceDetails.java": {
+    "mtime": 1785088331.5566432,
+    "seen": 1792503682.256291,
+    "ast_hash": "b88ff8838712e983016468c6547a5566",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ProjectTranslationCheckpointService.java": {
+    "mtime": 1785689264.9469657,
+    "seen": 1792503682.2562923,
+    "ast_hash": "2cd37fd7ecdcbc5fb2daf0b0abc8179c",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ProjectTranslationCheckpointSink.java": {
+    "mtime": 1785688876.7992685,
+    "seen": 1792503682.2562938,
+    "ast_hash": "63949044728994756b6a79def139d185",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ProjectTranslationCoordinator.java": {
+    "mtime": 1788645023.3985877,
+    "seen": 1792503682.2562954,
+    "ast_hash": "67a6d446451e9a83433b9675fedf1b65",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ProjectTranslationResult.java": {
+    "mtime": 1785687760.5513737,
+    "seen": 1792503682.2562969,
+    "ast_hash": "8c314251cb542031e79ee4f639e31f03",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ProjectTranslationSettings.java": {
+    "mtime": 1785687759.2947488,
+    "seen": 1792503682.2562985,
+    "ast_hash": "1cfe60fe2a3b13ca86dd176dcd643a0c",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ReconciliationEntry.java": {
+    "mtime": 1785074681.238528,
+    "seen": 1792503682.2562997,
+    "ast_hash": "00d4c55871dd5a415766c9921e609f4f",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ReconciliationReport.java": {
+    "mtime": 1785074681.685665,
+    "seen": 1792503682.2563014,
+    "ast_hash": "7dcf3d9b926045a3df632fe9df955850",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ReconciliationStatus.java": {
+    "mtime": 1785074680.821924,
+    "seen": 1792503682.2563026,
+    "ast_hash": "d2e895c1f0b06aa4d42209bbcc29e694",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/RunRecordImport.java": {
+    "mtime": 1792449515.460054,
+    "seen": 1792503682.2563045,
+    "ast_hash": "eea8ae2842caab6d67167efd07e9c384",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/RuntimeEvidenceCapture.java": {
+    "mtime": 1792449695.9131315,
+    "seen": 1792503682.2563057,
+    "ast_hash": "f82bac0d8e589eda48d29f6af78768c4",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/RuntimeEvidenceReader.java": {
+    "mtime": 1792503262.1499321,
+    "seen": 1792503682.2563093,
+    "ast_hash": "e9c3b8233878ae707a49459ad36a7df5",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/SharedTranslationWorkflowService.java": {
+    "mtime": 1792365662.0750425,
+    "seen": 1792503682.2563105,
+    "ast_hash": "e82b9eca9a2760808c796e9adbb9fc5f",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/ShipTranslationContext.java": {
+    "mtime": 1788645021.595188,
+    "seen": 1792503682.2563121,
+    "ast_hash": "8031b3ec63293606945854647fcd10c8",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/SourceAttestationStore.java": {
+    "mtime": 1789884488.7557268,
+    "seen": 1792503682.2563133,
+    "ast_hash": "47f000b19ed4d15dff81258a2df838cc",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/SourceIdentityConflictException.java": {
+    "mtime": 1789246164.0578012,
+    "seen": 1792503682.256315,
+    "ast_hash": "46ab23efe56cf0aa7e4279302a69e9d3",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/SourceIntegrityGuard.java": {
+    "mtime": 1789884488.245325,
+    "seen": 1792503682.2563164,
+    "ast_hash": "4ef0e888a2d6a903b7b11664735b7f1f",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/SourceLanguageDetector.java": {
+    "mtime": 1785089319.4925218,
+    "seen": 1792503682.2563179,
+    "ast_hash": "7824a4a77800fef0f2bec7d406e362f0",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/SourceModIdentity.java": {
+    "mtime": 1789245836.9099011,
+    "seen": 1792503682.2563195,
+    "ast_hash": "7850da573e59aa93aefa7f161c74a76a",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/StorageHygieneService.java": {
+    "mtime": 1789133301.1012294,
+    "seen": 1792503682.2563212,
+    "ast_hash": "5bbe370630eae218f6913ac92fc00613",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/TerminologyConsistencyAuditor.java": {
+    "mtime": 1785093320.4821749,
+    "seen": 1792503682.2563229,
+    "ast_hash": "40682f78de6878fdb69e45a21e8cea80",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/TranslationCoverageAuditor.java": {
+    "mtime": 1785641601.2717998,
+    "seen": 1792503682.2563243,
+    "ast_hash": "bb7bd30fe32660c68154e079117fab9c",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/TranslationCoverageReport.java": {
+    "mtime": 1785641592.8935764,
+    "seen": 1792503682.256326,
+    "ast_hash": "468c78b3b9e4d269e1595e195146e7b1",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/TranslationMemoryApprovedGlossary.java": {
+    "mtime": 1785685291.8661647,
+    "seen": 1792503682.2563272,
+    "ast_hash": "19170cac316de97710b07975d333b37a",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/TranslationMetadataInterchangeService.java": {
+    "mtime": 1785687867.8182445,
+    "seen": 1792503682.2563288,
+    "ast_hash": "774d7737194d34a65880a47538809b90",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/TranslationReportExporter.java": {
+    "mtime": 1788665153.782048,
+    "seen": 1792503682.25633,
+    "ast_hash": "0d2613f67b2a028a3259f380d7e7e345",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/TranslationSnapshot.java": {
+    "mtime": 1792365662.0750425,
+    "seen": 1792503682.2563314,
+    "ast_hash": "463601edecbb92920743b7025c8a959c",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/TranslationWorkflow.java": {
+    "mtime": 1792365662.0750425,
+    "seen": 1792503682.2563329,
+    "ast_hash": "6247452e0995c0abd202d1445110ccfe",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/UnitRoleClassifier.java": {
+    "mtime": 1792448230.8582046,
+    "seen": 1792503682.2563345,
+    "ast_hash": "6f39ff279e18242b14e5df3a9c7d5a6f",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/WorkflowDiagnosticExport.java": {
+    "mtime": 1791513575.5519228,
+    "seen": 1792503682.2563362,
+    "ast_hash": "9ba1dab2826da0cb415a81bafbca12a5",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/WorkflowOperation.java": {
+    "mtime": 1791512910.6585994,
+    "seen": 1792503682.256338,
+    "ast_hash": "7bc020f9c05a40410ea28772fc9ef423",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/WorkflowPersistenceService.java": {
+    "mtime": 1789885392.6439154,
+    "seen": 1792503682.2563396,
+    "ast_hash": "e69ac44f83a54f77a55b0f8e04b47155",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/WorkflowPreferences.java": {
+    "mtime": 1789270433.2937534,
+    "seen": 1792503682.2563412,
+    "ast_hash": "c3ede253059434926e74b2bc86517b0c",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/WorkflowReview.java": {
+    "mtime": 1792365662.0750425,
+    "seen": 1792503682.2563424,
+    "ast_hash": "1bcd39fa07f68766a9f1f1c147a4d89a",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/WorkflowTransitionContract.java": {
+    "mtime": 1789865865.386241,
+    "seen": 1792503682.2563443,
+    "ast_hash": "07e9360a364037404e9dca3c2354feb5",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/java/com/ssmt/project/package-info.java": {
+    "mtime": 1785069806.457912,
+    "seen": 1792503682.2563462,
+    "ast_hash": "1242a54d1a94bb7b33ea74727a9ff5cd",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/resources/com/ssmt/project/approval-rules.json": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.256348,
+    "ast_hash": "684b636212ea2146fbca5b8577c70349",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/resources/com/ssmt/project/ranking-rules.json": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.2563493,
+    "ast_hash": "2e1199283117397985b8976fdb29f9b2",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/main/resources/com/ssmt/project/unit-roles.json": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.256351,
+    "ast_hash": "6136455373239ae0df77edc36d10035a",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/AiCoverageSummaryTest.java": {
+    "mtime": 1789336161.0777512,
+    "seen": 1792503682.2563524,
+    "ast_hash": "df9e792031194b04e2e3a6744df7c893",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/AiTranslationExchangeServiceTest.java": {
+    "mtime": 1785715721.5237439,
+    "seen": 1792503682.256354,
+    "ast_hash": "39374adc5baac697b6106ce727551db8",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/ArchivePublicationRetryTest.java": {
+    "mtime": 1789313818.7801719,
+    "seen": 1792503682.2563555,
+    "ast_hash": "5de4c6c7536eb398f0b3ca4c425ace21",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/AssuranceLedgerReaderTest.java": {
+    "mtime": 1789931574.4975457,
+    "seen": 1792503682.2563572,
+    "ast_hash": "d37cf1bd228fa33d9465dda8ba93772e",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/AssuranceSummaryTest.java": {
+    "mtime": 1789315808.2688994,
+    "seen": 1792503682.2563584,
+    "ast_hash": "7f5ce9fb0489ed3487090300ac6017dc",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/AttemptFeedbackReaderTest.java": {
+    "mtime": 1789883622.0340009,
+    "seen": 1792503682.2563596,
+    "ast_hash": "67454dda0850cb1dea1d0c6f2482b029",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/AuthorLocalizationDetectorTest.java": {
+    "mtime": 1785093380.6502175,
+    "seen": 1792503682.2563612,
+    "ast_hash": "c08c43ca48353ca3dc0a2e364b843824",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/BridgeForgeInPlaceSnapshotTest.java": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.2563624,
+    "ast_hash": "c8b2890fdaeb7f39c692cd9dd86c3df2",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/BridgeForgeShippedHashTest.java": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.256364,
+    "ast_hash": "66f75bf9db396238c8ecc111900dc030",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/BridgeForgeTranslationComparisonTest.java": {
+    "mtime": 1791509170.6050265,
+    "seen": 1792503682.2563653,
+    "ast_hash": "ea0e56f889664be2e9a65bde5e1c236e",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/BridgeForgeTranslationConformanceTest.java": {
+    "mtime": 1791235193.3396847,
+    "seen": 1792503682.2563667,
+    "ast_hash": "f86d94d8055354f9414655721f32ff0e",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/BridgeForgeTranslationDocumentTest.java": {
+    "mtime": 1791233840.739464,
+    "seen": 1792503682.2563684,
+    "ast_hash": "e16ab5911eb6f96b093d053504cc11cc",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/BrowserAiReviewServiceTest.java": {
+    "mtime": 1785686413.8349495,
+    "seen": 1792503682.2563698,
+    "ast_hash": "8b587f60238ed8af90219d45aefa23c0",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/BuildEvidenceReaderTest.java": {
+    "mtime": 1789931427.6621275,
+    "seen": 1792503682.2563713,
+    "ast_hash": "61aa7bc706a629295319a9d7b8d713e1",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/BytecodeCallSitesTest.java": {
+    "mtime": 1792448202.9657576,
+    "seen": 1792503682.256373,
+    "ast_hash": "cd2403eb675920d207247179a7ed8317",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/CandidateArchiveAuditTest.java": {
+    "mtime": 1792503554.7516866,
+    "seen": 1792503682.2563744,
+    "ast_hash": "d79ada560ca284bb2703d1e49b9d269e",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/CandidateRankingTest.java": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.2563758,
+    "ast_hash": "4407c809578a6c6c72811bde5c0dd4d3",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/ChainedProjectTranslationEngineTest.java": {
+    "mtime": 1785692387.1993437,
+    "seen": 1792503682.256377,
+    "ast_hash": "128dc16e25859f2c05c870af042a4a0f",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/CustomOptionCsvTest.java": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.2563787,
+    "ast_hash": "9753391f4d5ec44a0a1fdcab0c70f6ec",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/EdmundFacadeReleaseGateTest.java": {
+    "mtime": 1789335941.1405747,
+    "seen": 1792503682.2563798,
+    "ast_hash": "c94a9f2faf2bf675acb407c131f8f379",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/FinalEvidenceServiceTest.java": {
+    "mtime": 1789932057.141391,
+    "seen": 1792503682.2563813,
+    "ast_hash": "c1edd8bd1152f174b0e26891525c517f",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/FontCoverageAuditorTest.java": {
+    "mtime": 1785641567.3185213,
+    "seen": 1792503682.2563827,
+    "ast_hash": "39cd91dfd59c832581289893c9fdfc23",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/GapCoverageRoundTripTest.java": {
+    "mtime": 1788619931.04084,
+    "seen": 1792503682.2563844,
+    "ast_hash": "39580de9c001e30907090abe2a7628a0",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/GlossaryInterchangeServiceTest.java": {
+    "mtime": 1785689451.6001222,
+    "seen": 1792503682.2563858,
+    "ast_hash": "0e86ab68188c45620bf53de15437f073",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/GlossaryServiceTest.java": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.256387,
+    "ast_hash": "1dc2c58578c9dfbfb54a816dd29570e6",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/LeftoverClassifierTest.java": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.2563887,
+    "ast_hash": "7d4edc7ac3930d5c16abf015649e3e2a",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/LinkedGroupCollisionSafetyTest.java": {
+    "mtime": 1792448318.035949,
+    "seen": 1792503682.25639,
+    "ast_hash": "8a0503e1e7812f10627b070259928f13",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/LocalizationProjectServiceTest.java": {
+    "mtime": 1788269043.5512085,
+    "seen": 1792503682.2563918,
+    "ast_hash": "57da541c4aa528b629bfe06b240129c6",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/LooseClassUnitsTest.java": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.2563932,
+    "ast_hash": "f633aec2dadfbbee6cf5d45a12485e22",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/ModInputPreparationServiceTest.java": {
+    "mtime": 1792503616.7561648,
+    "seen": 1792503682.2563949,
+    "ast_hash": "13e28d54cd7a65aa22f2a128d1afd42f",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/PolicyApprovalTest.java": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.2563963,
+    "ast_hash": "3d0a18e229fafdbd5e537f6cbbdb876d",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/PresentationNamesTest.java": {
+    "mtime": 1789247951.3512895,
+    "seen": 1792503682.2563977,
+    "ast_hash": "3ee8b889214f8e0056282c99cf4adfda",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/ProjectDiagnosticExporterTest.java": {
+    "mtime": 1785075364.0129108,
+    "seen": 1792503682.2563994,
+    "ast_hash": "ff7b9a453ec5262dc56aeb5d3f30de68",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/ProjectRecoveryServiceTest.java": {
+    "mtime": 1785075467.433825,
+    "seen": 1792503682.2564006,
+    "ast_hash": "89ab56db7bebb73086848a0c17e56d02",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/ProjectRestorePointServiceTest.java": {
+    "mtime": 1788117896.2094498,
+    "seen": 1792503682.2564023,
+    "ast_hash": "aaa4343a9b5fa2eb13f6fc4f6da4e755",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/ProjectTranslationCheckpointServiceTest.java": {
+    "mtime": 1785688908.400419,
+    "seen": 1792503682.2564037,
+    "ast_hash": "fa67b6af03d9119bfc008428198e9228",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/ProjectTranslationCoordinatorTest.java": {
+    "mtime": 1785687802.7977388,
+    "seen": 1792503682.2564054,
+    "ast_hash": "cd30177f36721fb078cb59ecce9f32bc",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/RealModAcceptanceTest.java": {
+    "mtime": 1792449561.493203,
+    "seen": 1792503682.2564065,
+    "ast_hash": "8103c222b4285404c1dae1ab46cad9ee",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/RunRecordImportTest.java": {
+    "mtime": 1792367852.4341679,
+    "seen": 1792503682.256408,
+    "ast_hash": "5a31ded11fffc6f8029e912cef650694",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/RuntimeContextConformanceTest.java": {
+    "mtime": 1792449514.6737545,
+    "seen": 1792503682.2564096,
+    "ast_hash": "11857f03c91d3f3c5da7022c517238e8",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/RuntimeEvidenceCaptureTest.java": {
+    "mtime": 1792449720.1837225,
+    "seen": 1792503682.256411,
+    "ast_hash": "f610ab8137f0d3d487f48da28d432fa1",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/RuntimeEvidenceReaderTest.java": {
+    "mtime": 1792503213.6044128,
+    "seen": 1792503682.2564125,
+    "ast_hash": "045561e6f1f028d0886a2d161220f53b",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/ShipTranslationContextTest.java": {
+    "mtime": 1788645057.844862,
+    "seen": 1792503682.256414,
+    "ast_hash": "7255fdf138f60c84007da3717a91e46b",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/SourceAttestationStoreTest.java": {
+    "mtime": 1789884477.170618,
+    "seen": 1792503682.2564156,
+    "ast_hash": "0f9868278d40c15ef43de4c7345b429e",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/SourceIntegrityGuardTest.java": {
+    "mtime": 1789867497.2807765,
+    "seen": 1792503682.2564168,
+    "ast_hash": "d81c6459fbdcd1a1aa03fa74527c552b",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/SourceLanguageDetectorTest.java": {
+    "mtime": 1785089319.8581612,
+    "seen": 1792503682.2564182,
+    "ast_hash": "5cc0d7ae02f926c65b111f9e43a073a0",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/SourceLineageChoiceTest.java": {
+    "mtime": 1789269732.8047855,
+    "seen": 1792503682.2564197,
+    "ast_hash": "6f518a1a86ec8b7dba79829413a406b6",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/StorageHygieneServiceTest.java": {
+    "mtime": 1789163008.79998,
+    "seen": 1792503682.2564213,
+    "ast_hash": "92acd6f0967cffce05da0fd0ee0cb221",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/TerminologyConsistencyAuditorTest.java": {
+    "mtime": 1785093381.0102978,
+    "seen": 1792503682.256423,
+    "ast_hash": "e42b9dd7741603d9ebb0fb845584f99a",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/TextLineUnitsTest.java": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.2564242,
+    "ast_hash": "9794f3705eac766ceeab5bcb6a814079",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/TranslatedCloneIdentityTest.java": {
+    "mtime": 1789269732.8057854,
+    "seen": 1792503682.2564256,
+    "ast_hash": "66f029b47a6b3e5240024dc341ea1ca5",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/TranslationCoverageAuditorTest.java": {
+    "mtime": 1785641616.139161,
+    "seen": 1792503682.2564273,
+    "ast_hash": "19f1db77a37967a01d4d0b12a8d0648a",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/TranslationExtensionConformanceTest.java": {
+    "mtime": 1792448810.7803128,
+    "seen": 1792503682.2564285,
+    "ast_hash": "9bccd3927244d00279772c2228b722b4",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/TranslationMemoryApprovedGlossaryTest.java": {
+    "mtime": 1785685360.7959683,
+    "seen": 1792503682.2564301,
+    "ast_hash": "1e87882dc0611aa4da9a73ae1368e77e",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/TranslationMetadataInterchangeServiceTest.java": {
+    "mtime": 1785687868.2170508,
+    "seen": 1792503682.2564316,
+    "ast_hash": "8643c1f8d11a012d5d80fe4593aafebb",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/TranslationReportExporterTest.java": {
+    "mtime": 1785689452.033182,
+    "seen": 1792503682.2564332,
+    "ast_hash": "a156943c7120a1865b5a7baf5c040590",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/TranslationWorkflowTest.java": {
+    "mtime": 1789884758.1960678,
+    "seen": 1792503682.2564347,
+    "ast_hash": "1c7eb1403fb91fb5fe68a4fff6660c1f",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/UnitRoleClassifierTest.java": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.256436,
+    "ast_hash": "34e5fa3f7bc041d0bc138f6c5b2d17b4",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/UnitRoleIntegrationTest.java": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.2564375,
+    "ast_hash": "ba5b0a3871caa39d8ab698ded54962b7",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/UnreadableInputProjectTest.java": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.256439,
+    "ast_hash": "033f2bbfdad1ffaefcf3e38f7e3885cd",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/WeaponTooltipWorkflowTest.java": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.2564406,
+    "ast_hash": "eafedda79a1caf93f25d440ac606bd5a",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/WorkflowEnhancementsTest.java": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.256442,
+    "ast_hash": "34ffbc2177fb2edff2b2ef2407a98655",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/WorkflowPersistenceServiceTest.java": {
+    "mtime": 1789883494.2784345,
+    "seen": 1792503682.2564437,
+    "ast_hash": "115e54d0e75a9b37d99a797cca4b4b07",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/WorkflowPreferencesTest.java": {
+    "mtime": 1789270571.8080802,
+    "seen": 1792503682.256445,
+    "ast_hash": "a1c7dce27e832e5a872c13705628e538",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/WorkflowTransitionContractTest.java": {
+    "mtime": 1789865533.8771813,
+    "seen": 1792503682.2564461,
+    "ast_hash": "ff2f1a98f5707df3d6a17e0a1160e334",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/java/com/ssmt/project/WorkflowUnreadableAcknowledgeTest.java": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.2564478,
+    "ast_hash": "8fec65ef74462345a16b1fe8ddaaf5c6",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/resources/bridgeforge-r1/R-FIX.json": {
+    "mtime": 1792367852.4495237,
+    "seen": 1792503682.256449,
+    "ast_hash": "af3769c3b9087b416ed6522bc5b3b8f1",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/resources/bridgeforge-r1/candidate/mod_info.json": {
+    "mtime": 1792367852.4518805,
+    "seen": 1792503682.2564504,
+    "ast_hash": "ef7b006fd89832f8f8b59e9c4afa8242",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/resources/workflow-fixtures/csv-structural-rows/mod_info.json": {
+    "mtime": 1785618550.5622334,
+    "seen": 1792503682.256452,
+    "ast_hash": "c6fae44d278377f9830879b1772d0fb8",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/resources/workflow-fixtures/csv/mod_info.json": {
+    "mtime": 1785075158.7798045,
+    "seen": 1792503682.2564535,
+    "ast_hash": "4dcf3782af7479bb3fbd14a5de3943bc",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/resources/workflow-fixtures/json/data/strings/strings.json": {
+    "mtime": 1785075158.051271,
+    "seen": 1792503682.2564554,
+    "ast_hash": "59250f72ed8212eacb47e0641a011713",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/resources/workflow-fixtures/json/mod_info.json": {
+    "mtime": 1785075157.32681,
+    "seen": 1792503682.2564569,
+    "ast_hash": "37307fb77ace7a045d6becb467e112f2",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/resources/workflow-fixtures/variant/mod_info.json": {
+    "mtime": 1785075160.2226706,
+    "seen": 1792503682.2564585,
+    "ast_hash": "33e326ae4d90a5f6e491ac3f4abbfa8f",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/Main.java": {
+    "mtime": 1792452346.9729424,
+    "seen": 1792503682.25646,
+    "ast_hash": "19bf8d9460ca70afe03bcb66cea363a0",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/build.gradle.kts": {
+    "mtime": 1785063913.1799116,
+    "seen": 1792503682.256462,
+    "ast_hash": "143aa05f4a029e7d86574763d03d17cc",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/main/java/com/ssmt/scanner/ArchiveInventory.java": {
+    "mtime": 1790195567.3877618,
+    "seen": 1792503682.2564635,
+    "ast_hash": "9cccf2c933c2b044a0f86421cb3e7bf8",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/main/java/com/ssmt/scanner/AuditEngine.java": {
+    "mtime": 1792503071.9575737,
+    "seen": 1792503682.2564652,
+    "ast_hash": "d17d11f9dbb803fa5d6c399bce3c1b27",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/main/java/com/ssmt/scanner/CandidateInventory.java": {
+    "mtime": 1789886178.4758394,
+    "seen": 1792503682.2564666,
+    "ast_hash": "63fa0527394acceb97a50581157bd76a",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/main/java/com/ssmt/scanner/CoverageRunner.java": {
+    "mtime": 1792503071.9575737,
+    "seen": 1792503682.2564683,
+    "ast_hash": "b0fca70110c6766a1d8bdb8f4536ebe5",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/main/java/com/ssmt/scanner/CyclicDependencyException.java": {
+    "mtime": 1785064307.8149831,
+    "seen": 1792503682.2564716,
+    "ast_hash": "a00fb10b0b41bb50a9aa31b5f1972119",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/main/java/com/ssmt/scanner/InventoryFingerprint.java": {
+    "mtime": 1792503023.090659,
+    "seen": 1792503682.2564733,
+    "ast_hash": "3844977266dbdf5e166301816347293f",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/main/java/com/ssmt/scanner/JarContents.java": {
+    "mtime": 1790196150.68855,
+    "seen": 1792503682.256475,
+    "ast_hash": "ffc7b74f4a0cd4a6d83a7d7d2a389707",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/main/java/com/ssmt/scanner/ModInfoReader.java": {
+    "mtime": 1789315482.2275927,
+    "seen": 1792503682.2564766,
+    "ast_hash": "89f0f1d8a9772a82d9a2279ffe1ea9d6",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/main/java/com/ssmt/scanner/ModScanner.java": {
+    "mtime": 1785064361.9025288,
+    "seen": 1792503682.2564783,
+    "ast_hash": "9e58a3e2dcbc9d6e31fe28944a0a3335",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/main/java/com/ssmt/scanner/P3Coverage.java": {
+    "mtime": 1792503071.9585729,
+    "seen": 1792503682.2564797,
+    "ast_hash": "929faf061ad8bbb8ae34f551408ad661",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/main/java/com/ssmt/scanner/PackageIdentityAudit.java": {
+    "mtime": 1789315631.8965027,
+    "seen": 1792503682.2564816,
+    "ast_hash": "9f5296f7122236345511d7e6ffcbeaea",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/main/java/com/ssmt/scanner/ScanReport.java": {
+    "mtime": 1785064020.3317852,
+    "seen": 1792503682.2564828,
+    "ast_hash": "435123038430a3fde61c06013be3dee5",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/main/java/com/ssmt/scanner/SourceTreeManifest.java": {
+    "mtime": 1789885770.4137535,
+    "seen": 1792503682.256484,
+    "ast_hash": "f64f82ee9a8f07e6ccd9a36866b1a65b",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/main/java/com/ssmt/scanner/package-info.java": {
+    "mtime": 1785062846.2624116,
+    "seen": 1792503682.256486,
+    "ast_hash": "ab0acda606fe3cf559cdf799712a9813",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/java/com/ssmt/scanner/ArchiveInventoryTest.java": {
+    "mtime": 1790195587.6296191,
+    "seen": 1792503682.2564874,
+    "ast_hash": "ed501139e3bf766eb1028d7f13150bd5",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/java/com/ssmt/scanner/AuditPrototypeTest.java": {
+    "mtime": 1792503127.340404,
+    "seen": 1792503682.256489,
+    "ast_hash": "8cc2106c12a6bfbf4198553bb13179d1",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/java/com/ssmt/scanner/CandidateInventoryTest.java": {
+    "mtime": 1789315014.7980175,
+    "seen": 1792503682.2564905,
+    "ast_hash": "75acbec98af44df18f6135bae054c883",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/java/com/ssmt/scanner/InventoryFingerprintTest.java": {
+    "mtime": 1789316100.740908,
+    "seen": 1792503682.2564921,
+    "ast_hash": "47e5bcf31884b258c96c1681c47af3e6",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/java/com/ssmt/scanner/JarContentsTest.java": {
+    "mtime": 1790196207.0002363,
+    "seen": 1792503682.2564936,
+    "ast_hash": "988470f4dc31052e46f872276d3d8ffe",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/java/com/ssmt/scanner/ModInfoReaderTest.java": {
+    "mtime": 1785072851.274722,
+    "seen": 1792503682.2564948,
+    "ast_hash": "e618e926fbbc109ce9104852971b0f7b",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/java/com/ssmt/scanner/ModScannerTest.java": {
+    "mtime": 1785064102.2800505,
+    "seen": 1792503682.2564964,
+    "ast_hash": "faebcbd8b09eaf78342f9f2c57a550c0",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/java/com/ssmt/scanner/PackageIdentityAuditTest.java": {
+    "mtime": 1789315650.5283203,
+    "seen": 1792503682.2564979,
+    "ast_hash": "c9a7f86e426e1f0547637084bce20d03",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/java/com/ssmt/scanner/SourceTreeManifestTest.java": {
+    "mtime": 1789316932.140262,
+    "seen": 1792503682.2564993,
+    "ast_hash": "33c8300c0af1f2d9721ad32db5388e2b",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/java/com/ssmt/scanner/package-info.java": {
+    "mtime": 1785062846.2624116,
+    "seen": 1792503682.2565007,
+    "ast_hash": "c134f2d12bfaa9f996131ab74d156ef4",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/resources/mods/cycle/a/mod_info.json": {
+    "mtime": 1785064109.0281682,
+    "seen": 1792503682.2565024,
+    "ast_hash": "d72e7ed533fc84906326876a42868974",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/resources/mods/cycle/b/mod_info.json": {
+    "mtime": 1785064109.7625525,
+    "seen": 1792503682.2565038,
+    "ast_hash": "a22241c2ffbb49575388b27a975171f1",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/resources/mods/dependency-order/addon-a/mod_info.json": {
+    "mtime": 1785064107.5407536,
+    "seen": 1792503682.2565053,
+    "ast_hash": "b9858219c4fd35cdf57f3cafbec93e35",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/resources/mods/dependency-order/addon-b/mod_info.json": {
+    "mtime": 1785064108.26757,
+    "seen": 1792503682.256507,
+    "ast_hash": "7a7184f231ad31adf448f750c14d0fe2",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/resources/mods/dependency-order/base/mod_info.json": {
+    "mtime": 1785064106.8210695,
+    "seen": 1792503682.2565084,
+    "ast_hash": "a31a87d98e600056818ed56d527c0b3e",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/resources/mods/general/invalid-dependency/mod_info.json": {
+    "mtime": 1785064105.4337552,
+    "seen": 1792503682.2565103,
+    "ast_hash": "8cbe9420f5f072d1374cfbb6abf31551",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/resources/mods/general/lenient-mod/mod_info.json": {
+    "mtime": 1785064104.0580504,
+    "seen": 1792503682.2565114,
+    "ast_hash": "1e432da439da5ebc789697b5cccc5479",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/resources/mods/general/malformed-mod/mod_info.json": {
+    "mtime": 1785064104.744579,
+    "seen": 1792503682.256513,
+    "ast_hash": "de04de7a63f2a82afc14e4532bdaea80",
+    "semantic_hash": ""
+  },
+  "ssmt-scanner/src/test/resources/mods/general/valid-mod/mod_info.json": {
+    "mtime": 1785064103.3708508,
+    "seen": 1792503682.2565148,
+    "ast_hash": "43351e03c35337572afd71d043b0e4bd",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/build.gradle.kts": {
+    "mtime": 1785066952.6601686,
+    "seen": 1792503682.2565165,
+    "ast_hash": "4d83f40a318ed9a5f270a26e8bfecef6",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/main/java/com/ssmt/tm/MasterTranslationLibrary.java": {
+    "mtime": 1788264322.3752549,
+    "seen": 1792503682.2565176,
+    "ast_hash": "aa58ea96c1a857277abee10ae84a4fbe",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/main/java/com/ssmt/tm/SqliteTranslationMemory.java": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.2565193,
+    "ast_hash": "3d3d8fb93c59e311b89e7b8857d431a9",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/main/java/com/ssmt/tm/TextSimilarity.java": {
+    "mtime": 1792365662.077547,
+    "seen": 1792503682.2565207,
+    "ast_hash": "1090f43df847866cf3b3b7c7ae237dfc",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/main/java/com/ssmt/tm/TranslationDraft.java": {
+    "mtime": 1785093228.073912,
+    "seen": 1792503682.256522,
+    "ast_hash": "d7315c76f842f18556599766c69f9470",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/main/java/com/ssmt/tm/TranslationEntry.java": {
+    "mtime": 1785093228.453057,
+    "seen": 1792503682.2565236,
+    "ast_hash": "44355fff51b9da44ea41dd6552630282",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/main/java/com/ssmt/tm/TranslationGenerationMetadata.java": {
+    "mtime": 1785685270.7026377,
+    "seen": 1792503682.2565248,
+    "ast_hash": "99aa96b6fb92a6ad7857934ae3fb8d0e",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/main/java/com/ssmt/tm/TranslationMatch.java": {
+    "mtime": 1785066795.0324824,
+    "seen": 1792503682.2565262,
+    "ast_hash": "6ea69bac6cfc16af717e50b4d30d13c0",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/main/java/com/ssmt/tm/TranslationMemoryException.java": {
+    "mtime": 1785066474.3294098,
+    "seen": 1792503682.256528,
+    "ast_hash": "896a17c87a9412b69e587ed873214e37",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/main/java/com/ssmt/tm/TranslationMemoryInterchange.java": {
+    "mtime": 1785093247.5023448,
+    "seen": 1792503682.256529,
+    "ast_hash": "793dcacacac20dcf87a296a73968da5a",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/main/java/com/ssmt/tm/TranslationMemoryMergeResult.java": {
+    "mtime": 1785097603.397083,
+    "seen": 1792503682.2565305,
+    "ast_hash": "a18276662be63046bfa42789e0d1b9b5",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/main/java/com/ssmt/tm/TranslationMemoryMergeService.java": {
+    "mtime": 1785618781.9937007,
+    "seen": 1792503682.256532,
+    "ast_hash": "29e6e6299ace7bdddaaaef85001a229b",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/main/java/com/ssmt/tm/TranslationQuery.java": {
+    "mtime": 1785066794.65476,
+    "seen": 1792503682.2565336,
+    "ast_hash": "b25c45ef27d135c15ed0d9712305fe2f",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/main/java/com/ssmt/tm/TranslationReviewStatus.java": {
+    "mtime": 1785685270.2661881,
+    "seen": 1792503682.256535,
+    "ast_hash": "4be807ee5a87596916054eb3d2ca07cf",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/main/java/com/ssmt/tm/package-info.java": {
+    "mtime": 1785066473.193056,
+    "seen": 1792503682.2565362,
+    "ast_hash": "d3dbac32f976c715bcb2aa15769b5cda",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/test/java/com/ssmt/tm/MasterTranslationLibraryTest.java": {
+    "mtime": 1788264385.2305708,
+    "seen": 1792503682.2565384,
+    "ast_hash": "0de7e00e333a3a0f0004bb09a4752520",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/test/java/com/ssmt/tm/SqliteTranslationMemoryTest.java": {
+    "mtime": 1789082368.9002297,
+    "seen": 1792503682.25654,
+    "ast_hash": "f2e75d2f4c267c95bc9a3d6fc8bbc1ec",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/test/java/com/ssmt/tm/TextSimilarityTest.java": {
+    "mtime": 1785066750.5272684,
+    "seen": 1792503682.2565417,
+    "ast_hash": "72c388357912c7de507c0ebcccd24a1c",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/test/java/com/ssmt/tm/TranslationDraftTest.java": {
+    "mtime": 1785066391.363847,
+    "seen": 1792503682.256543,
+    "ast_hash": "57c2c8ec5ee5c0ea0900073a7eb6adb7",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/test/java/com/ssmt/tm/TranslationMemoryInterchangeTest.java": {
+    "mtime": 1785067107.214633,
+    "seen": 1792503682.2565446,
+    "ast_hash": "32560ef28a727715036db4828b0cc3ae",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/test/java/com/ssmt/tm/TranslationMemoryMergeServiceTest.java": {
+    "mtime": 1785618793.7602832,
+    "seen": 1792503682.256546,
+    "ast_hash": "7f747afbc0c34269306bf4476af66779",
+    "semantic_hash": ""
+  },
+  "ssmt-tm/src/test/java/com/ssmt/tm/TranslationQueryTest.java": {
+    "mtime": 1785066750.942864,
+    "seen": 1792503682.2565472,
+    "ast_hash": "6ceba5a041f1e12a95370591ea1c7f5f",
+    "semantic_hash": ""
+  },
+  "ssmt-validation/build.gradle.kts": {
+    "mtime": 1785067173.5844047,
+    "seen": 1792503682.2565491,
+    "ast_hash": "f3fdc03b0f03024a3e19bdd67ffb2ffd",
+    "semantic_hash": ""
+  },
+  "ssmt-validation/src/main/java/com/ssmt/validation/TranslationValidator.java": {
+    "mtime": 1788662030.2710106,
+    "seen": 1792503682.2565506,
+    "ast_hash": "a3395a96353abb49f8efbf39b33e36d2",
+    "semantic_hash": ""
+  },
+  "ssmt-validation/src/main/java/com/ssmt/validation/ValidationCode.java": {
+    "mtime": 1788662029.3984578,
+    "seen": 1792503682.256552,
+    "ast_hash": "8433c1a02bf1f7fd7ab419d0a747b1c1",
+    "semantic_hash": ""
+  },
+  "ssmt-validation/src/main/java/com/ssmt/validation/ValidationIssue.java": {
+    "mtime": 1785067222.6176648,
+    "seen": 1792503682.2565532,
+    "ast_hash": "57f9672b9246067fdfed9696ae3e39d5",
+    "semantic_hash": ""
+  },
+  "ssmt-validation/src/main/java/com/ssmt/validation/font/BmFontGlyphSet.java": {
+    "mtime": 1785641477.1527474,
+    "seen": 1792503682.256555,
+    "ast_hash": "7bdc314613d80977f529f7e2b3ee6532",
+    "semantic_hash": ""
+  },
+  "ssmt-validation/src/main/java/com/ssmt/validation/font/package-info.java": {
+    "mtime": 1785641484.7968986,
+    "seen": 1792503682.2565565,
+    "ast_hash": "82c1a6a9bc923dfe09999b4465b954da",
+    "semantic_hash": ""
+  },
+  "ssmt-validation/src/main/java/com/ssmt/validation/package-info.java": {
+    "mtime": 1785067221.7011497,
+    "seen": 1792503682.2565582,
+    "ast_hash": "9d0ea7086db3dd39fb996483da9d849a",
+    "semantic_hash": ""
+  },
+  "ssmt-validation/src/test/java/com/ssmt/validation/TranslationValidatorTest.java": {
+    "mtime": 1788662115.7458463,
+    "seen": 1792503682.2565596,
+    "ast_hash": "455fee8cc9c813b72019fb0b07438e66",
+    "semantic_hash": ""
+  },
+  "ssmt-validation/src/test/java/com/ssmt/validation/font/BmFontGlyphSetTest.java": {
+    "mtime": 1785641505.1985807,
+    "seen": 1792503682.256561,
+    "ast_hash": "b155a271f5c68491dcd79c4a9041e0c4",
+    "semantic_hash": ""
+  },
+  ".github/workflows/build.yml": {
+    "mtime": 1791513385.0657094,
+    "seen": 1792503682.2565627,
+    "ast_hash": "356ea018beb8a0ea06beac27ba07cc0e",
+    "semantic_hash": ""
+  },
+  ".github/workflows/release.yml": {
+    "mtime": 1790544013.222395,
+    "seen": 1792503682.2565644,
+    "ast_hash": "37863900ddffa7121d893cb2c1dce448",
+    "semantic_hash": ""
+  },
+  "ACCESSIBILITY.md": {
+    "mtime": 1788270414.977606,
+    "seen": 1792503682.256566,
+    "ast_hash": "f92179443992b8eb9045d4ecc074af9a",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1792371540.0913355,
+    "seen": 1792503682.2565675,
+    "ast_hash": "00af16d9fafbebd508f9bc34641d18bb",
+    "semantic_hash": ""
+  },
+  "ARCHITECTURE.md": {
+    "mtime": 1792367036.2334664,
+    "seen": 1792503682.256569,
+    "ast_hash": "6c15b75bac2e2fb3b63acee22199fe0a",
+    "semantic_hash": ""
+  },
+  "AUTO_GUIDE.md": {
+    "mtime": 1792367210.5701177,
+    "seen": 1792503682.2565703,
+    "ast_hash": "08b1ba17337713df7305c2b793281de7",
+    "semantic_hash": ""
+  },
+  "BEGINNERS_GUIDE.md": {
+    "mtime": 1791513886.7864797,
+    "seen": 1792503682.2565715,
+    "ast_hash": "18b368033fa22479a3b0613dabb0ad93",
+    "semantic_hash": ""
+  },
+  "BYTECODE_ALLOWLIST.md": {
+    "mtime": 1792367210.5706244,
+    "seen": 1792503682.2565732,
+    "ast_hash": "eae1bb4d88e9f4fb071d7ae8973254e4",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1792014515.5883293,
+    "seen": 1792503682.2565746,
+    "ast_hash": "86791d484ab24d3cbb24b14ce9a0b723",
+    "semantic_hash": ""
+  },
+  "COMPATIBILITY_MATRIX.md": {
+    "mtime": 1788267949.534401,
+    "seen": 1792503682.2565763,
+    "ast_hash": "71cb0a01b7c406b8a103e637e2c356ad",
+    "semantic_hash": ""
+  },
+  "CSV_SCHEMAS.md": {
+    "mtime": 1788663277.6951714,
+    "seen": 1792503682.2565777,
+    "ast_hash": "fdd8ccc16a31adb699916d5ac1f8968a",
+    "semantic_hash": ""
+  },
+  "DISTRIBUTION.md": {
+    "mtime": 1789269732.8037858,
+    "seen": 1792503682.2565792,
+    "ast_hash": "a049176715f264527cdc1d1dce376b8e",
+    "semantic_hash": ""
+  },
+  "ENVIRONMENT.md": {
+    "mtime": 1791237333.6848762,
+    "seen": 1792503682.2565806,
+    "ast_hash": "72e97e44dbaf3d952970e6421738c5ae",
+    "semantic_hash": ""
+  },
+  "GLOSSARY.md": {
+    "mtime": 1792367223.0008903,
+    "seen": 1792503682.2565818,
+    "ast_hash": "aa74a6d96962daa28c14495fe6c8539c",
+    "semantic_hash": ""
+  },
+  "GLOSSARY_FORMAT.md": {
+    "mtime": 1785689620.233572,
+    "seen": 1792503682.2565835,
+    "ast_hash": "170fef64eecf8412b4c9f956f81e210a",
+    "semantic_hash": ""
+  },
+  "JSON_SCHEMAS.md": {
+    "mtime": 1788578929.772163,
+    "seen": 1792503682.256585,
+    "ast_hash": "313854e90fac0a151d7e9198de70ff1f",
+    "semantic_hash": ""
+  },
+  "MAINTENANCE.md": {
+    "mtime": 1791515188.7547283,
+    "seen": 1792503682.256587,
+    "ast_hash": "5c3c58eb1948e6cfe71e1983153f696a",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1792367210.569589,
+    "seen": 1792503682.2565887,
+    "ast_hash": "c967343a93f5188a19fe1371c7c03582",
+    "semantic_hash": ""
+  },
+  "SECURITY.md": {
+    "mtime": 1788267950.8654428,
+    "seen": 1792503682.2565901,
+    "ast_hash": "33e3abbaa923948b833cbc66253169bc",
+    "semantic_hash": ""
+  },
+  "USER_GUIDE.md": {
+    "mtime": 1792503589.4832761,
+    "seen": 1792503682.2565916,
+    "ast_hash": "48c52e21b1baa161ae015f9b851cd125",
+    "semantic_hash": ""
+  },
+  "docs/ASSESSMENT_IMPLEMENTATION.md": {
+    "mtime": 1790195705.2961028,
+    "seen": 1792503682.2565932,
+    "ast_hash": "68f3d3a1b531ef2ef9473b58289e2999",
+    "semantic_hash": ""
+  },
+  "docs/ASSURANCE_LEDGER_IMPLEMENTATION.md": {
+    "mtime": 1789931637.586154,
+    "seen": 1792503682.2565947,
+    "ast_hash": "69aa66bd84e8c15ed5153788677f7523",
+    "semantic_hash": ""
+  },
+  "docs/AUTOMATION_PLAN.md": {
+    "mtime": 1792367852.4341679,
+    "seen": 1792503682.2565966,
+    "ast_hash": "abd2f3f8f436efd1128e8581e675496f",
+    "semantic_hash": ""
+  },
+  "docs/BRIDGEFORGE_METHOD_CONVERSION.md": {
+    "mtime": 1791237333.6838763,
+    "seen": 1792503682.256598,
+    "ast_hash": "754f674fec3db7e0d754ca759fc5d209",
+    "semantic_hash": ""
+  },
+  "docs/COVERAGE_IMPLEMENTATION.md": {
+    "mtime": 1790252453.5037339,
+    "seen": 1792503682.2565992,
+    "ast_hash": "3fb724e0d7a00b45dc3b19566d8b4f2b",
+    "semantic_hash": ""
+  },
+  "docs/EXTRACTOR_COMPARISON.md": {
+    "mtime": 1791509500.1450582,
+    "seen": 1792503682.2566009,
+    "ast_hash": "429d40e938a7883e0559c2053be2bbc0",
+    "semantic_hash": ""
+  },
+  "docs/G2_SAFETY_VALIDATION.md": {
+    "mtime": 1792448430.0895703,
+    "seen": 1792503682.2566025,
+    "ast_hash": "8bfbc52ab00c524102f42f5927eb305a",
+    "semantic_hash": ""
+  },
+  "docs/GUI_WORKFLOW_ENHANCEMENTS.md": {
+    "mtime": 1792365662.039361,
+    "seen": 1792503682.2566042,
+    "ast_hash": "b02ad016ddfda9070e3a3914e9a1b5f9",
+    "semantic_hash": ""
+  },
+  "docs/LIVE_VALIDATION_0.8.0.md": {
+    "mtime": 1789314330.8757088,
+    "seen": 1792503682.2566056,
+    "ast_hash": "a90c86f279b841644ada4bb769f05b72",
+    "semantic_hash": ""
+  },
+  "docs/NEW_WORK_RELEASE_REVIEW.md": {
+    "mtime": 1789269732.8037858,
+    "seen": 1792503682.2566075,
+    "ast_hash": "c32b1a94eed096bac1b6cb13e3753c82",
+    "semantic_hash": ""
+  },
+  "docs/NIGHTCROSS_ADDED_RUN.md": {
+    "mtime": 1789335591.8459036,
+    "seen": 1792503682.256609,
+    "ast_hash": "100bf43eea7a91ff2af57fd0701e89c5",
+    "semantic_hash": ""
+  },
+  "docs/NON_VALIDATION_COMPLETION.md": {
+    "mtime": 1789884954.7190776,
+    "seen": 1792503682.2566106,
+    "ast_hash": "770af1eef0964000522607ddeb3efbd1",
+    "semantic_hash": ""
+  },
+  "docs/P1_CONVERGENCE_PLAN.md": {
+    "mtime": 1789866991.6363645,
+    "seen": 1792503682.2566118,
+    "ast_hash": "c389a7e82f49869ddece7d8af1fb6342",
+    "semantic_hash": ""
+  },
+  "docs/P1_P5_REVIEW_FIXES.md": {
+    "mtime": 1792503588.9676428,
+    "seen": 1792503682.2566137,
+    "ast_hash": "7e0fedcd261b1d47110439ed676aa825",
+    "semantic_hash": ""
+  },
+  "docs/P7_IMPLEMENTATION_STATUS.md": {
+    "mtime": 1791515210.0881672,
+    "seen": 1792503682.2566152,
+    "ast_hash": "ffa99210814d26e4d7e7591c82c33321",
+    "semantic_hash": ""
+  },
+  "docs/P7_TRANSLATION_METHOD.md": {
+    "mtime": 1791237333.6848762,
+    "seen": 1792503682.2566164,
+    "ast_hash": "39ccb5528ff312ae4f60b48ae7962e0e",
+    "semantic_hash": ""
+  },
+  "docs/PACKAGE_AUDIT_IMPLEMENTATION.md": {
+    "mtime": 1789884787.573086,
+    "seen": 1792503682.256618,
+    "ast_hash": "46cca9ccbebe2ae04c533dbb3cc60d12",
+    "semantic_hash": ""
+  },
+  "docs/REINJECTION_IMPLEMENTATION.md": {
+    "mtime": 1789884362.9113946,
+    "seen": 1792503682.2566197,
+    "ast_hash": "d6d2806e7353364e950d0f01ab9a8213",
+    "semantic_hash": ""
+  },
+  "docs/RELEASE_0.8.0_RC1_VERIFICATION.md": {
+    "mtime": 1789271372.5148406,
+    "seen": 1792503682.2566214,
+    "ast_hash": "80c2b40f42c565aaeeb5b8a5a813445a",
+    "semantic_hash": ""
+  },
+  "docs/RELEASE_0.8.0_RC2.md": {
+    "mtime": 1791553468.4523907,
+    "seen": 1792503682.2566228,
+    "ast_hash": "ce74042082f4d0840689f103e081a2e1",
+    "semantic_hash": ""
+  },
+  "docs/RELEASE_0.8.0_RC3.md": {
+    "mtime": 1791554090.5478568,
+    "seen": 1792503682.2566245,
+    "ast_hash": "0ac5cc2ba30a05ffaef36fa0c57f0320",
+    "semantic_hash": ""
+  },
+  "docs/RESIDUAL_CHINESE_DIAGNOSIS.md": {
+    "mtime": 1789339308.9404829,
+    "seen": 1792503682.2566261,
+    "ast_hash": "5255dc9d3b3a194742907095302f5ed1",
+    "semantic_hash": ""
+  },
+  "docs/ROADMAP.md": {
+    "mtime": 1792503589.2171228,
+    "seen": 1792503682.2566276,
+    "ast_hash": "f0e8a4fae912522f1adc582f363d83b9",
+    "semantic_hash": ""
+  },
+  "docs/ROADMAP_PHASE_STATUS_2026-09-23.md": {
+    "mtime": 1790252452.900758,
+    "seen": 1792503682.256629,
+    "ast_hash": "cbfc74c04fb55cecf4b9bef306b939a2",
+    "semantic_hash": ""
+  },
+  "docs/SCHEMA_ALIGNMENT_VALIDATION.md": {
+    "mtime": 1792449045.4444592,
+    "seen": 1792503682.2566302,
+    "ast_hash": "4f85ba1d066a5144b3de545b0bec80cf",
+    "semantic_hash": ""
+  },
+  "docs/SISTER_REPO_INTEROPERABILITY_DESIGN.md": {
+    "mtime": 1790542577.2561505,
+    "seen": 1792503682.256632,
+    "ast_hash": "01e0a322fc5a42a57a10f776b8d06d86",
+    "semantic_hash": ""
+  },
+  "docs/WEAPON_TOOLTIP_COVERAGE.md": {
+    "mtime": 1789336371.2899885,
+    "seen": 1792503682.2566333,
+    "ast_hash": "585e0d9844aebc1450b73706f2bc1999",
+    "semantic_hash": ""
+  },
+  "docs/designs/gap-coverage-design.md": {
+    "mtime": 1789084438.0111415,
+    "seen": 1792503682.256635,
+    "ast_hash": "2d0d1953f8e994b052b8eb336dc1dc9f",
+    "semantic_hash": ""
+  },
+  "docs/designs/simple-file-workflow.md": {
+    "mtime": 1789084409.1522212,
+    "seen": 1792503682.2566364,
+    "ast_hash": "88438c7a70052a201d54e33aaacd2f7a",
+    "semantic_hash": ""
+  },
+  "docs/edmund-desktop-workflow-fix.md": {
+    "mtime": 1789084348.0540943,
+    "seen": 1792503682.2566383,
+    "ast_hash": "3ccf1cbdd63b99fce858959b164865b9",
+    "semantic_hash": ""
+  },
+  "docs/known-good-pre-redesign-baseline.md": {
+    "mtime": 1789130556.523052,
+    "seen": 1792503682.2566395,
+    "ast_hash": "8c7006dbe1bfea9e14f0b1b22d3276d5",
+    "semantic_hash": ""
+  },
+  "docs/translation-workflow-migration.md": {
+    "mtime": 1789084408.6676757,
+    "seen": 1792503682.256641,
+    "ast_hash": "92331e88f48e99fcbb48d7ab50cd3489",
+    "semantic_hash": ""
+  },
+  "fixtures/runtime-context/README.md": {
+    "mtime": 1792450026.3407052,
+    "seen": 1792503682.2566423,
+    "ast_hash": "f5e15bd440897ad4c14e800b2baf5e8d",
+    "semantic_hash": ""
+  },
+  "fixtures/runtime-context/candidate/reports/REVIVAL_REPORT.md": {
+    "mtime": 1792367872.0,
+    "seen": 1792503682.256644,
+    "ast_hash": "a441e4a23af92cf0c4fa5382371b879e",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/README.md": {
+    "mtime": 1792448943.3869736,
+    "seen": 1792503682.2566457,
+    "ast_hash": "164732a57003b9a580218b841aa3b134",
+    "semantic_hash": ""
+  },
+  "fixtures/translation-conformance/SCHEMA_V1_EXTENSIONS.md": {
+    "mtime": 1792448942.5955172,
+    "seen": 1792503682.256647,
+    "ast_hash": "6265a362066ed8b480f2a116f53a1222",
+    "semantic_hash": ""
+  },
+  "ssmt-auto/gradle-9.1.0/init.d/readme.txt": {
+    "mtime": 318232800.0,
+    "seen": 1792503682.2566488,
+    "ast_hash": "5f51e08d8e81ff0a002efa67b2319e7a",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/test/resources/edmund/README.md": {
+    "mtime": 1788664091.0873966,
+    "seen": 1792503682.2566502,
+    "ast_hash": "0dfb5bb5e091adb262f04135cb0204cb",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/resources/bridgeforge-r1/candidate/reports/REVIVAL_REPORT.md": {
+    "mtime": 1792367852.45288,
+    "seen": 1792503682.256652,
+    "ast_hash": "a441e4a23af92cf0c4fa5382371b879e",
+    "semantic_hash": ""
+  },
+  "ssmt-project/src/test/resources/edmund/README.md": {
+    "mtime": 1788698551.799851,
+    "seen": 1792503682.2566538,
+    "ast_hash": "716ecb1db0e862a43924f5d432ab6404",
+    "semantic_hash": ""
+  },
+  "fixtures/p3/mod/assets/texture.png": {
+    "mtime": 1792451894.4213977,
+    "seen": 1792503682.2566555,
+    "ast_hash": "55505ba281b015ec31f03ccb151b2a34",
+    "semantic_hash": ""
+  },
+  "ssmt-gui/src/main/resources/com/ssmt/gui/ssmt-icon.png": {
+    "mtime": 1785070761.9788935,
+    "seen": 1792503682.2566571,
+    "ast_hash": "5d88113dc97aef6063476e7b4320ef20",
+    "semantic_hash": ""
+  }
+}

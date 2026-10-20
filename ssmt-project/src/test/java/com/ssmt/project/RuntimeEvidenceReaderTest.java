@@ -71,6 +71,26 @@ class RuntimeEvidenceReaderTest {
                 .hasMessageContaining("does not contain gate");
     }
 
+    @Test void anUnobservedExitIsPreservedAndCannotQualifyATerminalGate() throws Exception {
+        var pending = new RuntimeEvidenceReader.Profile(2, HASH, "0.98a-RC8", List.of(), List.of(),
+                "java.exe", "25", null, List.of(), List.of(), List.of());
+        Path file = root.resolve("pending.json");
+        var mapper = new ObjectMapper();
+        mapper.writeValue(file.toFile(), pending);
+        assertThat(new RuntimeEvidenceReader().read(file, HASH).processExitCode()).isNull();
+
+        Path log = Files.writeString(root.resolve("unknown-exit.log"), "observed menu, exit not recorded");
+        var passing = new RuntimeEvidenceReader.Profile(2, HASH, "0.98a-RC8", List.of(), List.of(),
+                "java.exe", "25", null,
+                List.of(new RuntimeEvidenceReader.LogReference("unknown-exit.log", sha256(log))), List.of(),
+                List.of(new RuntimeEvidenceReader.ScenarioResult(AssuranceSummary.Gate.AUTOMATED_BOOT,
+                        AssuranceSummary.Disposition.PASS, "menu", "")));
+        assertThatThrownBy(() -> new RuntimeEvidenceReader().verifyScenario(passing,
+                new AssuranceSummary.Result(AssuranceSummary.Gate.AUTOMATED_BOOT,
+                        AssuranceSummary.Disposition.PASS, HASH, "menu", "runtime.json", "")))
+                .isInstanceOf(java.io.IOException.class).hasMessageContaining("observed process exit");
+    }
+
     private static RuntimeEvidenceReader.Profile profile(List<RuntimeEvidenceReader.LogReference> logs) {
         return new RuntimeEvidenceReader.Profile(1, HASH, "0.98a-RC8",
                 List.of(new RuntimeEvidenceReader.EnabledMod("nightcross", "1.0")), List.of("nightcross"),

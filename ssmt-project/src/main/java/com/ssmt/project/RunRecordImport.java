@@ -36,8 +36,9 @@ import java.util.Set;
  *
  * <p>Project Go's runtime capture also needs a Starsector build identity (taken from {@code core_baseline_sha256}), the
  * Java executable ({@code manifest.java_executable}), a Java version and the process exit code. BridgeForge's record has
- * no Java version and no process exit code today; they are read from {@code manifest.java_version} and a top-level
- * {@code process_exit_code} if BridgeForge starts writing them. Until then nothing is guessed: all three gates stay
+     * optional Java version and process exit fields: {@code manifest.java_version} and a top-level
+     * {@code process_exit_code}. The producer can now record them, but interactive callers without an observed exit
+     * leave it null. Nothing is guessed: if either launch fact is missing, all three gates stay
  * NOT_TESTED and the reason names what is missing. SAVE_RELOAD additionally stays NOT_TESTED because the milestones
  * record that a save finished and a campaign loaded, not that the save was reloaded. The record is copied verbatim
  * beside the ledger as the hashed log of the schema-2 capture.</p>

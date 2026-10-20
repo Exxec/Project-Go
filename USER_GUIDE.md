@@ -34,6 +34,9 @@ defaults to `%LOCALAPPDATA%\Project Go\workspaces`; Auto projects and the shared
 catalog use the same application-data parent. Custom internal locations remain
 available for advanced use.
 
+When reusing an unpacked ZIP cache, Project Go verifies its files against the selected archive. If cached files have
+changed, it stops and preserves them for review rather than treating them as the original ZIP.
+
 The normal workflow creates only one visible result:
 
 ```text

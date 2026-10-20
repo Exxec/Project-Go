@@ -25,6 +25,7 @@ public final class CandidateArchiveAudit {
     /** Evidence file name written beside the ledger. */
     public static final String EVIDENCE_FILE = "candidate-audit.json";
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final int MAX_MANIFEST_BYTES = 64 * 1024 * 1024;
 
     /**
      * Audit outcome.
@@ -66,21 +67,57 @@ public final class CandidateArchiveAudit {
             String candidate = InventoryFingerprint.tree(inventory.stream().map(file ->
                     new InventoryFingerprint.File(file.path(), file.bytes(), file.sha256())).toList());
             evidence.put("candidate_sha256", candidate);
-            evidence.put("manifest_sha256", BridgeForgeTranslationService.hash(manifest));
-
-            var expected = new TreeMap<String, String>();
-            for (JsonNode node : JSON.readTree(manifest.toFile()).path("inventory")) {
-                expected.put(node.path("path").asText(), node.path("sha256").asText());
+            byte[] manifestBytes;
+            try (var input = Files.newInputStream(manifest)) {
+                manifestBytes = input.readNBytes(MAX_MANIFEST_BYTES + 1);
             }
-            var actual = new TreeMap<String, String>();
-            inventory.forEach(file -> actual.put(file.path(), file.sha256()));
+            if (manifestBytes.length > MAX_MANIFEST_BYTES) {
+                throw new IOException("Publication manifest exceeds 64 MiB");
+            }
+            evidence.put("manifest_sha256", java.util.HexFormat.of().formatHex(
+                    java.security.MessageDigest.getInstance("SHA-256").digest(manifestBytes)));
+
+            var expected = new TreeMap<String, InventoryFingerprint.File>();
+            JsonNode manifestRoot = com.fasterxml.jackson.databind.json.JsonMapper.builder()
+                    .enable(com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
+                    .enable(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
+                    .build().readTree(manifestBytes);
+            if (manifestRoot == null || !manifestRoot.path("schema_version").isIntegralNumber()
+                    || !manifestRoot.path("schema_version").canConvertToInt()
+                    || manifestRoot.path("schema_version").intValue() != 1
+                    || !manifestRoot.path("inventory").isArray()) {
+                throw new IOException("Expected a schema-1 publication manifest inventory");
+            }
+            for (JsonNode node : manifestRoot.path("inventory")) {
+                String path = BridgeForgeTranslationDocument.text(node, "path");
+                BridgeForgeTranslationDocument.safePath(path);
+                if (!node.path("bytes").isIntegralNumber() || !node.path("bytes").canConvertToLong()) {
+                    throw new IOException("Manifest file size must be an integer: " + path);
+                }
+                var file = new InventoryFingerprint.File(path, node.path("bytes").longValue(),
+                        BridgeForgeTranslationDocument.text(node, "sha256"));
+                if (expected.putIfAbsent(path, file) != null) {
+                    throw new IOException("Repeated manifest path: " + path);
+                }
+            }
+            var actual = new TreeMap<String, InventoryFingerprint.File>();
+            inventory.forEach(file -> actual.put(file.path(),
+                    new InventoryFingerprint.File(file.path(), file.bytes(), file.sha256())));
             var added = new TreeSet<String>();
             var missing = new TreeSet<String>();
             var changed = new TreeSet<String>();
-            actual.forEach((path, hash) -> {
+            var archiveFiles = new com.ssmt.scanner.ArchiveInventory().capture(archive);
+            String metadata = archiveFiles.stream().map(com.ssmt.scanner.ArchiveInventory.Entry::path)
+                    .filter(path -> path.equalsIgnoreCase("mod_info.json")
+                            || path.toLowerCase(java.util.Locale.ROOT).endsWith("/mod_info.json"))
+                    .findFirst().orElseThrow(() -> new IOException("Archive metadata missing"));
+            String prefix = metadata.substring(0, metadata.length() - "mod_info.json".length());
+            archiveFiles.stream().map(com.ssmt.scanner.ArchiveInventory.Entry::path)
+                    .filter(path -> !path.startsWith(prefix)).forEach(added::add);
+            actual.forEach((path, file) -> {
                 if (!expected.containsKey(path)) {
                     added.add(path);
-                } else if (!expected.get(path).equals(hash)) {
+                } else if (!expected.get(path).equals(file)) {
                     changed.add(path);
                 }
             });
@@ -126,8 +163,13 @@ public final class CandidateArchiveAudit {
             }
             evidence.putObject("gates").put("PACKAGE_IDENTITY", packageIdentity.name())
                     .put("STATIC_VALIDATION", staticValidation.name());
+            if (!prepared.archiveSha256().orElseThrow().equals(InventoryFingerprint.archive(archive))
+                    || !inventory.equals(new CandidateInventory().capture(root))) {
+                throw new IOException("Candidate or archive changed during audit");
+            }
             return new Result(candidate, packageIdentity, staticValidation, packageReason, staticReason, evidence);
-        } catch (IOException | com.ssmt.core.exception.SsmtParseException | IllegalArgumentException exception) {
+        } catch (IOException | java.security.NoSuchAlgorithmException
+                | com.ssmt.core.exception.SsmtParseException | IllegalArgumentException exception) {
             throw new ProjectException("Could not audit the candidate archive: " + exception.getMessage(), exception);
         }
     }

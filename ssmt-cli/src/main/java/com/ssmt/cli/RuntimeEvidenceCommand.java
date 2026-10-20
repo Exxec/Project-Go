@@ -43,7 +43,7 @@ public final class RuntimeEvidenceCommand implements Callable<Integer> {
                                         "REPLACE_WITH_MOD_ID", "REPLACE_WITH_MOD_VERSION")),
                                 List.of("REPLACE_WITH_MOD_ID"),
                                 "REPLACE_WITH_EXACT_JAVA_EXECUTABLE",
-                                "REPLACE_WITH_EXACT_JAVA_VERSION", 0, List.of(), List.of(),
+                                "REPLACE_WITH_EXACT_JAVA_VERSION", null, List.of(), List.of(),
                                 runtimeScenarioTemplate())));
                 return 0;
             }

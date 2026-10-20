@@ -104,6 +104,79 @@ class CandidateArchiveAuditTest {
                 .contains("mod version is 2.1, expected 9");
     }
 
+    @Test void wrappedArchiveCannotHideFilesOutsideTheSelectedMod() throws Exception {
+        var published = publish();
+        Path archive = temporary.resolve("wrapped.zip");
+        try (var output = new ZipOutputStream(Files.newOutputStream(archive));
+                var walk = Files.walk(published.output())) {
+            for (Path path : walk.filter(Files::isRegularFile).sorted().toList()) {
+                output.putNextEntry(new ZipEntry("wrapper/mod/"
+                        + published.output().relativize(path).toString().replace('\\', '/')));
+                Files.copy(path, output);
+                output.closeEntry();
+            }
+            output.putNextEntry(new ZipEntry("undeclared.txt"));
+            output.write("extra payload".getBytes(StandardCharsets.UTF_8));
+            output.closeEntry();
+        }
+        var result = new CandidateArchiveAudit().audit(archive, published.manifest(), temporary.resolve("work"),
+                Optional.empty(), Optional.empty());
+        assertThat(result.packageIdentity()).isEqualTo(AssuranceSummary.Disposition.FAIL);
+        assertThat(result.evidence().path("manifest_comparison").path("added").toString())
+                .contains("undeclared.txt");
+    }
+
+    @Test void manifestSizesAreComparedAndDuplicatePathsAreRefused() throws Exception {
+        var published = publish();
+        Path archive = temporary.resolve("candidate.zip");
+        zip(published.output(), archive, "");
+        ObjectNode manifest = (ObjectNode) JSON.readTree(published.manifest().toFile());
+        var entries = (com.fasterxml.jackson.databind.node.ArrayNode) manifest.path("inventory");
+        var first = (ObjectNode) entries.get(0);
+        first.put("bytes", first.path("bytes").asLong() + 1);
+        Path changed = temporary.resolve("changed-manifest.json");
+        JSON.writeValue(changed.toFile(), manifest);
+        var audit = new CandidateArchiveAudit();
+        assertThat(audit.audit(archive, changed, temporary.resolve("work"), Optional.empty(), Optional.empty())
+                .packageIdentity()).isEqualTo(AssuranceSummary.Disposition.FAIL);
+        entries.add(first.deepCopy());
+        JSON.writeValue(changed.toFile(), manifest);
+        assertThatThrownBy(() -> audit.audit(archive, changed, temporary.resolve("work"),
+                Optional.empty(), Optional.empty())).isInstanceOf(ProjectException.class)
+                .hasMessageContaining("Repeated manifest path");
+    }
+
+    @Test void aModifiedAuditCacheCannotProduceASecondPackagePass() throws Exception {
+        var published = publish();
+        Path archive = temporary.resolve("candidate.zip");
+        zip(published.output(), archive, "");
+        Path work = temporary.resolve("work");
+        var audit = new CandidateArchiveAudit();
+        assertThat(audit.audit(archive, published.manifest(), work, Optional.empty(), Optional.empty())
+                .packageIdentity()).isEqualTo(AssuranceSummary.Disposition.PASS);
+        Path cached = new ModInputPreparationService().prepare(archive, work).modRoot();
+        Files.writeString(cached.resolve("data/a.csv"), "id,name\nx,changed cache\n");
+        assertThatThrownBy(() -> audit.audit(archive, published.manifest(), work, Optional.empty(), Optional.empty()))
+                .isInstanceOf(ProjectException.class).hasMessageContaining("cached archive differs");
+        assertThat(cached.resolve("data/a.csv")).hasContent("id,name\nx,changed cache\n");
+    }
+
+    @Test void aCoercedManifestSchemaVersionIsRefused() throws Exception {
+        var published = publish();
+        Path archive = temporary.resolve("candidate.zip");
+        zip(published.output(), archive, "");
+        ObjectNode manifest = (ObjectNode) JSON.readTree(published.manifest().toFile());
+        Path changed = temporary.resolve("invalid-schema.json");
+        for (var version : java.util.List.of(JSON.getNodeFactory().textNode("1"),
+                JSON.getNodeFactory().numberNode(1.5))) {
+            manifest.set("schema_version", version);
+            JSON.writeValue(changed.toFile(), manifest);
+            assertThatThrownBy(() -> new CandidateArchiveAudit().audit(archive, changed,
+                    temporary.resolve("work"), Optional.empty(), Optional.empty()))
+                    .isInstanceOf(ProjectException.class).hasMessageContaining("schema-1");
+        }
+    }
+
     @Test void remainingChineseTextNeedsAReviewDecisionNotAPass() throws Exception {
         Path leftover = temporary.resolve("leftover");
         Files.createDirectories(leftover.resolve("data"));

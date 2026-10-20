@@ -19,3 +19,5 @@
 *.png binary
 # Conformance fixtures keep their own bytes and line endings (shared with BridgeForge).
 fixtures/translation-conformance/** -text
+# Synthetic runtime records bind to exact candidate bytes across platforms.
+fixtures/runtime-context/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

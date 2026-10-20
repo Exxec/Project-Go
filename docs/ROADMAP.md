@@ -448,6 +448,14 @@ Exit criteria: each claimed behavior maps to a recorded scenario and result;
 untested behavior remains visibly `NOT_TESTED` rather than inheriting success from
 another gate.
 
+### P1-P5 review follow-up — 2026-10-20
+
+The review repairs restore the fingerprint API, remove filename/count-based evidence claims, verify ZIP cache contents
+before reuse, tighten final archive/manifest comparison, and preserve unknown runtime exits as null. Regression names,
+validation and remaining acceptance gates: [P1_P5_REVIEW_FIXES.md](P1_P5_REVIEW_FIXES.md).
+P3's fixture-first rule for newly accepted formats remains open. The owner explicitly left P5 live tests pending;
+no campaign, combat, persistence or upgrade checkbox is closed by these offline repairs.
+
 ## P6 — completion and future-attempt feedback
 
 - [x] Generate the final status and summary from per-gate evidence. Reject missing,
@@ -693,10 +701,48 @@ Status (one commit per item on `main`):
 - **G4.2 Done 2026-10-18 on the Project Go side; LIVE PENDING on the BridgeForge side.** `assurance --candidate DIR --import-run <queue>/_live/<TESTID>.json --ledger-out LEDGER` (`RunRecordImport`, `AssuranceLedgerWriter`, `BridgeForgeShippedHash`). A record is evidence only when it has a `manifest_id` (BridgeForge item 75 R1), a member with provenance `BOUND` whose `shipped_sha256` equals the candidate's BridgeForge shipped hash (the copy-drift file-set hash, ported to Java and pinned against a value BridgeForge computed on a synthetic tree), and the launch environment (Starsector build, Java, process exit code). Legacy records (today's format, no manifest or provenance), unbound members, other bytes or missing environment leave AUTOMATED_BOOT, CAMPAIGN and SAVE_RELOAD NOT_TESTED with the reason. For a matching BOUND member: boot PASS when the main menu was reached with no FATAL, MOD-ERROR, JVM crash or non-zero exit (FAIL on a FAIL verdict or those signs), CAMPAIGN PASS when a campaign loaded, SAVE_RELOAD PASS only with a save and an explicit `milestones.reload_after_save` (the log counters alone cannot show a reload). The record is copied verbatim beside the ledger as the hashed log of a schema-2 runtime capture (`runtime-<TESTID>.json`), so `AssuranceLedgerReader` verifies it. Caveats: R1 is specified but not built in BridgeForge, so the field names `manifest_id`, `members[].provenance`, `milestones`, `environment` are this side's reading contract and must be reconciled when R1 lands; no real BOUND record exists to test against. Tests: `BridgeForgeShippedHashTest`, `RunRecordImportTest`, `AssuranceImportRunCommandTest`.
 - **G4.3 Done 2026-10-18 (harness; owner marks the rows).** `GuiChecklistTest` + `gradlew :ssmt-gui:guiChecklist`: the real `TranslationWorkflowPane` in a real JavaFX window, one screenshot per step in `ssmt-gui/build/gui-checklist/`, `checklist.json` with what was asserted. Run here on 2026-10-18 on a Windows desktop: 10 rows AUTOMATED_PASS (drops of folder/ZIP/mod_info.json, Unicode folder, renamed response, malformed response keeps the project, changed source held for review, first install remembers its destination, a different destination, quality plus a later edit named, a missing remembered destination falls back, and the unreadable-input checkbox), 5 NOT_AUTOMATED with reasons. Deviation: plain JavaFX `Node.snapshot` instead of TestFX/Monocle: no new dependency, and Monocle's latest build (21.0.2) targets JavaFX 21, not the 25 used here; so no headless CI run (Ubuntu runners have no display). Production change: the pane takes an injectable controller and a few methods are package-private for the harness. Not covered: native file choosers, the error dialog (it writes a diagnostic into the user's app data), Explorer drops, cancellation timing.
 
-## Recommendations (2026-10-18; proposed, not approved)
+## G2 safety follow-up (2026-10-19)
+
+Owner request: "review roadmap then begin working on next phase. set as goal and if possible delegate to lowest recommended agent. optimize token usage plase."
+The next implementation slice closes two independently reproduced G2.1/G2.2/G2.3 defects before new schema or runtime work.
+It does not approve the proposed recommendations below or close P8.10.
+
+- A class constant with any detected lookup-key use stays IDENTIFIER even when other sites display it; the bytecode allowlist
+  proposal excludes every site of that same file/class/text constant. Synthetic loose-class and jar tests verify export,
+  source-preserving apply, protected leftovers, proposal exclusion and independence from scan order (`BytecodeCallSitesTest`).
+- A format-specific rejection of a LINKED member must refuse the operation before publication, including existing JSON-key
+  collisions and invalid protected syntax. Regression coverage: `LinkedGroupCollisionSafetyTest`.
+- Validation receipt and remaining checkout blockers are recorded in `G2_SAFETY_VALIDATION.md`. This is static translation
+  safety work: LIVE TEST NOT PERFORMED; runtime, native visual acceptance and cross-repository schema gates remain open.
+
+## Schema alignment follow-up (2026-10-19)
+
+Owner: "If able continue same process in next phase." This authorizes the next translation-schema slice; the remaining
+recommendations below stay separate. Schema v1 is retained with additive text-line/class kinds and optional role/group
+metadata. The shared contract and fixtures are in `fixtures/translation-conformance/SCHEMA_V1_EXTENSIONS.md`.
+
+BridgeForge now discovers/applies/checks these kinds, checks source identities, consumes declared roles, protects
+IDENTIFIER units and stages complete linked copies before publication. Its linked in-place path is explicitly refused;
+it does not implement Project Go's classifier. Project Go's exchange validator rejects malformed role/group metadata.
+`TranslationExtensionConformanceTest` exercises both new shared fixtures and compares exact exported units/hashes/output
+bytes. The original 18-unit corpus is unchanged. Source/static/package evidence: see `SCHEMA_ALIGNMENT_VALIDATION.md`.
+Real-mod acceptance, runtime records, native owner GUI review, release approval and P8.10 remain open.
+
+## Remaining near-term follow-ups (2026-10-19)
+
+Owner: "Repeat for all next phases if able." Feasible implementation and evidence collection proceeded in recommendation
+order; the local-only report is `REMAINING_PHASES_STATUS.md` (kept outside version control).
+Runtime context fields and explicit capture are implemented and synthetic-tested, with unknown exits left null. The
+real-mod task measured FlowerGod at 908/1,620 policy approvals, with 712 review items and unchanged source. Its real build
+is BLOCKED_REVIEW. The GUI harness refreshed 10 automated passes and 5 non-automated rows; all 15 owner reviews stay
+NOT_TESTED. Static inventories do not establish JSON-key consumers, so P8.10 stays open. The unfinished runtime capture
+files were backed up and their compile/publication defects repaired. No live test, owner review or release was invented.
+
+## Recommendations (2026-10-18; individual near-term follow-ups authorized above; long-term remains proposed)
 
 Written after the automation plan (G0-G4) merged and CI went green on Windows and Ubuntu. The owner asked for
-recommendations and long-term recommendations. None is scheduled until the owner picks it; `AGENTS.md` and the
+recommendations and long-term recommendations. The near-term follow-ups are authorized as recorded above; long-term
+directions remain proposed. `AGENTS.md` and the
 `ARCHITECTURE.md` boundaries bind all of them.
 
 ### Near term: close the cross-project loops and get real-mod evidence
@@ -705,6 +751,9 @@ recommendations and long-term recommendations. None is scheduled until the owner
    `role`/`role_rule`/`group`; BridgeForge's `translate-apply` must accept them, with shared conformance fixtures, before the two
    tools can exchange such documents (recorded in BridgeForge's `docs/ROADMAP_STATUS.md`). Agree the schema change once,
    in both repositories, rather than each side extending v1 alone; consider calling it schema 2.
+   Implemented offline 2026-10-19 as the additive schema-v1 extension profile above, with explicit conservative refusal
+   boundaries. No schema-2 migration is needed for this backward-readable profile; older consumers lacking these kinds
+   must not be used to apply it.
 2. **Runtime evidence from BridgeForge.** `assurance --import-run` reads BridgeForge's real run record, but every gate stays
    NOT_TESTED until BridgeForge records `manifest.java_version` and a `process_exit_code` (BridgeForge follow-up). Once it
    does, one bound BridgeForge live run of a translated mod closes AUTOMATED_BOOT and CAMPAIGN for that candidate.

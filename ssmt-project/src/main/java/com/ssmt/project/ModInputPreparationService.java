@@ -104,20 +104,21 @@ public final class ModInputPreparationService {
         if (!extraction.startsWith(cacheRoot)) {
             throw new ProjectException("Could not create a safe mod archive cache path");
         }
-        if (Files.exists(extraction)) {
-            return archiveResult(archive, extraction, digest);
-        }
-
         Path staging = null;
         try {
             staging = Files.createTempDirectory(cacheRoot, "archive-source-staging-");
             extract(archive, staging);
             Path stagedRoot = findArchiveModRoot(staging);
             Path relativeRoot = staging.relativize(stagedRoot);
+            if (!digest.equals(sha256(archive))) {
+                throw new ProjectException("Mod archive changed during preparation");
+            }
+            var expected = new com.ssmt.scanner.CandidateInventory().capture(staging);
+            if (Files.exists(extraction, java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
+                return archiveResult(archive, extraction, digest, expected);
+            }
             if (!publish(staging, extraction)) {
-                deleteTree(staging);
-                staging = null;
-                return archiveResult(archive, extraction, digest);
+                return archiveResult(archive, extraction, digest, expected);
             }
             staging = null;
             return new PreparedMod(archive, extraction.resolve(relativeRoot).toRealPath(),
@@ -125,9 +126,6 @@ public final class ModInputPreparationService {
         } catch (ProjectException exception) {
             throw exception;
         } catch (IOException exception) {
-            if (Files.isDirectory(extraction)) {
-                return archiveResult(archive, extraction, digest);
-            }
             throw new ProjectException("Could not unpack selected mod archive", exception);
         } finally {
             deleteTree(staging);
@@ -247,9 +245,14 @@ public final class ModInputPreparationService {
         void sleep(long milliseconds) throws InterruptedException;
     }
 
-    private static PreparedMod archiveResult(Path archive, Path extraction, String digest)
+    private static PreparedMod archiveResult(Path archive, Path extraction, String digest,
+            List<com.ssmt.scanner.CandidateInventory.Entry> expected)
             throws ProjectException {
         try {
+            if (!expected.equals(new com.ssmt.scanner.CandidateInventory().capture(extraction))) {
+                throw new ProjectException("The cached archive differs from the selected ZIP; "
+                        + "preserve it for review and choose a new cache location");
+            }
             return new PreparedMod(archive, findArchiveModRoot(extraction).toRealPath(),
                     InputKind.ZIP_ARCHIVE, Optional.of(digest));
         } catch (IOException exception) {

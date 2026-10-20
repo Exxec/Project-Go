@@ -55,6 +55,8 @@ class AssuranceCommandTest {
         assertThat(output.toString()).contains("candidateSha256", "REPLACE_WITH_EXACT_BUILD",
                 "\"schemaVersion\" : 2", "AUTOMATED_BOOT", "UPGRADE_COMPATIBILITY",
                 "NOT_TESTED");
+        assertThat(new com.fasterxml.jackson.databind.ObjectMapper().readTree(output.toString())
+                .path("processExitCode").isNull()).isTrue();
     }
 
     @Test void buildTemplateBindsToCandidateAndKeepsAuthorityUnderReview() throws Exception {

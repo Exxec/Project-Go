@@ -76,7 +76,6 @@ public final class RuntimeEvidenceReader {
             loadOrder = List.copyOf(Objects.requireNonNull(loadOrder, "loadOrder"));
             requireText(javaExecutable, "Java executable");
             requireText(javaVersion, "Java version");
-            Objects.requireNonNull(processExitCode, "processExitCode");
             logs = List.copyOf(Objects.requireNonNull(logs, "logs"));
             modalDialogs = List.copyOf(Objects.requireNonNull(modalDialogs, "modalDialogs"));
             scenarios = List.copyOf(Objects.requireNonNullElse(scenarios, List.of()));
@@ -128,6 +127,9 @@ public final class RuntimeEvidenceReader {
         }
         if (profile.logs().isEmpty()) {
             throw new IOException("Runtime PASS/FAIL requires at least one captured log");
+        }
+        if (profile.processExitCode() == null) {
+            throw new IOException("Runtime PASS/FAIL requires an observed process exit code");
         }
         if (result.disposition() == AssuranceSummary.Disposition.PASS
                 && profile.processExitCode() != 0) {
