@@ -41,6 +41,7 @@ public final class TranslationWorkflow {
     private static final int MAX_LEGACY_PROJECTS = 256;
     private static final long MAX_LEGACY_PROJECT_BYTES = 64L * 1024L * 1024L;
     private static final String PROJECT_FILE = "project.ssmt.json";
+    private static final String REVOKED_APPROVAL = "Automatic approval revoked; review required";
     private static final String LINEAGE_FILE = "lineage.json";
     private static final int LINEAGE_SCHEMA_VERSION = 1;
     private static final int MAX_REGISTERED_FORKS = 32;
@@ -369,13 +370,18 @@ public final class TranslationWorkflow {
             var imported = workflow.importResponse(session.source(), response,
                     prepared, null);
             retainHistory(metadata, session.project(), refreshed);
-            // A newly supplied translation resolves that entry's pending review flag.
+            // Retained text is not a response to a review finding. Resolve only supplied identities.
             var pending = metadata.withArray("pendingReview");
             for (int index = pending.size() - 1; index >= 0; index--) {
                 JsonNode finding = pending.get(index);
                 if (imported.result().project().entries().stream().anyMatch(e ->
                         e.sourceFile().toString().replace('\\', '/').equals(finding.path("sourceFile").asText())
-                        && e.key().equals(finding.path("key").asText()) && !e.translatedText().isBlank())) {
+                        && e.key().equals(finding.path("key").asText()) && !e.translatedText().isBlank()
+                        && imported.result().suppliedEntryIds().contains(AiTranslationExchangeService.identity(e))
+                        && (!REVOKED_APPROVAL.equals(finding.path("status").asText())
+                                || e.provenance() == com.ssmt.core.model.TranslationProvenance.POLICY_APPROVED
+                                || e.provenance() == com.ssmt.core.model.TranslationProvenance.HUMAN_EDITED
+                                || e.provenance() == com.ssmt.core.model.TranslationProvenance.MANUAL_IMPORT))) {
                     pending.remove(index);
                 }
             }
@@ -394,6 +400,35 @@ public final class TranslationWorkflow {
             }
             ObjectNode metadata = readState(session.workspace().resolve(PROJECT_FILE));
             return commit(session.source(), session.workspace(), acknowledged, session.identity(), metadata, null);
+        });
+    }
+
+    /** Withdraws rule approvals atomically and keeps the affected text pending explicit review. */
+    public Session revokePolicyApprovals(Session session) throws ProjectException {
+        return locked(session.workspace(), () -> {
+            requireCurrent(session);
+            var approved = session.project().entries().stream().filter(entry -> entry.provenance()
+                    == com.ssmt.core.model.TranslationProvenance.POLICY_APPROVED).toList();
+            if (approved.isEmpty()) { return session; }
+            ObjectNode metadata = readState(session.workspace().resolve(PROJECT_FILE));
+            for (ProjectEntry entry : approved) {
+                ObjectNode record = JSON.createObjectNode();
+                record.put("sourceFile", entry.sourceFile().toString().replace('\\', '/'));
+                record.put("key", entry.key());
+                record.put("status", REVOKED_APPROVAL);
+                record.put("source", entry.originalText());
+                record.put("previousSource", entry.originalText());
+                record.put("previousTranslation", entry.translatedText());
+                record.put("previousProvenance", entry.provenance().name());
+                if (!contains(metadata.withArray("history"), record)) {
+                    metadata.withArray("history").add(record.deepCopy());
+                }
+                if (!contains(metadata.withArray("pendingReview"), record)) {
+                    metadata.withArray("pendingReview").add(record);
+                }
+            }
+            return commit(session.source(), session.workspace(), PolicyApproval.revoke(session.project()),
+                    session.identity(), metadata, null);
         });
     }
 

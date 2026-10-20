@@ -375,6 +375,37 @@ class GuiChecklistTest {
             partial.close();
         }
 
+        var approvals = new Fixture("Checklist Mod");
+        try {
+            approvals.drop(approvals.source);
+            approvals.drop(approvals.answeredRequest("policy-response.json"));
+            Path saved = approvals.controller.session().orElseThrow().workspace().resolve("project.ssmt.json");
+            ObjectNode seeded = (ObjectNode) JSON.readTree(saved.toFile());
+            ((ObjectNode) seeded.path("entries").get(0)).put("provenance", "POLICY_APPROVED");
+            JSON.writeValue(saved.toFile(), seeded);
+            approvals.drop(approvals.source);
+            String dialogShot = "policy-approval-revoke-dialog.png";
+            onFx(() -> {
+                var dialog = approvals.pane.reviewDialog("One automatically approved translation. "
+                        + "Revoking keeps the wording and requires review before installation.");
+                dialog.show();
+                writePng(dialog.getDialogPane().getScene().snapshot(null), out.resolve(dialogShot));
+                var revoke = dialog.getDialogPane().getButtonTypes().stream()
+                        .filter(button -> button.getText().startsWith("Revoke ")).findFirst().orElseThrow();
+                ((javafx.scene.control.Button) dialog.getDialogPane().lookupButton(revoke)).fire();
+                return null;
+            });
+            approvals.waitIdle();
+            boolean revoked = approvals.controller.policyApprovedCount() == 0
+                    && !approvals.controller.readyToBuild() && approvals.controller.needsReview();
+            String after = approvals.shot("policy-approval-revoked");
+            row("Revoke automatic approvals", "Revoke keeps text and requires review before installing.",
+                    verdict(revoked, failures, "revoke button and durable review gate"), List.of(dialogShot, after),
+                    "revoked=" + revoked + "; owner visual review still required");
+        } finally {
+            approvals.close();
+        }
+
         notAutomated("Cancel during preparation/validation",
                 "Task stops at a safe boundary; previous project/output retained.",
                 "needs a long-running operation to cancel mid-way; covered by unit tests of WorkflowOperation, not by this walk");

@@ -1530,15 +1530,15 @@
     "semantic_hash": ""
   },
   "ssmt-gui/src/main/java/com/ssmt/gui/TranslationWorkflowController.java": {
-    "mtime": 1792365662.0578606,
-    "seen": 1792503682.2560844,
-    "ast_hash": "e7201a783e8389f5afd244d1b43a3d86",
+    "mtime": 1792504477.8116004,
+    "seen": 1792505659.9068022,
+    "ast_hash": "7dfc269c109ed3cbb3bf7ff31f54ae51",
     "semantic_hash": ""
   },
   "ssmt-gui/src/main/java/com/ssmt/gui/TranslationWorkflowPane.java": {
-    "mtime": 1792365662.0578606,
-    "seen": 1792503682.256086,
-    "ast_hash": "cca2ce6f79e52ae29863125fb2f168ae",
+    "mtime": 1792504683.5425904,
+    "seen": 1792505659.9068043,
+    "ast_hash": "fc0a2b6bd927dce4de217e4cfff3dcbb",
     "semantic_hash": ""
   },
   "ssmt-gui/src/main/java/com/ssmt/gui/TranslationWorkflowPresentation.java": {
@@ -1614,9 +1614,9 @@
     "semantic_hash": ""
   },
   "ssmt-gui/src/test/java/com/ssmt/gui/GuiChecklistTest.java": {
-    "mtime": 1792365662.0578606,
-    "seen": 1792503682.2561078,
-    "ast_hash": "7352969fef04e5b8d831ee41f144ead3",
+    "mtime": 1792504683.7663898,
+    "seen": 1792505659.9068198,
+    "ast_hash": "6a244ccaa2994883acd28487366c1722",
     "semantic_hash": ""
   },
   "ssmt-gui/src/test/java/com/ssmt/gui/GuiTextCompletenessTest.java": {
@@ -1680,9 +1680,9 @@
     "semantic_hash": ""
   },
   "ssmt-gui/src/test/java/com/ssmt/gui/TranslationWorkflowControllerTest.java": {
-    "mtime": 1791512830.4856613,
-    "seen": 1792503682.2561243,
-    "ast_hash": "df60a51d69e31707689b44d0b53c1f77",
+    "mtime": 1792505123.438118,
+    "seen": 1792505659.906834,
+    "ast_hash": "93672ca2b0cfc3929b1eccf3a5a3de19",
     "semantic_hash": ""
   },
   "ssmt-gui/src/test/java/com/ssmt/gui/TranslationWorkflowPresentationTest.java": {
@@ -1866,15 +1866,15 @@
     "semantic_hash": ""
   },
   "ssmt-project/src/main/java/com/ssmt/project/AiTranslationExchangeService.java": {
-    "mtime": 1792365662.0578606,
-    "seen": 1792503682.2561867,
-    "ast_hash": "0a6e5123d859b7a62ddf4ef940e94b29",
+    "mtime": 1792505095.2359111,
+    "seen": 1792505659.906872,
+    "ast_hash": "c11202e33542991437c088bc7466e01e",
     "semantic_hash": ""
   },
   "ssmt-project/src/main/java/com/ssmt/project/AiTranslationImportResult.java": {
-    "mtime": 1792365662.0578606,
-    "seen": 1792503682.256188,
-    "ast_hash": "837ebabced056ffaa99d397f47c8e8f4",
+    "mtime": 1792505094.9704103,
+    "seen": 1792505659.906873,
+    "ast_hash": "63e81cc393980507dd0f9afbb2c2c761",
     "semantic_hash": ""
   },
   "ssmt-project/src/main/java/com/ssmt/project/AssuranceLedgerReader.java": {
@@ -2094,9 +2094,9 @@
     "semantic_hash": ""
   },
   "ssmt-project/src/main/java/com/ssmt/project/GlossaryService.java": {
-    "mtime": 1792365662.0578606,
-    "seen": 1792503682.2562568,
-    "ast_hash": "3c6670f63f2bb916240189c42acd0267",
+    "mtime": 1792504340.8675697,
+    "seen": 1792505659.9069178,
+    "ast_hash": "b5d45bcb8a5d7170f169c57bd4a55fd6",
     "semantic_hash": ""
   },
   "ssmt-project/src/main/java/com/ssmt/project/GlossaryTerm.java": {
@@ -2352,9 +2352,9 @@
     "semantic_hash": ""
   },
   "ssmt-project/src/main/java/com/ssmt/project/TerminologyConsistencyAuditor.java": {
-    "mtime": 1785093320.4821749,
-    "seen": 1792503682.2563229,
-    "ast_hash": "40682f78de6878fdb69e45a21e8cea80",
+    "mtime": 1792504340.8685665,
+    "seen": 1792505659.9069686,
+    "ast_hash": "8edeb23c14132089ddb9d05a404ecb52",
     "semantic_hash": ""
   },
   "ssmt-project/src/main/java/com/ssmt/project/TranslationCoverageAuditor.java": {
@@ -2394,9 +2394,9 @@
     "semantic_hash": ""
   },
   "ssmt-project/src/main/java/com/ssmt/project/TranslationWorkflow.java": {
-    "mtime": 1792365662.0750425,
-    "seen": 1792503682.2563329,
-    "ast_hash": "6247452e0995c0abd202d1445110ccfe",
+    "mtime": 1792505095.5537126,
+    "seen": 1792505659.9069762,
+    "ast_hash": "fde04389d79892e446cb559119a61d34",
     "semantic_hash": ""
   },
   "ssmt-project/src/main/java/com/ssmt/project/UnitRoleClassifier.java": {
@@ -2610,9 +2610,9 @@
     "semantic_hash": ""
   },
   "ssmt-project/src/test/java/com/ssmt/project/GlossaryServiceTest.java": {
-    "mtime": 1792365662.077547,
-    "seen": 1792503682.256387,
-    "ast_hash": "1dc2c58578c9dfbfb54a816dd29570e6",
+    "mtime": 1792504374.068449,
+    "seen": 1792505659.9070187,
+    "ast_hash": "7f6943499f0611d31c5f2f02dd1b6329",
     "semantic_hash": ""
   },
   "ssmt-project/src/test/java/com/ssmt/project/LeftoverClassifierTest.java": {
@@ -2754,9 +2754,9 @@
     "semantic_hash": ""
   },
   "ssmt-project/src/test/java/com/ssmt/project/TerminologyConsistencyAuditorTest.java": {
-    "mtime": 1785093381.0102978,
-    "seen": 1792503682.256423,
-    "ast_hash": "e42b9dd7741603d9ebb0fb845584f99a",
+    "mtime": 1792504374.065715,
+    "seen": 1792505659.9070468,
+    "ast_hash": "4438c95c8623468718d1b423aa1fa285",
     "semantic_hash": ""
   },
   "ssmt-project/src/test/java/com/ssmt/project/TextLineUnitsTest.java": {
@@ -3414,9 +3414,9 @@
     "semantic_hash": ""
   },
   "USER_GUIDE.md": {
-    "mtime": 1792503589.4832761,
-    "seen": 1792503682.2565916,
-    "ast_hash": "48c52e21b1baa161ae015f9b851cd125",
+    "mtime": 1792505486.8510857,
+    "seen": 1792505659.907176,
+    "ast_hash": "4648a397f995097568156fe429ebc20e",
     "semantic_hash": ""
   },
   "docs/ASSESSMENT_IMPLEMENTATION.md": {
@@ -3432,9 +3432,9 @@
     "semantic_hash": ""
   },
   "docs/AUTOMATION_PLAN.md": {
-    "mtime": 1792367852.4341679,
-    "seen": 1792503682.2565966,
-    "ast_hash": "abd2f3f8f436efd1128e8581e675496f",
+    "mtime": 1792505480.5085385,
+    "seen": 1792505659.9071796,
+    "ast_hash": "cc99715b11b4d7d19e9ee8ba43f7ddd1",
     "semantic_hash": ""
   },
   "docs/BRIDGEFORGE_METHOD_CONVERSION.md": {
@@ -3498,9 +3498,9 @@
     "semantic_hash": ""
   },
   "docs/P1_P5_REVIEW_FIXES.md": {
-    "mtime": 1792503588.9676428,
-    "seen": 1792503682.2566137,
-    "ast_hash": "7e0fedcd261b1d47110439ed676aa825",
+    "mtime": 1792504126.3646069,
+    "seen": 1792505659.9071937,
+    "ast_hash": "f2451a726a32b7da61da4aec390dcb97",
     "semantic_hash": ""
   },
   "docs/P7_IMPLEMENTATION_STATUS.md": {
@@ -3552,9 +3552,9 @@
     "semantic_hash": ""
   },
   "docs/ROADMAP.md": {
-    "mtime": 1792503589.2171228,
-    "seen": 1792503682.2566276,
-    "ast_hash": "f0e8a4fae912522f1adc582f363d83b9",
+    "mtime": 1792505616.3563702,
+    "seen": 1792505659.9072037,
+    "ast_hash": "84eec12fc0378554a677a67844dad8e6",
     "semantic_hash": ""
   },
   "docs/ROADMAP_PHASE_STATUS_2026-09-23.md": {
@@ -3669,6 +3669,12 @@
     "mtime": 1785070761.9788935,
     "seen": 1792503682.2566571,
     "ast_hash": "5d88113dc97aef6063476e7b4320ef20",
+    "semantic_hash": ""
+  },
+  "docs/NON_LIVE_ROADMAP_FOLLOWUP.md": {
+    "mtime": 1792505616.0541668,
+    "seen": 1792505659.90719,
+    "ast_hash": "7ca6cf489af7c992c70976f99040672d",
     "semantic_hash": ""
   }
 }

@@ -83,6 +83,17 @@ public final class TranslationWorkflowController {
         return session != null && reviewRequired;
     }
 
+    public long policyApprovedCount() {
+        return session == null ? 0 : session.project().entries().stream().filter(entry -> entry.provenance()
+                == com.ssmt.core.model.TranslationProvenance.POLICY_APPROVED).count();
+    }
+
+    public void revokePolicyApprovals() throws ProjectException {
+        TranslationWorkflow.Session previous = requireSession();
+        TranslationWorkflow.Session replacement = workflow.revokePolicyApprovals(previous);
+        if (replacement != previous) { activate(replacement); }
+    }
+
     private void activate(TranslationWorkflow.Session candidate) {
         var findings = com.ssmt.project.WorkflowReview.validate(candidate.project()).findings();
         boolean candidateReady = candidate.needsReview() == 0 && findings.isEmpty();

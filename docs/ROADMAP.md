@@ -740,6 +740,11 @@ files were backed up and their compile/publication defects repaired. No live tes
 
 ## Recommendations (2026-10-18; individual near-term follow-ups authorized above; long-term remains proposed)
 
+Follow-up 2026-10-20: G3.1 auditor-based glossary counts and G3.2 durable GUI revocation are implemented and validated.
+The grouped real-mod review packet, broader Nightcross CRC diagnosis, refreshed GUI checklist and cross-tool/hosted
+evidence are recorded in [NON_LIVE_ROADMAP_FOLLOWUP.md](NON_LIVE_ROADMAP_FOLLOWUP.md). Nightcross remains blocked by owner
+choice; missing translation drafts, JSON-key consumer proof, owner GUI review and final release gates remain explicit.
+
 Written after the automation plan (G0-G4) merged and CI went green on Windows and Ubuntu. The owner asked for
 recommendations and long-term recommendations. The near-term follow-ups are authorized as recorded above; long-term
 directions remain proposed. `AGENTS.md` and the

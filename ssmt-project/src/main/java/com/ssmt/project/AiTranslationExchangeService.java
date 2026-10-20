@@ -400,13 +400,14 @@ public final class AiTranslationExchangeService {
                     project.entries().size() - translations.size(),
                     nameUpdated,
                     policyApproved,
-                    policyReview);
+                    policyReview,
+                    translations.keySet());
         } catch (IOException | TranslationMemoryException | IllegalArgumentException exception) {
             throw new ProjectException("Could not import AI translation response", exception);
         }
     }
 
-    private static String identity(ProjectEntry entry) {
+    static String identity(ProjectEntry entry) {
         return entry.key().startsWith("bf:") ? entry.key().substring(3)
                 : entry.sourceFile().toString().replace('\\', '/') + "#" + entry.key();
     }

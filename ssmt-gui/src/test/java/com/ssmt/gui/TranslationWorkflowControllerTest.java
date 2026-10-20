@@ -17,6 +17,105 @@ import org.junit.jupiter.api.io.TempDir;
 class TranslationWorkflowControllerTest {
     @TempDir Path directory;
 
+    @Test void revokePreservesTextAndManualApprovalsAndDurablyBlocksPublication() throws Exception {
+        Path source = directory.resolve("revoke-source");
+        Files.createDirectories(source.resolve("data/strings"));
+        Files.writeString(source.resolve("mod_info.json"), "{\"id\":\"revoke\",\"name\":\"Revoke\"}");
+        Files.writeString(source.resolve("data/strings/strings.json"), "{\"a\":\"你好世界\",\"b\":\"再见世界\"}");
+        byte[] original = Files.readAllBytes(source.resolve("data/strings/strings.json"));
+        Path owned = directory.resolve("revoke-owned");
+        var controller = new TranslationWorkflowController(new TranslationWorkflow(owned),
+                new WorkflowPreferences(directory.resolve("revoke-settings.json")));
+        controller.loadMod(source);
+        Path response = directory.resolve("revoke-response.json");
+        controller.exportTranslation(response);
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        var document = (com.fasterxml.jackson.databind.node.ObjectNode) mapper.readTree(response.toFile());
+        document.path("entries").forEach(entry -> ((com.fasterxml.jackson.databind.node.ObjectNode) entry)
+                .put("translation", "Translated text"));
+        mapper.writeValue(response.toFile(), document);
+        controller.importTranslation(response);
+        Path saved = controller.session().orElseThrow().workspace().resolve("project.ssmt.json");
+        var persisted = (com.fasterxml.jackson.databind.node.ObjectNode) mapper.readTree(saved.toFile());
+        ((com.fasterxml.jackson.databind.node.ObjectNode) persisted.path("entries").get(0))
+                .put("provenance", "POLICY_APPROVED");
+        ((com.fasterxml.jackson.databind.node.ObjectNode) persisted.path("entries").get(1))
+                .put("provenance", "MANUAL_IMPORT");
+        mapper.writeValue(saved.toFile(), persisted);
+        controller.loadMod(source);
+        var active = controller.session().orElseThrow();
+        assertThat(controller.policyApprovedCount()).isEqualTo(1);
+        assertThat(controller.readyToBuild()).isTrue();
+        try (var channel = FileChannel.open(active.workspace().resolve(".lock"), StandardOpenOption.WRITE);
+                var lock = channel.lock()) {
+            assertThat(lock.isValid()).isTrue();
+            assertThatThrownBy(controller::revokePolicyApprovals).isInstanceOf(ProjectException.class);
+        }
+        assertThat(controller.session().orElseThrow()).isSameAs(active);
+        controller.revokePolicyApprovals();
+        assertThat(controller.policyApprovedCount()).isZero();
+        assertThat(controller.readyToBuild()).isFalse();
+        assertThat(controller.needsReview()).isTrue();
+        assertThat(controller.session().orElseThrow().project().entries()).extracting(
+                com.ssmt.project.ProjectEntry::translatedText).containsOnly("Translated text");
+        assertThat(controller.session().orElseThrow().project().entries()).filteredOn(entry -> entry.provenance()
+                == com.ssmt.core.model.TranslationProvenance.AI_TRANSLATED).hasSize(1);
+        assertThat(controller.session().orElseThrow().project().entries()).filteredOn(entry -> entry.provenance()
+                == com.ssmt.core.model.TranslationProvenance.MANUAL_IMPORT).hasSize(1);
+        var revoked = controller.session().orElseThrow();
+        assertThatThrownBy(() -> new TranslationWorkflow(owned).exportTranslation(active,
+                directory.resolve("stale-request.json"))).isInstanceOf(ProjectException.class);
+        controller.revokePolicyApprovals();
+        assertThat(controller.session().orElseThrow()).isSameAs(revoked);
+        controller.loadMod(source);
+        assertThat(controller.readyToBuild()).isFalse();
+        assertThat(controller.review().findings()).anyMatch(finding -> finding.reason().contains("approval revoked"));
+        Path output = directory.resolve("revoked-output");
+        assertThatThrownBy(() -> controller.buildPatch(output)).isInstanceOf(ProjectException.class);
+        assertThat(output).doesNotExist();
+        assertThat(Files.readAllBytes(source.resolve("data/strings/strings.json"))).isEqualTo(original);
+        // Blank, unrelated and rejected draft responses cannot approve retained revoked text.
+        Path blank = directory.resolve("blank-response.json");
+        controller.exportTranslation(blank);
+        var skipped = (com.fasterxml.jackson.databind.node.ObjectNode) mapper.readTree(blank.toFile());
+        skipped.put("allowBlankTranslations", true);
+        skipped.path("entries").forEach(entry -> ((com.fasterxml.jackson.databind.node.ObjectNode) entry)
+                .put("translation", ""));
+        mapper.writeValue(blank.toFile(), skipped);
+        controller.importTranslation(blank);
+        assertThat(controller.readyToBuild()).isFalse();
+        var subset = skipped.deepCopy();
+        ((com.fasterxml.jackson.databind.node.ArrayNode) subset.path("entries")).remove(0);
+        ((com.fasterxml.jackson.databind.node.ObjectNode) subset.path("entries").get(0))
+                .put("translation", "Reviewed text");
+        subset.put("entryCount", 1).put("entry_count", 1);
+        subset.remove("entryIdsSha256");
+        ((com.fasterxml.jackson.databind.node.ObjectNode) subset.path("coverageSummary"))
+                .put("exportedEntryCount", 1);
+        Path unrelated = directory.resolve("unrelated-response.json");
+        mapper.writeValue(unrelated.toFile(), subset);
+        controller.importTranslation(unrelated);
+        assertThat(controller.readyToBuild()).isFalse();
+        Path rejected = directory.resolve("rejected-draft.json");
+        controller.exportTranslation(rejected);
+        var draft = (com.fasterxml.jackson.databind.node.ObjectNode) mapper.readTree(rejected.toFile());
+        draft.path("entries").forEach(entry -> ((com.fasterxml.jackson.databind.node.ObjectNode) entry)
+                .put("translation", "仍需审核"));
+        mapper.writeValue(rejected.toFile(), draft);
+        controller.importTranslation(rejected);
+        assertThat(controller.readyToBuild()).isFalse();
+        // A freshly supplied corrected translation can qualify under the rules again.
+        Path corrected = directory.resolve("reviewed-response.json");
+        controller.exportTranslation(corrected);
+        var reviewed = (com.fasterxml.jackson.databind.node.ObjectNode) mapper.readTree(corrected.toFile());
+        reviewed.path("entries").forEach(entry -> ((com.fasterxml.jackson.databind.node.ObjectNode) entry)
+                .put("translation", "Reviewed text"));
+        mapper.writeValue(corrected.toFile(), reviewed);
+        controller.importTranslation(corrected);
+        assertThat(controller.readyToBuild()).isTrue();
+        assertThat(controller.policyApprovedCount()).isEqualTo(2);
+    }
+
     @Test void normalActionsUseDurableFacadeAndFailedImportDoesNotReplaceActiveSession() throws Exception {
         Path source = directory.resolve("source");
         Files.createDirectories(source.resolve("data/strings"));

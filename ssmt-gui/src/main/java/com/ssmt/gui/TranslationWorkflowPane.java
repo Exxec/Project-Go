@@ -301,7 +301,7 @@ final class TranslationWorkflowPane extends VBox {
             if (review.findings().size() > 2000) { text.append("Showing the first 2000 findings.\n"); }
             text.append("Create a new translation file and return corrected translations to resolve findings.\n")
                     .append("Viewing this report does not approve or change translations.");
-            showText(GuiText.get("normal.primary.review"), text.toString());
+            if (showReview(text.toString())) { return; }
             if (presentation.action() == TranslationWorkflowPresentation.Action.REVIEW_CHANGES) {
                 presentation.completed(TranslationWorkflowPresentation.Action.REVIEW_CHANGES, readyToBuild());
             }
@@ -363,6 +363,35 @@ final class TranslationWorkflowPane extends VBox {
     }
 
     private void showText(String title, String text) {
+        textDialog(title, text).showAndWait();
+    }
+
+    private boolean showReview(String text) {
+        Dialog<ButtonType> dialog = reviewDialog(text);
+        return dialog.showAndWait().filter(result -> result != ButtonType.CLOSE).isPresent();
+    }
+
+    /** The actual review dialog, also used by the screenshot harness to fire its revoke button. */
+    Dialog<ButtonType> reviewDialog(String text) {
+        Dialog<ButtonType> dialog = textDialog(GuiText.get("normal.primary.review"), text);
+        ButtonType revoke = new ButtonType(GuiText.get("normal.approval.revoke").replace("{0}",
+                Long.toString(controller.policyApprovedCount())), javafx.scene.control.ButtonBar.ButtonData.OTHER);
+        if (controller.policyApprovedCount() > 0) {
+            dialog.getDialogPane().getButtonTypes().add(0, revoke);
+        }
+        dialog.setOnHidden(event -> {
+            if (revoke.equals(dialog.getResult())) { revokePolicyApprovals(); }
+        });
+        return dialog;
+    }
+
+    /** Runs the same action as the review dialog's revoke button; exposed to the checklist harness. */
+    void revokePolicyApprovals() {
+        run(TranslationWorkflowPresentation.Action.REVIEW_CHANGES, controller::revokePolicyApprovals,
+                GuiText.get("normal.approval.revoked"), "Revoke automatic approvals");
+    }
+
+    private Dialog<ButtonType> textDialog(String title, String text) {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.initOwner(stage);
         dialog.setTitle(title);
@@ -373,7 +402,7 @@ final class TranslationWorkflowPane extends VBox {
         content.setPrefColumnCount(80);
         content.setPrefRowCount(22);
         dialog.getDialogPane().setContent(content);
-        dialog.showAndWait();
+        return dialog;
     }
 
     private static FileChooser jsonChooser(String name) {

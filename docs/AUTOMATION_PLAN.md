@@ -144,7 +144,7 @@ under a map of display names (`designTypeColors`) is `LINKED` with its reference
 
 ### Phase G3: approval with rules instead of by hand (about three days; needs owner decision 1)
 
-Status: Done 2026-10-18 as `translate glossary` / `glossary-approve` and a GUI dialog. Not done: repeat counting through `TerminologyConsistencyAuditor` (plain counting used).
+Status: Done 2026-10-18 as `translate glossary` / `glossary-approve` and a GUI dialog. Follow-up 2026-10-20: repeat counting now uses `TerminologyConsistencyAuditor.sourceOccurrences`; exact untranslated sources count, identifiers and blanks do not, and terms remain proposals until approved.
 
 **G3.1 Glossary built from the mod.** Fill the export's `glossary{}` from: approved TM terms that occur in this mod; proper names
 the mod itself spells in English somewhere (faction display names, ship names in an English `descriptions.csv` or `mod_info.json`);
@@ -152,7 +152,7 @@ and terms `TerminologyConsistencyAuditor` finds repeated more than N times, prop
 approval. Approved terms are stored per mod and globally.
 - Tests: a mod whose faction CSV has Chinese and English names yields that pair; a repeated term is proposed, not approved.
 
-Status: Done 2026-10-18 (`PolicyApproval`, `POLICY_APPROVED`, `project import-ai-response --approve-by-rules`). A one-click revoke button in the GUI is not built.
+Status: Done 2026-10-18 (`PolicyApproval`, `POLICY_APPROVED`, `project import-ai-response --approve-by-rules`). Follow-up 2026-10-20: Review Changes has a revoke button. It preserves text, withdraws only policy approvals, and persists a review gate across restart. Blank, omitted and policy-rejected response entries cannot clear that gate.
 
 **G3.2 Policy approval.** Draft translations (AI, API, offline) are approved automatically when all hold: every validator in
 `ssmt-validation` passes (placeholders, markers, line breaks); glossary terms are used consistently; no CJK left in the

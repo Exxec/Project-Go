@@ -56,6 +56,13 @@ restart, and never stored inside a source mod.
 Opening another database makes that catalog the remembered GUI default.
 Portable projects and custom locations remain available under Advanced.
 
+## Withdrawing automatic approvals
+
+Open **Review Changes** and choose **Revoke automatic approvals** to withdraw the rule approvals in this project.
+Your wording and other approvals are kept. Installation waits for review, including after you close and reopen the mod.
+Export a fresh translation file and return corrected entries to resolve the review; blank entries and drafts that fail
+the approval rules do not approve the retained wording.
+
 ## Files that cannot be read
 
 When some of the mod's files cannot be read, the program still opens the mod and translates the rest. The status area lists each
