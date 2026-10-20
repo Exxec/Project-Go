@@ -55,6 +55,33 @@ class GlossaryServiceTest {
         assertThat(proposal.approvedMap()).doesNotContainKey(REPEATED);
     }
 
+    @Test void auditorCountsRespectProtectedRolesAndThresholdWithoutApprovingOrWriting() throws Exception {
+        Path mod = mod();
+        var original = project(mod);
+        var document = original.methodDocument();
+        for (var entry : document.path("entries")) {
+            if (entry.path("source").asText().equals(REPEATED)) {
+                ((com.fasterxml.jackson.databind.node.ObjectNode) entry).put("role", "IDENTIFIER");
+                break;
+            }
+        }
+        var protectedProject = new LocalizationProject(original.schemaVersion(), original.sourceModId(),
+                original.patchId(), original.patchName(), original.entries(), document);
+        byte[] sourceBefore = Files.readAllBytes(mod.resolve("data/world/ships.csv"));
+        var auditor = new TerminologyConsistencyAuditor();
+        assertThat(auditor.sourceOccurrences(original)).containsEntry(REPEATED, 3);
+        assertThat(auditor.sourceOccurrences(protectedProject)).containsEntry(REPEATED, 2);
+        assertThat(service(null).propose(mod, protectedProject).proposed()).isEmpty();
+        var aboveThreshold = new GlossaryService(temporary.resolve("unused.json"), null, null, 4);
+        assertThat(aboveThreshold.propose(mod, original).proposed()).isEmpty();
+        assertThat(service(null).apply(mod, original).methodDocument().path("glossary").has(REPEATED)).isFalse();
+        assertThat(original.methodDocument()).isNotEqualTo(document);
+        assertThat(Files.readAllBytes(mod.resolve("data/world/ships.csv"))).isEqualTo(sourceBefore);
+        assertThat(temporary.resolve("mod-glossary.json")).doesNotExist();
+        assertThat(temporary.resolve("global-glossary.json")).doesNotExist();
+        assertThat(temporary.resolve("unused.json")).doesNotExist();
+    }
+
     @Test void onlyHumanApprovedTranslationMemoryEntriesBecomeTerms() throws Exception {
         Path mod = mod();
         Path tm = temporary.resolve("tm.db");

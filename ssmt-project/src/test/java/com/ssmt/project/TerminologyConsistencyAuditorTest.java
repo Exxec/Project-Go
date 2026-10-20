@@ -1,6 +1,7 @@
 package com.ssmt.project;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -44,6 +45,23 @@ class TerminologyConsistencyAuditorTest {
                 entry("c.csv", "csv:id=3:name", "Term", ""));
 
         assertThat(auditor.audit(project)).isEmpty();
+    }
+
+    @Test
+    void countsUntranslatedExactSourcesWithoutMergingNormalizedVariants() {
+        LocalizationProject project = project(
+                entry("a.csv", "name:1", "Warm Pool", ""),
+                entry("b.csv", "name:2", "Warm Pool", "Thermal Pool"),
+                entry("c.csv", "name:3", "warm-pool", ""),
+                entry("d.csv", "name:4", "   ", ""));
+        var counts = auditor.sourceOccurrences(project);
+
+        assertThat(counts).containsEntry("Warm Pool", 2).containsEntry("warm-pool", 1)
+                .hasSize(2);
+        assertThat(counts.keySet()).containsExactly("Warm Pool", "warm-pool");
+        assertThatThrownBy(() -> counts.put("mutated", 1))
+                .isInstanceOf(UnsupportedOperationException.class);
+        assertThat(project.entries().getFirst().translatedText()).isEmpty();
     }
 
     private static LocalizationProject project(ProjectEntry... entries) {

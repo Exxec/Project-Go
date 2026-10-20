@@ -77,12 +77,7 @@ public final class GlossaryService {
         if (document == null) {
             return new Proposal(List.of(), List.of());
         }
-        Map<String, Integer> counts = new TreeMap<>();
-        for (JsonNode entry : document.path("entries")) {
-            if (!entry.path("role").asText("TEXT").equals("IDENTIFIER")) {
-                counts.merge(entry.path("source").asText(), 1, Integer::sum);
-            }
-        }
+        Map<String, Integer> counts = new TerminologyConsistencyAuditor().sourceOccurrences(project);
         Map<String, Term> approved = new LinkedHashMap<>();
         Map<String, Term> conflicts = new LinkedHashMap<>();
         for (Term term : mergedStored()) {

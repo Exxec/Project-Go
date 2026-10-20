@@ -2,6 +2,7 @@ package com.ssmt.project;
 
 import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -26,6 +27,39 @@ public final class TerminologyConsistencyAuditor {
                 .comparing(ConsistencyFinding::normalizedSource)
                 .thenComparing(finding -> finding.type().name()));
         return List.copyOf(findings);
+    }
+
+    /**
+     * Counts exact, nonblank source units for glossary proposals, including untranslated units.
+     * Method documents supply authoritative role classifications; identifiers are excluded.
+     * Case, punctuation and whitespace variants remain distinct glossary keys even when the
+     * consistency audit relates them. This observation never approves a term or translation.
+     * Legacy projects without a method document use their extracted entries.
+     *
+     * @param project project to inspect without modification
+     * @return immutable source counts in natural source order
+     */
+    public Map<String, Integer> sourceOccurrences(LocalizationProject project) {
+        Map<String, Integer> counts = new TreeMap<>();
+        var document = project.methodDocument();
+        if (document == null) {
+            for (ProjectEntry entry : project.entries()) {
+                countSource(counts, entry.originalText());
+            }
+        } else {
+            for (var entry : document.path("entries")) {
+                if (!entry.path("role").asText("TEXT").equals("IDENTIFIER")) {
+                    countSource(counts, entry.path("source").asText());
+                }
+            }
+        }
+        return Collections.unmodifiableMap(counts);
+    }
+
+    private static void countSource(Map<String, Integer> counts, String source) {
+        if (!source.isBlank()) {
+            counts.merge(source, 1, Integer::sum);
+        }
     }
 
     private static void addFindings(
