@@ -60,7 +60,8 @@ remain pending. Identity MATCH never establishes complete coverage, approval, ri
 ## GUI and release preparation
 
 The refreshed real-window checklist has **16 rows: 11 AUTOMATED_PASS and five NOT_AUTOMATED**, with 15 screenshots.
-Every owner status remains NOT_TESTED. A local review index lists each expected result, program observation and screenshot.
+The owner marked **Revoke automatic approvals PASS** on 2026-10-20 after reviewing its dialog and result screenshots.
+The other 15 owner statuses remain NOT_TESTED. A local review index lists each expected result, program observation and screenshot.
 Native chooser/Explorer interactions, cancellation timing and the other manual rows need actual owner observation.
 Screenshots and assertions are not substituted for that observation.
 
