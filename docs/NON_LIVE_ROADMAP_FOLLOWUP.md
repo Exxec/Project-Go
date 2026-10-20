@@ -57,6 +57,13 @@ Unicode ordering, bounded reads and hardlink rejection are covered. Its focused 
 one skipped symlink test because Windows denied symlink creation; Ruff passed. CLI wiring and hosted consumer acceptance
 remain pending. Identity MATCH never establishes complete coverage, approval, rights, archive identity or runtime proof.
 
+Fresh-checkout follow-up: the hosted shared-fixture detector exposed runtime fixture line-ending/hash drift missed by
+the earlier working-copy comparison. Project Go now uses BridgeForge's committed LF bytes and synthetic shipped hash
+`5d50ffbb82d40be9ebc957cc9e6bd36ca9ba92a27f72aca7d5ed93ad09ce1fab`. Both shared fixture trees, including their file sets,
+match exactly. The earlier CRLF-bound receipt is historical; it does not supersede this producer-bound comparison.
+The consumer importer is committed on BridgeForge's `feat/localization-coverage-consumer-20261020` branch (`cc7d6919`);
+its full local suite passed 2,284 tests with 12 skips and checkout hermeticity PASS.
+
 ## GUI and release preparation
 
 The refreshed real-window checklist has **16 rows: 11 AUTOMATED_PASS and five NOT_AUTOMATED**, with 15 screenshots.

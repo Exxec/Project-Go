@@ -84,15 +84,15 @@
     "semantic_hash": ""
   },
   "fixtures/runtime-context/observed-zero.synthetic.json": {
-    "mtime": 1792449477.981435,
-    "seen": 1792503682.2556846,
-    "ast_hash": "7d8d546ac9bbfe7ff8bcf0fa212c1901",
+    "mtime": 1792531779.2531555,
+    "seen": 1792531845.076829,
+    "ast_hash": "62d3493df917b3a8f23e07d756753dc8",
     "semantic_hash": ""
   },
   "fixtures/runtime-context/unknown-exit.synthetic.json": {
-    "mtime": 1792449478.0207272,
-    "seen": 1792503682.255686,
-    "ast_hash": "4e9dcd45887d17fe1a40e73f9b90b10e",
+    "mtime": 1792531779.2531555,
+    "seen": 1792531845.076833,
+    "ast_hash": "f743e290bba463a276ea6c36e89014a7",
     "semantic_hash": ""
   },
   "fixtures/translation-conformance/expected-apply.json": {
@@ -3396,9 +3396,9 @@
     "semantic_hash": ""
   },
   "MAINTENANCE.md": {
-    "mtime": 1792526547.0376565,
-    "seen": 1792526601.4264073,
-    "ast_hash": "9f550b45f52b0be1eae594934eeb46b4",
+    "mtime": 1792526757.5271287,
+    "seen": 1792531845.07802,
+    "ast_hash": "b6abdcea100990a764c6b1a51b4feb71",
     "semantic_hash": ""
   },
   "README.md": {
@@ -3618,9 +3618,9 @@
     "semantic_hash": ""
   },
   "fixtures/runtime-context/candidate/reports/REVIVAL_REPORT.md": {
-    "mtime": 1792367872.0,
-    "seen": 1792503682.256644,
-    "ast_hash": "a441e4a23af92cf0c4fa5382371b879e",
+    "mtime": 1792531779.2531555,
+    "seen": 1792531845.0780904,
+    "ast_hash": "e808ca1aa9f0d4993ea60c48cd28a703",
     "semantic_hash": ""
   },
   "fixtures/translation-conformance/README.md": {
@@ -3672,9 +3672,9 @@
     "semantic_hash": ""
   },
   "docs/NON_LIVE_ROADMAP_FOLLOWUP.md": {
-    "mtime": 1792525861.014843,
-    "seen": 1792526601.4264367,
-    "ast_hash": "7efa82f9734f6a91d94947d542910beb",
+    "mtime": 1792531811.6538453,
+    "seen": 1792531845.0780485,
+    "ast_hash": "6760be5dd193a272a1e5f460b9e7ed7d",
     "semantic_hash": ""
   }
 }
