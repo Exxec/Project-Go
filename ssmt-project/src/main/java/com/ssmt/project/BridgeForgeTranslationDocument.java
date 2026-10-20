@@ -89,6 +89,11 @@ public final class BridgeForgeTranslationDocument {
                 throw new IllegalArgumentException("Unreadable diagnostics must be text");
             }
         });
+        if (document.has("roles_version")) {
+            text(document, "roles_version");
+        }
+        java.util.Map<String, String> groupSources = new java.util.HashMap<>();
+        java.util.Map<String, Integer> groupSizes = new java.util.HashMap<>();
         Set<String> ids = new HashSet<>();
         for (JsonNode entry : entries) {
             String id = text(entry, "id");
@@ -101,6 +106,26 @@ public final class BridgeForgeTranslationDocument {
                     || !entry.path("context").isObject() || !hashes.has(file)) {
                 throw new IllegalArgumentException("Invalid or duplicate translation entry " + id);
             }
+            String role = entry.has("role") ? text(entry, "role") : "TEXT";
+            if (!Set.of("TEXT", "IDENTIFIER", "LINKED", "UNKNOWN").contains(role)) {
+                throw new IllegalArgumentException("Invalid role metadata " + id);
+            }
+            if (entry.has("role_rule")) {
+                text(entry, "role_rule");
+            }
+            if (role.equals("LINKED")) {
+                String group = text(entry, "group");
+                String previous = groupSources.putIfAbsent(group, entry.path("source").asText());
+                if (group.isBlank() || previous != null && !previous.equals(entry.path("source").asText())) {
+                    throw new IllegalArgumentException("Invalid linked group " + group);
+                }
+                groupSizes.merge(group, 1, Integer::sum);
+            } else if (entry.has("group")) {
+                throw new IllegalArgumentException("Only LINKED units may carry a group");
+            }
+        }
+        if (groupSizes.values().stream().anyMatch(size -> size < 2)) {
+            throw new IllegalArgumentException("Invalid linked group: at least two members required");
         }
     }
 

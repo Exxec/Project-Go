@@ -148,7 +148,7 @@ public final class BridgeForgeTranslationService {
         return UnitRoleClassifier.withDefaultRules().annotate(document, callEvidence(source, document));
     }
 
-    /** Lookup-only class literals proven by call sites; empty when the mod has no CJK class literal. */
+    /** Class literals with a lookup use evidenced by call sites; empty when the mod has no CJK class literal. */
     static java.util.Map<String, String> callEvidence(Path source, ObjectNode document) throws ProjectException {
         boolean classes = false;
         for (var entry : document.path("entries")) {

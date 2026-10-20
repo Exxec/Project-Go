@@ -126,18 +126,25 @@ class BytecodeCallSitesTest {
         assertThat(allowlist.permits(jar, shownKey, SHOWN)).isTrue();
         assertThat(allowlist.permits(jar, sites.stream().filter(site -> site.text().equals(KEY)).findFirst()
                 .orElseThrow().key(), KEY)).isFalse();
+        for (var site : sites) {
+            if (site.text().equals(MIXED)) {
+                assertThat(allowlist.permits(jar, site.key(), MIXED)).isFalse();
+            }
+        }
         assertThat(proposal).contains("# PROTECT").contains("# REVIEW").contains(BytecodeTextAllowlist.sha256(SHOWN));
         var legacy = new com.ssmt.extractor.bytecode.ClassStringExtractor().extract(
                 new com.ssmt.core.plugin.ExtractionRequest("cs", mod, mod.resolve("jars/probe.jar")));
         assertThat(legacy).extracting(com.ssmt.core.model.ExtractedString::key).contains(shownKey);
     }
 
-    @Test void aLiteralUsedBothAsKeyAndTextIsNotProtected() throws Exception {
+    @Test void aLiteralUsedBothAsKeyAndTextStaysProtectedRegardlessOfSiteOrder() throws Exception {
         var sites = BytecodeCallSites.withDefaultRules().scan(mod(false), new ArrayList<>());
         var protectedLiterals = BytecodeCallSites.withDefaultRules().protectedLiterals(sites);
         assertThat(protectedLiterals).containsKey("classes/gen/Probe.class||" + KEY)
-                .doesNotContainKey("classes/gen/Probe.class||" + MIXED)
+                .containsKey("classes/gen/Probe.class||" + MIXED)
                 .doesNotContainKey("classes/gen/Probe.class||" + SHOWN);
+        assertThat(BytecodeCallSites.withDefaultRules().protectedLiterals(sites.reversed()))
+                .isEqualTo(protectedLiterals);
     }
 
     @Test void lookupLiteralsBecomeProtectedIdentifiersInTheExportAndApplyKeepsThemUntouched() throws Exception {
@@ -148,13 +155,17 @@ class BytecodeCallSitesTest {
             document.path("entries").forEach(entry -> roles.put(entry.path("source").asText(),
                     entry.path("role").asText("TEXT")));
             assertThat(roles).containsEntry(KEY, "IDENTIFIER").containsEntry(SHOWN, "TEXT")
-                    .containsEntry(COMPARED, "TEXT").containsEntry(MIXED, "TEXT");
+                    .containsEntry(COMPARED, "TEXT").containsEntry(MIXED, "IDENTIFIER");
             document.path("entries").forEach(entry -> ((com.fasterxml.jackson.databind.node.ObjectNode) entry)
                     .put("translation", "English"));
             var report = new BridgeForgeTranslationApply().apply(mod, document,
                     temporary.resolve(inJar ? "out-jar" : "out-class"), false);
             assertThat(report.path("problems").toString()).contains("protected identifier");
-            assertThat(report.path("leftover").path("by_reason").path("PROTECTED_IDENTIFIER").asInt()).isEqualTo(1);
+            assertThat(report.path("leftover").path("by_reason").path("PROTECTED_IDENTIFIER").asInt()).isEqualTo(2);
+            Path output = temporary.resolve(inJar ? "out-jar" : "out-class");
+            var remaining = new BridgeForgeTranslationService().export(output);
+            assertThat(remaining.path("entries")).hasSize(2);
+            assertThat(remaining.path("entries").toString()).contains(KEY).contains(MIXED);
         }
     }
 }
