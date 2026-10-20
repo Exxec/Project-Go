@@ -27,7 +27,6 @@ jobs:
         with:
           distribution: temurin
           java-version: "25"
-          cache: gradle
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
@@ -77,7 +76,7 @@ jobs:
           done < <(find ssmt-cli/build/distributions ssmt-gui/build/distributions ssmt-auto/build/distributions -maxdepth 1 -name '*.zip' -type f -print0)
 
       - name: Upload verification artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: Project-Go-release-evidence
           path: |
@@ -107,7 +106,6 @@ jobs:
         with:
           distribution: temurin
           java-version: "25"
-          cache: gradle
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
@@ -127,7 +125,7 @@ jobs:
           }
 
       - name: Upload Windows package
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: Project-Go-windows-x64
           path: |
@@ -147,13 +145,13 @@ jobs:
 
     steps:
       - name: Download release evidence
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8.0.2
         with:
           name: Project-Go-release-evidence
           path: release-assets
 
       - name: Download Windows build
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8.0.2
         with:
           name: Project-Go-windows-x64
           path: release-assets/windows

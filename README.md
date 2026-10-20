@@ -72,8 +72,8 @@ See [USER_GUIDE.md](USER_GUIDE.md) for the command details.
 - JDK 25
 - No system Gradle installation is required
 
-The Gradle wrapper uses Gradle 9.1 because it is the first Gradle release with
-full Java 25 support.
+The Gradle wrapper uses Gradle 9.8.2 with distribution checksum verification
+and supports the required JDK 25.
 
 ## Build and test
 

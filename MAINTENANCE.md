@@ -16,7 +16,7 @@ not deprecated without an update-reconciliation migration.
 | Surface | Supported baseline | Verification |
 | --- | --- | --- |
 | Java | Temurin/OpenJDK 25 | Windows and Linux CI |
-| Gradle | Wrapper 9.1 | Wrapper validation |
+| Gradle | Wrapper 9.8.2 | Wrapper validation |
 | Windows | Current GitHub-hosted image | Build and `jpackage` app image |
 | Linux | Current GitHub-hosted image | Build/test CI; native package is best effort |
 | macOS | Not a release target | No CI or packaging commitment |
@@ -25,6 +25,12 @@ not deprecated without an update-reconciliation migration.
 | OpenAI adapter | Responses endpoint `/v1/responses` | Mock-transport contract tests |
 | Gemini adapter | Interactions endpoint `/v1beta/interactions` | Mock-transport contract tests |
 | Ollama adapter | Chat endpoint `/api/chat` | Mock-transport contract tests |
+
+Tooling checkpoint, 2026-10-20: Gradle 9.8.2 distribution and wrapper hashes match the official checksums.
+Artifact upload/download actions use Node 24; `setup-gradle` owns caching without duplicate `setup-java` caching.
+`build :ssmt-gui:smokeTestAppImage :ssmt-auto:smokeTestAppImage :ssmt-auto:verifyNativeUnicode` passed on Windows
+with JDK 25 (735 tests, zero failures/errors, two intentional skips). Actionlint passed for both workflows.
+Existing Gradle 10 deprecations remain; hosted results must be checked for the exact pushed commit.
 
 ## Translation-Memory Recovery
 
