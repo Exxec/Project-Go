@@ -48,6 +48,35 @@ All **442 entries**, including **436 classes**, fail standard CRC verification; 
 This was independently reproduced with bounded standard ZIP reads. No failed payload was treated as valid, no CRC was
 bypassed, no class was loaded/executed and no archive was repaired. An authoritative replacement remains necessary.
 
+## Resumable draft recovery (roadmap H1)
+
+`ssmt-cli recover-drafts` re-drafts review units whose target text is missing, in bounded, resumable batches. It reads a
+review packet (`review.json`, plus `approved.json` when present) and writes only into a separate `--workspace`; it makes no
+network call, generates no draft, and approves nothing.
+
+```
+ssmt-cli recover-drafts plan   --packet DIR --workspace DIR [--batch-size 50]   # counts + plan.json
+ssmt-cli recover-drafts export --packet DIR --workspace DIR [--batch-size 50]   # batches/batch-NNNN.json + manifest
+ssmt-cli recover-drafts import --packet DIR --workspace DIR BATCH.json          # one filled batch
+ssmt-cli recover-drafts status --workspace DIR
+```
+
+- Selected units: every non-IDENTIFIER review unit whose current and retained targets are blank. Identity is the unit id plus
+  the SHA-256 of its exact source text. Order is deterministic (sorted ids, no timestamps).
+- A LINKED group is one item and is never split across batches (a group larger than the batch size gets its own batch).
+- Each exported batch is recorded in `recovery-manifest.json` (written atomically). Re-running `export` skips recorded
+  batches and never overwrites a batch file the owner is filling in; a different `--batch-size` needs a new workspace.
+- `import` accepts or rejects the whole batch: unknown identities, identities from another batch, a changed source digest
+  (stale), duplicates, blank drafts, a missing member of a LINKED group, or different texts inside one group reject it with
+  nothing written. Accepted text goes to `drafts.json` as `DRAFT_NEEDS_REVIEW`; the normal validation and approval rules
+  still apply afterwards. Importing an already imported batch changes nothing.
+- The manifest records digests of `review.json` and `approved.json`; every later operation fails as stale if either changed,
+  and the workspace may not sit inside the packet, so the earlier project and the approved entries stay untouched.
+
+Tests: `DraftRecoveryServiceTest` (batching with LINKED groups, determinism, resume after interruption, stale/unknown/partial
+rejection, approved and review files byte-identical) and `RecoverDraftsCommandTest`. The retained FlowerGod project file is not
+on disk, so the review packet is the input; a project-document adapter is future work. Gate status is unchanged.
+
 ## JSON keys and interoperability
 
 The prior Mirfak inventories contain three CJK `designTypeColors` keys in each of two versions. Same-text CSV/JAR units

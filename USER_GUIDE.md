@@ -552,6 +552,9 @@ ssmt-cli tm backup DATABASE BACKUP
 ssmt-cli tm integrity DATABASE
 ```
 
+`recover-drafts plan|export|import|status` recovers missing review drafts in resumable batches keyed by unit id and
+source digest; see `docs/NON_LIVE_ROADMAP_FOLLOWUP.md`.
+
 `project refresh` is a dry run unless `--apply` is supplied. `--minimum-score`
 controls which fuzzy TM candidates are shown; it never enables automatic
 application.
