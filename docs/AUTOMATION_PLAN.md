@@ -52,6 +52,8 @@ Hand work and gaps, with locations (all under `ssmt-project/src/main/java/com/ss
 
 ## 3. Work items
 
+A `Status:` line sits directly above the item it describes (the phase header carries no status of its own).
+
 ### Phase G0: small fixes (about a day)
 
 Status: Done 2026-10-14. Backups live in `<mod>/.ssmt-backup/<timestamp>/`; `translate restore <mod> [timestamp]` lists snapshots when no timestamp is given.

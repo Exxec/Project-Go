@@ -1,6 +1,6 @@
 # System Architecture
 
-`Last updated: 2026-09-11 (normal single-copy publication and internal Auto workspaces)`
+`Last updated: 2026-10-21 (links and AI Boundary reviewed against `main`; module boundaries unchanged since 2026-09-11)`
 
 ## Overview
 

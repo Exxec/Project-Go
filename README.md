@@ -1,6 +1,6 @@
 # Project Go
 
-Sister-tool evidence is available through `ssmt assess MOD --coverage --coverage-manifest FILE` (versioned, text-free coverage output outside the mod) and `ssmt release-chain --source-record FILE --archive FILE [--downloaded-asset FILE]` (source record, archive hash, and optional asset byte comparison). These commands preserve the source and leave native, live, rights, and remote-publication conclusions unknown without separate evidence.
+Sister-tool evidence is available through the CLI (`ssmt-cli` launcher; its command name is `ssmt`): `ssmt assess MOD --coverage --coverage-manifest FILE` (versioned, text-free coverage output outside the mod) and `ssmt release-chain --source-record FILE --archive FILE [--downloaded-asset FILE]` (source record, archive hash, and optional asset byte comparison). These commands preserve the source and leave native, live, rights, and remote-publication conclusions unknown without separate evidence.
 
 Project Go is an offline-first Java tool for analyzing and localizing Starsector
 mods without modifying their source directories. The long-term pipeline scans
@@ -20,12 +20,14 @@ or redistribution rights.
 The source-safe P7 translation method and P8 workflow enhancements are implemented
 on `main`. Implementation commit `55bf2f8` passed Windows and Ubuntu
 [CI run 37876311841](https://github.com/Exxec/Project-Go/actions/runs/37876311841).
-Local validation passed 610 tests and packaged native Auto Unicode
-command-argument verification. See [the roadmap](docs/ROADMAP.md) and
+Local validation then passed 610 tests and packaged native Auto Unicode
+command-argument verification; a later local run (2026-10-20, see
+[MAINTENANCE.md](MAINTENANCE.md)) passed 735 tests with two intentional skips. See [the roadmap](docs/ROADMAP.md) and
 [P8 acceptance notes](docs/GUI_WORKFLOW_ENHANCEMENTS.md) for scope and open gates. The existing
-`v0.7.0` tag has no published GitHub Release;
-post-tag source now identifies itself as `0.8.0-rc.3`, not as the old
-tagged version. See [new-work review and release gates](docs/NEW_WORK_RELEASE_REVIEW.md).
+`v0.7.0` tag has no published GitHub Release; the latest published
+GitHub pre-release is `v0.8.0-rc.3`. `main` carries the automation work below
+on top of it and still identifies itself as `0.8.0-rc.3` until the owner decides
+on the next candidate. See [new-work review and release gates](docs/NEW_WORK_RELEASE_REVIEW.md).
 The release candidate adds readable naming, immutable source identity, explicit
 legacy adoption and same-id lineage choices with source-content checks. Manual
 GUI/file-picker and candidate-specific game acceptance remain separate gates.
