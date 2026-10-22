@@ -753,6 +753,26 @@ is BLOCKED_REVIEW. That 2026-10-19 GUI checkpoint had 10 automated passes and fi
 NOT_TESTED. The 2026-10-21 receipt above records the subsequent 16-row checklist and one owner PASS. Static inventories do not establish JSON-key consumers, so P8.10 stays open. The unfinished runtime capture
 files were backed up and their compile/publication defects repaired. No live test, owner review or release was invented.
 
+## Owner hand-work follow-ups (approved 2026-10-22)
+
+Order of work: H1, H2, H3, H4. None changes a gate state by itself; drafts stay drafts until reviewed.
+
+- **H1 Resumable draft recovery (FlowerGod first).** Identify the review items whose target text is missing or
+  unrecoverable from the retained review project; export them in bounded batches keyed by stable identity (unit identity
+  plus source digest); checkpoint each returned batch; import by identity only, rejecting stale or unknown identities.
+  The earlier project and approved-entry copy stay untouched; LINKED groups remain all-or-none; regenerated drafts follow
+  the normal validation and approval rules. Done when FlowerGod's missing targets can be re-drafted and imported in
+  batches, resumed after interruption, without touching approved entries.
+- **H2 GUI review inbox.** Show only checklist rows that are unreviewed or whose evidence changed since the owner's
+  decision, each with its screenshots and the recorded decision; recording a decision writes the same receipt the
+  checklist uses. Done when the 15 NOT_TESTED owner rows can be reviewed from the inbox.
+- **H3 Real-manifest contract check.** CI exports an actual coverage manifest from a fixture mod and BridgeForge's
+  consumer imports it (BridgeForge ROADMAP-3 80.9), next to the existing shared-fixture comparison. Closes the
+  "end-to-end hosted acceptance of an actual exported coverage manifest" gap recorded in the 2026-10-21 receipt.
+- **H4 Translation carry-forward on mod update.** When a mod updates, reuse an approval only where the unit's source
+  identity, source text and context are unchanged; changed or moved units go to review with the old approval shown as a
+  hint. Never carries an approval across a changed source digest.
+
 ## Recommendations (2026-10-18; individual near-term follow-ups authorized above; long-term remains proposed)
 
 Follow-up 2026-10-20: G3.1 auditor-based glossary counts and G3.2 durable GUI revocation are implemented and validated.
