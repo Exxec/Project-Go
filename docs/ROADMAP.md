@@ -668,7 +668,7 @@ separate from that confirmation. Version 0.8.0-rc.2 packages the current code.
 
 ## Lessons carried over from BridgeForge's hardening (item 70) and regression pass (2026-10-12; proposed 2026-10-12, not an owner-approved plan; the in-place item is now done, see below)
 
-Source: BridgeForge [ROADMAP-3.md](https://github.com/Exxec/Project-BridgeForge/blob/main/ROADMAP-3.md) item 70, `docs/HARDENING_PLAN.md`, `docs/RC8_BEHAVIOUR.md` (RC8-30 to RC8-33). Each line says what it would change here and what it buys; only the in-place item below has since been built (automation plan G0.1).
+Source: BridgeForge [docs/HARDENING_PLAN.md](https://github.com/Exxec/Project-BridgeForge/blob/main/docs/HARDENING_PLAN.md) item 70, `docs/HARDENING_PLAN.md`, `docs/RC8_BEHAVIOUR.md` (RC8-30 to RC8-33). Each line says what it would change here and what it buys; only the in-place item below has since been built (automation plan G0.1).
 
 - **Atomic writes and guarded deletes.** Write through a temp file and `os.replace`; delete a tree only inside an allowed root and never through a junction (BridgeForge `safeio.py`, with a ratchet test whose baseline may only shrink). Benefit: an interrupted write or a wrong path cannot leave a half-written or vanished file.
 - **Bounded reads of untrusted archives.** Cap a zip or jar entry (200 MB; class files 32 MB) before reading it (`zipsafe.read_limited`); a hostile or corrupt archive then fails that entry instead of exhausting memory.
