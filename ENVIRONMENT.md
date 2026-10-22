@@ -38,7 +38,7 @@ Temurin 25.0.4
 Current verified Gradle:
 
 ```text
-Gradle 9.1.0
+Gradle 9.8.2
 ```
 
 ---
