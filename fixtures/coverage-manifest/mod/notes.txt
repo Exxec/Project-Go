@@ -1,0 +1,1 @@
+Synthetic coverage-manifest fixture. Not a real mod.
