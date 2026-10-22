@@ -1,5 +1,8 @@
 # Non-live roadmap follow-up, 2026-10-20
 
+Receipt refresh: 2026-10-21. Earlier measurements below remain dated checkpoint evidence; they were not rerun
+for this documentation update.
+
 Scope: the owner requested work through the remaining non-live roadmap items in the recommended order.
 Game testing remains pending. Nightcross was explicitly left blocked by the owner after the archive diagnosis.
 Existing source mods, saves, translation libraries, scratch work and unrelated dirty files are preserved.
@@ -25,7 +28,11 @@ exchange/policy suites, and an actual revoke-button action in `GuiChecklistTest`
 The retained FlowerGod report has 908 previously approved entries and 712 review entries. Inspection separates the review
 work into **350 TEXT units missing drafts** (141 mission lines, 208 JAR units, one JSON unit) and **362 LINKED units in 118
 groups**. Of the LINKED units, 163 had a draft reported in the earlier run and 199 did not. Those draft targets are absent
-from the retained review project, so recovering the original translation document is necessary before reusing them.
+from the retained review project, so recovering the original translation document is necessary before reusing those targets.
+The owner noted on 2026-10-21 that the drafts may need to be restarted. If recovery is unavailable, prepare a fresh
+draft pass from the preserved source and current review packet, retaining the earlier project and approved-entry copy.
+This is a possible next step, not a completed restart or approval: no new drafts were generated or sent to a provider.
+Any regenerated drafts still require validation and the applicable approval rules; LINKED groups remain all-or-none.
 
 A local review packet contains stable IDs, exact source/context, reasons, complete group membership, blank target fields,
 and a separate copy of the previously approved entries. Its 412-file source inventory matches
@@ -47,22 +54,31 @@ The prior Mirfak inventories contain three CJK `designTypeColors` keys in each o
 are useful review context but do not establish all consumers. No evidence justifies changing the conservative bare-key
 UNKNOWN policy; P8.10 stays open. The review packet keeps group membership and consumer uncertainty explicit.
 
-The current BridgeForge extension/runtime-context suites passed **seven tests**. Both repositories' extension profile
+At the 2026-10-20 local checkpoint, BridgeForge extension/runtime-context suites passed **seven tests**.
+Both repositories' extension profile
 and two fixture JSON documents are byte-identical. A neutral Project Go `assess --coverage --coverage-manifest` run
 successfully produced `ssmt-localization-coverage-1`, bound to source fingerprint
 `8fedc6b762488dd280d540cf058b727ab798a74b9b968c326850637547387f04`.
 BridgeForge now has a read-only `localization_coverage.observe` API and regression tests. Actual exported-manifest
 acceptance matches that fingerprint and preserves the source. Strict schema/count/path validation, changed bytes,
 Unicode ordering, bounded reads and hardlink rejection are covered. Its focused run reported 13 tests, zero failures,
-one skipped symlink test because Windows denied symlink creation; Ruff passed. CLI wiring and hosted consumer acceptance
-remain pending. Identity MATCH never establishes complete coverage, approval, rights, archive identity or runtime proof.
+one skipped symlink test because Windows denied symlink creation; Ruff passed. CLI wiring and end-to-end hosted
+acceptance of an actual exported coverage manifest remain pending; the hosted shared-fixture gate below has passed.
+Identity MATCH never establishes complete coverage, approval, rights, archive identity or runtime proof.
 
 Fresh-checkout follow-up: the hosted shared-fixture detector exposed runtime fixture line-ending/hash drift missed by
 the earlier working-copy comparison. Project Go now uses BridgeForge's committed LF bytes and synthetic shipped hash
 `5d50ffbb82d40be9ebc957cc9e6bd36ca9ba92a27f72aca7d5ed93ad09ce1fab`. Both shared fixture trees, including their file sets,
 match exactly. The earlier CRLF-bound receipt is historical; it does not supersede this producer-bound comparison.
-The consumer importer is committed on BridgeForge's `feat/localization-coverage-consumer-20261020` branch (`cc7d6919`);
-its full local suite passed 2,284 tests with 12 skips and checkout hermeticity PASS.
+The earlier importer branch receipt (`cc7d6919`, 2,284 local tests with 12 skips and hermeticity PASS) is historical.
+The importer and required shared-fixture gate are integrated into BridgeForge main, with exact-commit
+[CI run 39510390276](https://github.com/Exxec/Project-BridgeForge/actions/runs/39510390276) passing at `ae825d61`.
+Project Go main at `dd9c2fb` passed Windows and Ubuntu in
+[CI run 39502317335](https://github.com/Exxec/Project-Go/actions/runs/39502317335). These are source/CI receipts,
+not live-game or release acceptance.
+
+BridgeForge main moved to Python 3.15 on 2026-10-21 (PR #54, `cf4879a7`): `requires-python >=3.15`, CI on 3.15 only,
+2,516 local tests OK. The earlier `build/python315-20261020` branch (`c82e2d54`) is superseded and was not merged.
 
 ## GUI and release preparation
 
@@ -84,7 +100,7 @@ release is authorized by merely committing/pushing source. Game scenarios remain
 
 ## Validation and retained evidence
 
-Final Project Go command:
+Historical 2026-10-20 local Project Go command (not rerun for the receipt refresh):
 
 ```powershell
 .\gradlew.bat build :ssmt-gui:guiChecklist :ssmt-auto:verifyNativeUnicode --offline --no-daemon --max-workers=2 --console=plain
