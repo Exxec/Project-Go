@@ -35,3 +35,10 @@ Thumbs.db
 
 # Machine-local worktrees, live-test fixtures and retained evidence
 /.local/
+docs/REMAINING_PHASES_STATUS.md
+SWE handoff.md
+/nul
+/fixtures/p3/
+/ssmt-auto/gradle-*/
+graphify-out/cache/
+graphify-out/.graphify_*
