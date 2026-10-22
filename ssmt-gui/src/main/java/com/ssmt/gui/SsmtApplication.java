@@ -217,6 +217,7 @@ public final class SsmtApplication extends Application {
                 providerSettingsTab(),
                 fontCoverageTab(stage),
                 fixedTab("Extractor Comparison", new ExtractorComparisonPane(stage)),
+                fixedTab("Review Inbox", new ReviewInboxPane()),
                 logTab());
         return fixedTab(GuiText.get("tab.tools"), tools);
     }
