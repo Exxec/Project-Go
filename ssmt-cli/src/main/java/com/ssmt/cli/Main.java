@@ -31,7 +31,8 @@ import picocli.CommandLine.IVersionProvider;
             TranslationMemoryCommand.class,
             OfflineTranslateCommand.class,
             ProjectTranslateCommand.class,
-            ProjectCommand.class
+            ProjectCommand.class,
+            RecoverDraftsCommand.class
         }
 )
 public final class Main implements Runnable {
