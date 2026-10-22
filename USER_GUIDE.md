@@ -566,6 +566,32 @@ terms used, no Chinese left, length ratio per unit kind, protected syntax intact
 becomes `POLICY_APPROVED`; the others stay `AI_TRANSLATED` drafts with the failed
 rule recorded. `--approve` and `--approve-by-rules` cannot be combined.
 
+### Carrying approvals forward when a mod updates
+
+```text
+ssmt-cli project create NEW_SOURCE NEW_PROJECT          (the new version, as usual)
+ssmt-cli project carry-forward --from OLD_PROJECT --to NEW_PROJECT --out CARRIED_PROJECT [--report REPORT.json]
+```
+
+An approval (a non-blank translation marked `HUMAN_EDITED` or `POLICY_APPROVED`) is reused only when the unit's
+identity (source file and stable key), exact source text (compared by SHA-256 digest) and context are all unchanged.
+Context is what the unit already carries: its kind, its role, the extractor's context fields (row and column, JSON
+path, class and so on) and, for a `LINKED` unit, the identities of every member of its group. Each unit is classified:
+
+| Class | Meaning | Result |
+|---|---|---|
+| `CARRIED` | identity, digest and context unchanged, old unit approved | approval copied; report names the old approval |
+| `CHANGED` | same identity, different text or context | review; old translation shown as a hint only |
+| `MOVED` | same text found only under a different identity | review; hint only |
+| `GROUP_HELD` | qualified alone, but a `LINKED` group member did not (or old members disagreed) | whole group to review |
+| `UNCHANGED_UNAPPROVED` | unchanged, but the old unit was only a draft | review; nothing carried |
+| `NEW` / `REMOVED` | only in the new / old version | review / listed only |
+
+An approval never crosses a changed source digest, and a hint is never applied. `LINKED` groups are carried all or
+none. Neither `--from` nor `--to` is modified; `--out` and the reports must not already exist. The JSON report and a
+`.txt` summary are deterministic (no timestamps) and record the old project's SHA-256. The carried project goes
+through the normal review and build gates; carrying changes no gate state.
+
 ### Other `translate` operations
 
 - `translate check MOD` lists the Chinese text still left in a translated working

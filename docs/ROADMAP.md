@@ -772,6 +772,9 @@ Order of work: H1, H2, H3, H4. None changes a gate state by itself; drafts stay 
 - **H4 Translation carry-forward on mod update.** When a mod updates, reuse an approval only where the unit's source
   identity, source text and context are unchanged; changed or moved units go to review with the old approval shown as a
   hint. Never carries an approval across a changed source digest.
+  Status 2026-10-22: implemented as `ssmt-cli project carry-forward --from OLD --to NEW --out FILE` (`CarryForwardService`;
+  classes CARRIED, CHANGED, MOVED, GROUP_HELD, UNCHANGED_UNAPPROVED, NEW, REMOVED). Covered by `CarryForwardServiceTest` and
+  `CarryForwardCommandTest` (synthetic). No real-mod run yet: `NOT_TESTED`.
 
 ## Recommendations (2026-10-18; individual near-term follow-ups authorized above; long-term remains proposed)
 
