@@ -1,0 +1,40 @@
+{
+  "schemaVersion" : "ssmt-localization-coverage-1",
+  "inputKind" : "DIRECTORY",
+  "selectedRoot" : "",
+  "candidateSha256" : "48e752893a8550e6ba12a014a87a259cd86b39d2485e884704b37f6fe0134eb2",
+  "archiveSha256" : "",
+  "coverageStatus" : "OBSERVED_STANDARD_EXTRACTION",
+  "files" : [ {
+    "path" : "data/hullmods/hull_mods.csv",
+    "handler" : "com.ssmt.extractor.csv.StandardCsvFileExtractor",
+    "status" : "EXTRACTED",
+    "strings" : 2,
+    "reason" : "SELECTED_STRINGS_ONLY"
+  }, {
+    "path" : "data/strings/strings.json",
+    "handler" : "com.ssmt.extractor.json.StandardJsonFileExtractor",
+    "status" : "EXTRACTED",
+    "strings" : 2,
+    "reason" : "SELECTED_STRINGS_ONLY"
+  }, {
+    "path" : "mod_info.json",
+    "handler" : "",
+    "status" : "UNSUPPORTED",
+    "strings" : 0,
+    "reason" : "NO_EXTRACTOR_MATCH"
+  }, {
+    "path" : "notes.txt",
+    "handler" : "",
+    "status" : "UNSUPPORTED",
+    "strings" : 0,
+    "reason" : "NO_EXTRACTOR_MATCH"
+  } ],
+  "supportedFileCount" : 2,
+  "skippedFileCount" : 2,
+  "extractedStringCount" : 4,
+  "totalSupportedStringCount" : null,
+  "jsonGapCount" : 0,
+  "csvGapCount" : 0,
+  "limitations" : [ "Dependencies are declarations; availability/version compatibility NOT_ASSESSED", "Source/JAR correspondence and origin authority NOT_ASSESSED", "Coverage counts are selected strings only, not exhaustive player-visible content", "Archive authentication and extractability NOT_ASSESSED", "Runtime, save compatibility and redistribution rights NOT_TESTED" ]
+}

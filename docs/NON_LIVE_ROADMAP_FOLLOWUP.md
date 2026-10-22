@@ -64,6 +64,7 @@ acceptance matches that fingerprint and preserves the source. Strict schema/coun
 Unicode ordering, bounded reads and hardlink rejection are covered. Its focused run reported 13 tests, zero failures,
 one skipped symlink test because Windows denied symlink creation; Ruff passed. CLI wiring and end-to-end hosted
 acceptance of an actual exported coverage manifest remain pending; the hosted shared-fixture gate below has passed.
+H3 (2026-10-22) adds the contract check for the latter: see `fixtures/coverage-manifest/README.md`.
 Identity MATCH never establishes complete coverage, approval, rights, archive identity or runtime proof.
 
 Fresh-checkout follow-up: the hosted shared-fixture detector exposed runtime fixture line-ending/hash drift missed by

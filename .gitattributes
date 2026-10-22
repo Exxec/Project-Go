@@ -21,3 +21,5 @@
 fixtures/translation-conformance/** -text
 # Synthetic runtime records bind to exact candidate bytes across platforms.
 fixtures/runtime-context/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+# Coverage-manifest contract fixture (H3 / BridgeForge 80.9): the golden manifest binds to the exact mod bytes.
+fixtures/coverage-manifest/** -text

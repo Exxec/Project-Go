@@ -769,6 +769,10 @@ Order of work: H1, H2, H3, H4. None changes a gate state by itself; drafts stay 
 - **H3 Real-manifest contract check.** CI exports an actual coverage manifest from a fixture mod and BridgeForge's
   consumer imports it (BridgeForge ROADMAP-3 80.9), next to the existing shared-fixture comparison. Closes the
   "end-to-end hosted acceptance of an actual exported coverage manifest" gap recorded in the 2026-10-21 receipt.
+  *Built 2026-10-22:* `fixtures/coverage-manifest/` holds a tiny synthetic mod and the golden manifest this producer
+  exports for it; `CoverageManifestContractTest` (in `gradlew build`) fails if the export drifts from the golden file, and
+  BridgeForge's `shared-fixtures` job imports that golden with its real consumer. The hosted result is recorded by the
+  two PRs' checks; no gate state changes.
 - **H4 Translation carry-forward on mod update.** When a mod updates, reuse an approval only where the unit's source
   identity, source text and context are unchanged; changed or moved units go to review with the old approval shown as a
   hint. Never carries an approval across a changed source digest.
