@@ -16,6 +16,7 @@ import picocli.CommandLine.IVersionProvider;
             TranslationCommand.class,
             BridgeForgeTranslationCommand.class,
             StorageCommand.class,
+            ReviewInboxCommand.class,
             ScanCommand.class,
             AssessCommand.class,
             AssuranceCommand.class,

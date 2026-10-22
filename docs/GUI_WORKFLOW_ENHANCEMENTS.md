@@ -110,6 +110,23 @@ the original checklist and automated-walk description above remain dated checkpo
 screenshots do not establish owner observation for the remaining rows. See
 [NON_LIVE_ROADMAP_FOLLOWUP.md](NON_LIVE_ROADMAP_FOLLOWUP.md) for the retained evidence and other open gates.
 
+## Owner review inbox (H2)
+
+The inbox shows only the checklist rows that need the owner: rows with no recorded decision, rows last marked
+`NOT_TESTED`, and rows whose evidence changed since the decision. Each row shows its expected behaviour, the program's
+result, its screenshots and any prior decision.
+
+- GUI: Tools and Settings, then the **Review Inbox** tab; the folder defaults to `ssmt-gui/build/gui-checklist`. PASS, FAIL
+  and NOT_TESTED buttons record the decision; FAIL needs a note.
+- CLI: `ssmt-cli review-inbox list [--all] [--json] [--dir <folder>]` (read-only) and
+  `ssmt-cli review-inbox record --row <n> --status PASS|FAIL|NOT_TESTED [--note <text>]`.
+- Receipt: `owner-review.json` beside `checklist.json` (`schema_version` 1, a `decisions` list of `scenario`,
+  `owner_status`, `note`, `decided_at`, `evidence_sha256`). It is separate so a new checklist run cannot overwrite it.
+  Before H2 the owner decisions were recorded only in prose in this document; there was no machine receipt, so this file is the
+  first one and the 2026-10-20 "Revoke automatic approvals PASS" has no entry until the owner records it.
+- Evidence hash: SHA-256 over the row's automated result, program observation and every screenshot's bytes. A decision without
+  a hash counts as current. Nothing is recorded except by an explicit owner action.
+
 ## Remaining gates
 
 Local validation on 2026-10-08: all 610 tests passed with zero failures, errors
