@@ -101,6 +101,15 @@ drops). Rows that cannot be reached from outside the process (cancel mid-operati
 tab, diagnostics choosers, native Auto) are listed as `NOT_AUTOMATED` with the reason. `owner_status` stays `NOT_TESTED`: the
 table above is marked only from a person looking at the screenshots.
 
+## Owner-review receipt — 2026-10-21
+
+The refreshed 2026-10-20 checklist has **16 rows: 11 AUTOMATED_PASS and five NOT_AUTOMATED**, with 15 screenshots.
+The owner reviewed the revoke dialog and result screenshots and marked **Revoke automatic approvals PASS** on
+2026-10-20. The other 15 owner statuses remain NOT_TESTED. This supersedes the earlier blanket unreviewed status;
+the original checklist and automated-walk description above remain dated checkpoints. Automated assertions and
+screenshots do not establish owner observation for the remaining rows. See
+[NON_LIVE_ROADMAP_FOLLOWUP.md](NON_LIVE_ROADMAP_FOLLOWUP.md) for the retained evidence and other open gates.
+
 ## Remaining gates
 
 Local validation on 2026-10-08: all 610 tests passed with zero failures, errors

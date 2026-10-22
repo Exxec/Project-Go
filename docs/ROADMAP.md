@@ -5,6 +5,21 @@ gates. A checked item requires reproducible evidence; a successful extraction,
 compile, or main-menu boot must not be promoted into a broader compatibility or
 release claim.
 
+## Receipt refresh — 2026-10-21
+
+Project Go main at `dd9c2fb` passed Windows/Ubuntu [CI run 39502317335](https://github.com/Exxec/Project-Go/actions/runs/39502317335).
+BridgeForge's importer and required shared-fixture comparison are integrated into its main, with green exact-commit
+[CI run 39510390276](https://github.com/Exxec/Project-BridgeForge/actions/runs/39510390276) at `ae825d61`.
+BridgeForge main now requires Python 3.15 (PR #54, 2026-10-21); the earlier `c82e2d54` branch is superseded.
+These receipts supersede branch-only integration wording below, not historical test measurements.
+
+The GUI checklist now has 16 rows; the owner reviewed **Revoke automatic approvals PASS**, while 15 owner statuses
+remain NOT_TESTED. FlowerGod remains BLOCKED_REVIEW; restarting missing drafts is a possible next step raised by the
+owner, not work already performed. Nightcross remains blocked by owner choice and live tests remain pending.
+Coverage-importer CLI/end-to-end hosted acceptance, JSON-key consumer proof (P8.10), remaining GUI review and final
+candidate/rights/release gates remain open. See [NON_LIVE_ROADMAP_FOLLOWUP.md](NON_LIVE_ROADMAP_FOLLOWUP.md)
+for dated evidence and the distinction between the hosted fixture check and actual-manifest acceptance.
+
 ## Pre-implementation review checkpoint — 2026-09-10
 
 - At the start of this review, the working tree was clean after refreshing
@@ -734,8 +749,8 @@ Owner: "Repeat for all next phases if able." Feasible implementation and evidenc
 order; the local-only report is `REMAINING_PHASES_STATUS.md` (kept outside version control).
 Runtime context fields and explicit capture are implemented and synthetic-tested, with unknown exits left null. The
 real-mod task measured FlowerGod at 908/1,620 policy approvals, with 712 review items and unchanged source. Its real build
-is BLOCKED_REVIEW. The GUI harness refreshed 10 automated passes and 5 non-automated rows; all 15 owner reviews stay
-NOT_TESTED. Static inventories do not establish JSON-key consumers, so P8.10 stays open. The unfinished runtime capture
+is BLOCKED_REVIEW. That 2026-10-19 GUI checkpoint had 10 automated passes and five non-automated rows, with all 15 owner reviews
+NOT_TESTED. The 2026-10-21 receipt above records the subsequent 16-row checklist and one owner PASS. Static inventories do not establish JSON-key consumers, so P8.10 stays open. The unfinished runtime capture
 files were backed up and their compile/publication defects repaired. No live test, owner review or release was invented.
 
 ## Recommendations (2026-10-18; individual near-term follow-ups authorized above; long-term remains proposed)
