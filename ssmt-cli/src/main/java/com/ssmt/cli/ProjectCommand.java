@@ -39,7 +39,8 @@ import picocli.CommandLine.Parameters;
             ProjectCommand.Refresh.class,
             ProjectCommand.CheckFonts.class,
             ProjectCommand.Coverage.class,
-            ProjectCommand.ImportAiResponse.class
+            ProjectCommand.ImportAiResponse.class,
+            CarryForwardCommand.class
         })
 public final class ProjectCommand implements Runnable {
     @Override
