@@ -34,7 +34,9 @@ import javafx.util.StringConverter;
 
 /** One drop-driven normal flow; optional pickers and maintenance stay secondary. */
 final class TranslationWorkflowPane extends VBox {
-    private final TranslationWorkflowController controller;
+    private final WorkflowReviewDialogs workflowReviewDialogs = new WorkflowReviewDialogs(this);
+
+    final TranslationWorkflowController controller;
     private final WorkflowMaintenanceController maintenance = new WorkflowMaintenanceController();
     private final Label status = new Label(GuiText.get("normal.chooseHelp"));
     private final javafx.scene.control.CheckBox acknowledgeUnreadable =
@@ -52,7 +54,7 @@ final class TranslationWorkflowPane extends VBox {
     private final MenuItem importAction = new MenuItem(GuiText.get("normal.action.importFile"));
     private final MenuItem buildAction = new MenuItem(GuiText.get("normal.action.buildNow"));
     private final TranslationWorkflowPresentation presentation = new TranslationWorkflowPresentation();
-    private final Stage stage;
+    final Stage stage;
     private final Runnable openAdvanced;
     private Path attemptedInput;
     private String lastOperation = "Workflow status";
@@ -324,65 +326,20 @@ final class TranslationWorkflowPane extends VBox {
     }
 
     private void showGlossaryDialog(com.ssmt.project.GlossaryService.Proposal proposal) {
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.initOwner(stage);
-        dialog.setTitle(GuiText.get("normal.glossary.title"));
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-        VBox rows = new VBox(8);
-        rows.setPadding(new Insets(8));
-        rows.getChildren().add(new Label(GuiText.get("normal.glossary.approved").replace("{0}",
-                Integer.toString(proposal.approved().size()))));
-        proposal.approved().stream().limit(100).forEach(term -> rows.getChildren().add(new Label(
-                term.source() + "  ->  " + term.target() + "   [" + term.origin() + "]")));
-        rows.getChildren().add(new Label(GuiText.get("normal.glossary.proposed").replace("{0}",
-                Integer.toString(proposal.proposed().size()))));
-        for (var term : proposal.proposed().stream().limit(40).toList()) {
-            javafx.scene.control.TextField target = new javafx.scene.control.TextField();
-            target.setPromptText(GuiText.get("normal.glossary.prompt"));
-            javafx.scene.control.CheckBox everyMod = new javafx.scene.control.CheckBox(
-                    GuiText.get("normal.glossary.global"));
-            Button approve = new Button(GuiText.get("normal.glossary.approve"));
-            approve.setOnAction(event -> {
-                if (target.getText().isBlank()) {
-                    return;
-                }
-                dialog.close();
-                inspect(() -> {
-                    controller.approveGlossaryTerm(term.source(), target.getText().strip(), everyMod.isSelected());
-                    return controller.glossary();
-                }, this::showGlossaryDialog, "Approve glossary term");
-            });
-            rows.getChildren().add(new VBox(2, new Label(term.source() + "   (" + term.occurrences() + "x, "
-                    + term.note() + ")"), new HBox(8, target, everyMod, approve)));
-        }
-        javafx.scene.control.ScrollPane scroll = new javafx.scene.control.ScrollPane(rows);
-        scroll.setPrefViewportWidth(720);
-        scroll.setPrefViewportHeight(480);
-        dialog.getDialogPane().setContent(scroll);
-        dialog.showAndWait();
+        workflowReviewDialogs.showGlossaryDialog(proposal);
     }
 
     private void showText(String title, String text) {
-        textDialog(title, text).showAndWait();
+        workflowReviewDialogs.showText(title, text);
     }
 
     private boolean showReview(String text) {
-        Dialog<ButtonType> dialog = reviewDialog(text);
-        return dialog.showAndWait().filter(result -> result != ButtonType.CLOSE).isPresent();
+        return workflowReviewDialogs.showReview(text);
     }
 
     /** The actual review dialog, also used by the screenshot harness to fire its revoke button. */
     Dialog<ButtonType> reviewDialog(String text) {
-        Dialog<ButtonType> dialog = textDialog(GuiText.get("normal.primary.review"), text);
-        ButtonType revoke = new ButtonType(GuiText.get("normal.approval.revoke").replace("{0}",
-                Long.toString(controller.policyApprovedCount())), javafx.scene.control.ButtonBar.ButtonData.OTHER);
-        if (controller.policyApprovedCount() > 0) {
-            dialog.getDialogPane().getButtonTypes().add(0, revoke);
-        }
-        dialog.setOnHidden(event -> {
-            if (revoke.equals(dialog.getResult())) { revokePolicyApprovals(); }
-        });
-        return dialog;
+        return workflowReviewDialogs.reviewDialog(text);
     }
 
     /** Runs the same action as the review dialog's revoke button; exposed to the checklist harness. */
@@ -392,17 +349,7 @@ final class TranslationWorkflowPane extends VBox {
     }
 
     private Dialog<ButtonType> textDialog(String title, String text) {
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.initOwner(stage);
-        dialog.setTitle(title);
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-        TextArea content = new TextArea(text);
-        content.setEditable(false);
-        content.setWrapText(true);
-        content.setPrefColumnCount(80);
-        content.setPrefRowCount(22);
-        dialog.getDialogPane().setContent(content);
-        return dialog;
+        return workflowReviewDialogs.textDialog(title, text);
     }
 
     private static FileChooser jsonChooser(String name) {
@@ -504,7 +451,7 @@ final class TranslationWorkflowPane extends VBox {
         }, path -> status.setText("Diagnostic report exported: " + path), "Export diagnostics");
     }
 
-    private <T> void inspect(Work<T> work, java.util.function.Consumer<T> success, String operation) {
+    <T> void inspect(Work<T> work, java.util.function.Consumer<T> success, String operation) {
         startOperation();
         Task<T> task = new Task<>() {
             @Override protected T call() throws Exception {
@@ -912,5 +859,5 @@ final class TranslationWorkflowPane extends VBox {
     }
 
     @FunctionalInterface private interface Action { void run() throws Exception; }
-    @FunctionalInterface private interface Work<T> { T run() throws Exception; }
+    @FunctionalInterface interface Work<T> { T run() throws Exception; }
 }

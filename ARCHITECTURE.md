@@ -511,3 +511,17 @@ source immutability verification
 ```
 
 Real-mod acceptance should cover source safety, output validity, and in-game loading.
+
+
+## Refactor G1: GUI and project responsibilities
+
+The JavaFX entry point remains `SsmtApplication`; tab construction belongs in the corresponding `*Tab` class.
+`AdvancedWorkspace` coordinates per-window state, while `WorkspaceProjectActions`, `WorkspaceAiActions` and
+`WorkspaceMemoryActions` own their existing action families. Normal-workflow dialogs live in `WorkflowReviewDialogs`.
+`ProjectWorkspaceController` keeps its public API and delegates independent catalog operations to `WorkspaceTranslationMemory`.
+
+Within `ssmt-project`, `ProjectDocumentCodec` owns the project JSON codec/file publication, `ProjectBuildService` owns
+validated translated-copy/overlay publication, and `WorkflowLineageStore` owns bounded source-lineage records.
+`LocalizationProjectService` and `TranslationWorkflow` retain their public APIs. These package-private helpers stay within
+the existing module boundaries and preserve source protection and approval/evidence policy. Validation and review status:
+[REFACTOR_G1_AUDIT.md](docs/REFACTOR_G1_AUDIT.md).
