@@ -40,5 +40,3 @@ SWE handoff.md
 /nul
 /fixtures/p3/
 /ssmt-auto/gradle-*/
-graphify-out/cache/
-graphify-out/.graphify_*
