@@ -824,3 +824,11 @@ directions remain proposed. `AGENTS.md` and the
    send only changed units for review, with the save-safety rules of the translated copy kept.
 5. **Optional AI, never required.** Keep extraction, validation and builds offline; AI stays an opt-in draft source behind
    policy approval and owner review.
+
+
+## Cross-repository refactor G1 checkpoint — 2026-10-22
+
+Implemented for review: application/tab/action separation, normal-workflow dialog and catalog seams, and project
+codec/build/lineage responsibilities. Public API and behavior are preserved. Full build: 765 tests, zero failures/errors,
+2 existing skips; all 16 GUI checklist rows unchanged. Checkstyle, SpotBugs, launcher and native Unicode checks pass.
+See [the G1 audit](REFACTOR_G1_AUDIT.md). Pending PR review/merge; existing owner, live-game and release gates stay open.

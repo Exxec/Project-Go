@@ -1,11 +1,8 @@
 package com.ssmt.project;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.ssmt.core.CancellationToken;
-import com.ssmt.core.BytecodeTextAllowlist;
 import com.ssmt.core.RuntimeBudgets;
 import com.ssmt.core.exception.SsmtParseException;
 import com.ssmt.core.model.ExtractedString;
@@ -21,23 +18,14 @@ import com.ssmt.extractor.json.OptInJsonSchemaCatalog;
 import com.ssmt.extractor.json.StandardJsonFileExtractor;
 import com.ssmt.extractor.text.MissionTextExtractor;
 import com.ssmt.patcher.ClassFileInjector;
-import com.ssmt.patcher.PatchArtifact;
-import com.ssmt.patcher.PatchBuildResult;
 import com.ssmt.patcher.PatchBuilder;
-import com.ssmt.patcher.PatchBuilderException;
-import com.ssmt.patcher.PatchRequest;
 import com.ssmt.patcher.StandardFileInjector;
-import com.ssmt.patcher.TranslationReplacement;
 import com.ssmt.scanner.ModInfoReader;
 import com.ssmt.tm.SqliteTranslationMemory;
 import com.ssmt.tm.TranslationMemoryException;
 import com.ssmt.tm.TranslationQuery;
 import com.ssmt.validation.TranslationValidator;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -50,7 +38,9 @@ import java.util.Set;
  * Coordinates the complete source-safe localization workflow.
  */
 public final class LocalizationProjectService {
-    private static final ObjectMapper JSON = new ObjectMapper();
+
+    private final ProjectDocumentCodec projectDocumentCodec = new ProjectDocumentCodec();
+
     private final ModInfoReader modInfoReader = new ModInfoReader();
     private final ExtractionCoordinator extraction = new ExtractionCoordinator(List.of(
             new StandardCsvFileExtractor(),
@@ -61,6 +51,9 @@ public final class LocalizationProjectService {
     private final StandardFileInjector standardInjector = new StandardFileInjector();
     private final ClassFileInjector classInjector = new ClassFileInjector();
     private final PatchBuilder patchBuilder = new PatchBuilder();
+    private final ProjectBuildService projectBuildService = new ProjectBuildService(
+            modInfoReader, validator, standardInjector, classInjector, patchBuilder);
+
 
     /** Document field recording that the user accepted the listed unreadable inputs. */
     public static final String UNREADABLE_ACKNOWLEDGED = "unreadable_acknowledged";
@@ -658,55 +651,12 @@ public final class LocalizationProjectService {
      * @throws ProjectException on write failure
      */
     public void write(Path destination, LocalizationProject project) throws ProjectException {
-        byte[] contents = serialize(project);
-        Path target = destination.toAbsolutePath().normalize();
-        Path staging = target.resolveSibling(target.getFileName() + ".ssmt-stage");
-        try {
-            Files.write(staging, contents);
-            try {
-                Files.move(
-                        staging,
-                        target,
-                        StandardCopyOption.ATOMIC_MOVE,
-                        StandardCopyOption.REPLACE_EXISTING);
-            } catch (java.nio.file.AtomicMoveNotSupportedException exception) {
-                Files.move(staging, target, StandardCopyOption.REPLACE_EXISTING);
-            }
-        } catch (IOException exception) {
-            throw new ProjectException("Could not write project " + destination, exception);
-        } finally {
-            try {
-                Files.deleteIfExists(staging);
-            } catch (IOException ignored) {
-                // A failed staging cleanup must not hide the original write result.
-            }
-        }
+        projectDocumentCodec.write(destination, project);
     }
 
     /** Returns the deterministic UTF-8 document used by atomic workflow persistence. */
     public byte[] serialize(LocalizationProject project) throws ProjectException {
-        ObjectNode root = JSON.createObjectNode();
-        root.put("schemaVersion", project.schemaVersion());
-        root.put("sourceModId", project.sourceModId());
-        root.put("patchId", project.patchId());
-        root.put("patchName", project.patchName());
-        if (project.methodDocument() != null) {
-            root.set("bridgeforgeTranslation", project.methodDocument());
-        }
-        ArrayNode entries = root.putArray("entries");
-        for (ProjectEntry entry : project.entries()) {
-            ObjectNode node = entries.addObject();
-            node.put("sourceFile", entry.sourceFile().toString().replace('\\', '/'));
-            node.put("key", entry.key());
-            node.put("originalText", entry.originalText());
-            node.put("translatedText", entry.translatedText());
-            node.put("provenance", entry.provenance().name());
-        }
-        try {
-            return JSON.writerWithDefaultPrettyPrinter().writeValueAsBytes(root);
-        } catch (IOException exception) {
-            throw new ProjectException("Could not serialize localization project", exception);
-        }
+        return projectDocumentCodec.serialize(project);
     }
 
     /**
@@ -717,31 +667,7 @@ public final class LocalizationProjectService {
      * @throws ProjectException on malformed or unsupported content
      */
     public LocalizationProject read(Path source) throws ProjectException {
-        try {
-            JsonNode root = JSON.readTree(source.toFile());
-            List<ProjectEntry> entries = new ArrayList<>();
-            for (JsonNode node : required(root, "entries")) {
-                entries.add(new ProjectEntry(
-                        Path.of(text(node, "sourceFile")),
-                        text(node, "key"),
-                        text(node, "originalText"),
-                        text(node, "translatedText"),
-                        node.has("provenance")
-                                ? com.ssmt.core.model.TranslationProvenance.valueOf(
-                                        text(node, "provenance"))
-                                : com.ssmt.core.model.TranslationProvenance.MANUAL_IMPORT));
-            }
-            return new LocalizationProject(
-                    required(root, "schemaVersion").intValue(),
-                    text(root, "sourceModId"),
-                    text(root, "patchId"),
-                    text(root, "patchName"),
-                    entries,
-                    root.has("bridgeforgeTranslation")
-                            ? (ObjectNode) root.path("bridgeforgeTranslation") : null);
-        } catch (IOException | IllegalArgumentException exception) {
-            throw new ProjectException("Could not read project " + source, exception);
-        }
+        return projectDocumentCodec.read(source);
     }
 
     /**
@@ -804,123 +730,12 @@ public final class LocalizationProjectService {
             LocalizationProject project,
             CancellationToken cancellation,
             boolean publishSupportArtifacts) throws ProjectException {
-        if (cancellation == null) {
-            throw new IllegalArgumentException("cancellation must not be null");
-        }
-        cancellation.throwIfCancellationRequested();
-        ModInfo mod;
-        try {
-            mod = modInfoReader.read(sourceRoot);
-        } catch (SsmtParseException exception) {
-            throw new ProjectException("Could not read source mod", exception);
-        }
-        if (!mod.id().equals(project.sourceModId())) {
-            throw new ProjectException("Project source mod id does not match selected source");
-        }
-        if (!publishSupportArtifacts) {
-            requireOwnedNormalOutput(outputRoot, mod.id());
-        }
-        Map<Path, List<TranslationReplacement>> grouped = new LinkedHashMap<>();
-        for (ProjectEntry entry : project.entries()) {
-            cancellation.throwIfCancellationRequested();
-            WorkflowOperation.checkCancellation();
-            if (entry.originalText().isBlank()
-                    && entry.translatedText().isBlank()) {
-                continue;
-            }
-            validate(entry);
-            grouped.computeIfAbsent(entry.sourceFile(), ignored -> new ArrayList<>())
-                    .add(new TranslationReplacement(
-                            entry.sourceFile(),
-                            entry.key(),
-                            entry.originalText(),
-                            entry.translatedText()));
-        }
-        List<PatchArtifact> artifacts = new ArrayList<>();
-        try {
-            if (project.methodDocument() != null) {
-                artifacts.addAll(new BridgeForgeProjectAdapter().artifacts(sourceRoot, project));
-            }
-            for (List<TranslationReplacement> replacements : project.methodDocument() == null
-                    ? grouped.values() : List.<List<TranslationReplacement>>of()) {
-                cancellation.throwIfCancellationRequested();
-                Path relative = replacements.getFirst().sourceFile();
-                String lowerCaseName = relative.toString().toLowerCase(java.util.Locale.ROOT);
-                if (lowerCaseName.endsWith(".class") || lowerCaseName.endsWith(".jar")) {
-                    artifacts.add(classInjector.inject(sourceRoot, replacements));
-                } else {
-                    artifacts.add(standardInjector.inject(sourceRoot, replacements));
-                }
-            }
-            cancellation.throwIfCancellationRequested();
-            if (Files.exists(sourceRoot.resolve(BytecodeTextAllowlist.FILE_NAME))) {
-                Map<String, String> emitted = new LinkedHashMap<>();
-                for (List<TranslationReplacement> replacements : grouped.values()) {
-                    for (TranslationReplacement replacement : replacements) {
-                        emitted.put(replacement.sourceFile().toString().replace('\\', '/')
-                                + "\t" + replacement.key(), replacement.translatedText());
-                    }
-                }
-                artifacts.add(PatchArtifact.utf8(Path.of(BytecodeTextAllowlist.FILE_NAME),
-                        BytecodeTextAllowlist.read(sourceRoot).translatedCatalog(emitted)));
-            }
-            if (publishSupportArtifacts) {
-                artifacts.add(PatchArtifact.utf8(Path.of("Project Go Changes.csv"),
-                        new TranslationReportExporter().render(project)));
-            }
-            PatchRequest request = new PatchRequest(
-                    sourceRoot,
-                    outputRoot,
-                    project.patchId(),
-                    project.patchName(),
-                    project.sourceModId(),
-                    mod.name(),
-                    mod.gameVersion(),
-                    artifacts);
-            if (!publishSupportArtifacts) {
-                requireOwnedNormalOutput(outputRoot, mod.id());
-            }
-            WorkflowOperation.beginPublication();
-            PatchBuildResult result = publishSupportArtifacts
-                    ? patchBuilder.build(request)
-                    : patchBuilder.buildTranslatedCopy(request);
-            int supportArtifacts = publishSupportArtifacts ? 1 : 0;
-            return new ProjectBuildResult(
-                    result.changed(), result.artifactCount() - supportArtifacts);
-        } catch (PatchBuilderException | IllegalArgumentException | IOException exception) {
-            throw new ProjectException(
-                    "Could not build localization project: " + exception.getMessage(),
-                    exception);
-        }
+        return projectBuildService.buildInternal(sourceRoot, outputRoot, project, cancellation, publishSupportArtifacts);
     }
 
     /** Readable names are not identity: never replace another mod or an unmanaged copy. */
     private void requireOwnedNormalOutput(Path outputRoot, String sourceModId) throws ProjectException {
-        Path output = outputRoot.toAbsolutePath().normalize();
-        if (!Files.exists(output, java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
-            return;
-        }
-        try {
-            if (!Files.isDirectory(output, java.nio.file.LinkOption.NOFOLLOW_LINKS)
-                    || Files.isSymbolicLink(output)
-                    || !output.toRealPath(java.nio.file.LinkOption.NOFOLLOW_LINKS).equals(output.toRealPath())) {
-                throw new ProjectException("The existing output must be a real translated-copy directory");
-            }
-            ModInfo existing = modInfoReader.read(output);
-            if (!existing.id().equals(sourceModId)) {
-                throw new ProjectException(
-                        "The existing translated-copy folder belongs to a different mod; choose another destination");
-            }
-            Path fingerprint = output.resolve(".ssmt-build-fingerprint");
-            if (!Files.isRegularFile(fingerprint, java.nio.file.LinkOption.NOFOLLOW_LINKS)
-                    || Files.isSymbolicLink(fingerprint) || Files.size(fingerprint) != 64
-                    || !Files.readString(fingerprint, StandardCharsets.UTF_8).matches("[0-9a-f]{64}")) {
-                throw new ProjectException(
-                        "The existing folder is not a Project Go translated copy; choose another destination");
-            }
-        } catch (IOException | SsmtParseException exception) {
-            throw new ProjectException("Could not verify the existing translated-copy destination", exception);
-        }
+        projectBuildService.requireOwnedNormalOutput(outputRoot, sourceModId);
     }
 
     /** Checks every build precondition without writing a translated copy. */
@@ -949,20 +764,7 @@ public final class LocalizationProjectService {
     }
 
     private void validate(ProjectEntry entry) throws ProjectException {
-        if (entry.translatedText().isBlank()) {
-            throw new ProjectException("Blank translation at " + entry.key());
-        }
-        if (entry.key().startsWith("bf:")) {
-            if (BridgeForgePlaceholders.resolve(entry.originalText(), entry.translatedText()) == null) {
-                throw new ProjectException("Invalid protected placeholders at " + entry.key());
-            }
-            return;
-        }
-        var issues = validator.validate(entry.originalText(), entry.translatedText());
-        if (!issues.isEmpty()) {
-            throw new ProjectException(
-                    "Invalid translation at " + entry.key() + ": " + issues.getFirst().message());
-        }
+        projectBuildService.validate(entry);
     }
 
     private static ProjectEntry entry(ExtractedString extracted) {
@@ -1006,21 +808,9 @@ public final class LocalizationProjectService {
         return sourceFile.toString().replace('\\', '/');
     }
 
-    private static JsonNode required(JsonNode parent, String name) {
-        JsonNode value = parent == null ? null : parent.get(name);
-        if (value == null || value.isNull()) {
-            throw new IllegalArgumentException("Missing project field " + name);
-        }
-        return value;
-    }
 
-    private static String text(JsonNode parent, String name) {
-        JsonNode value = required(parent, name);
-        if (!value.isTextual()) {
-            throw new IllegalArgumentException("Project field is not text: " + name);
-        }
-        return value.textValue();
-    }
+
+
 
     private record EntryIdentity(Path sourceFile, String key) {
     }

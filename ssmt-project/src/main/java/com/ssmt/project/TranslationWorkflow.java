@@ -26,6 +26,7 @@ import java.util.Set;
 
 /** The source-safe, provider-independent workflow shared by desktop and CLI. */
 public final class TranslationWorkflow {
+
     private static final System.Logger LOG = System.getLogger(TranslationWorkflow.class.getName());
     private static final ObjectMapper JSON = new ObjectMapper();
     private final Path root;
@@ -35,17 +36,14 @@ public final class TranslationWorkflow {
             new SharedTranslationWorkflowService();
     private final WorkspacePublisher publisher;
     private final WorkflowPersistenceService persistence;
+    private final WorkflowLineageStore workflowLineageStore;
     private final SourceAttestationStore sourceAttestations = new SourceAttestationStore();
     private Path translationMemory;
     private static final int MAX_LEGACY_DIRECTORIES = 128;
     private static final int MAX_LEGACY_PROJECTS = 256;
     private static final long MAX_LEGACY_PROJECT_BYTES = 64L * 1024L * 1024L;
-    private static final String PROJECT_FILE = "project.ssmt.json";
+    static final String PROJECT_FILE = "project.ssmt.json";
     private static final String REVOKED_APPROVAL = "Automatic approval revoked; review required";
-    private static final String LINEAGE_FILE = "lineage.json";
-    private static final int LINEAGE_SCHEMA_VERSION = 1;
-    private static final int MAX_REGISTERED_FORKS = 32;
-    private static final long MAX_LINEAGE_BYTES = 1024L * 1024L;
     /** The one language the normal workflow installs; it is never a user setting. */
     static final String TARGET_LANGUAGE = "en";
 
@@ -128,6 +126,7 @@ public final class TranslationWorkflow {
         this.inputCache = this.root.resolveSibling("input-cache");
         this.publisher = publisher;
         this.persistence = new WorkflowPersistenceService(publisher::publish);
+        this.workflowLineageStore = new WorkflowLineageStore(this.root, projects, publisher, JSON, LOG);
     }
 
     /**
@@ -593,7 +592,7 @@ public final class TranslationWorkflow {
 
     /** Internal, digest-named workspace; the digest never becomes a visible name. */
     private Path workspaceFor(String modId) {
-        return root.resolve(digest(modId + "\nen"));
+        return workflowLineageStore.workspaceFor(modId);
     }
 
     /** Internal, digest-named workspace for one explicitly separated source. */
@@ -635,7 +634,7 @@ public final class TranslationWorkflow {
                         .add(entry.key()).toString()));
     }
 
-    private static String entryIdDigest(LocalizationProject project) {
+    static String entryIdDigest(LocalizationProject project) {
         List<String> identities = project.entries().stream()
                 .map(TranslationWorkflow::entryIdentity).sorted().toList();
         return digest(String.join("\n", identities));
@@ -643,62 +642,20 @@ public final class TranslationWorkflow {
 
     /** Finds a previously separated copy at the exact source the user selected. */
     private Optional<Path> registeredForkByPath(Path primary, Path canonical) {
-        String source = canonical.toString();
-        for (JsonNode entry : readLineage(primary).path("forks")) {
-            if (source.equals(entry.path("sourceRoot").asText(""))) {
-                Optional<Path> workspace = registeredWorkspace(entry.path("workspace").asText(""));
-                if (workspace.isPresent() && Files.isRegularFile(
-                        workspace.get().resolve(PROJECT_FILE), LinkOption.NOFOLLOW_LINKS)) {
-                    return workspace;
-                }
-            }
-        }
-        return Optional.empty();
+        return workflowLineageStore.registeredForkByPath(primary, canonical);
     }
 
     /** Finds a previously separated copy whose source texts match, even after a rename. */
     private Optional<Path> registeredForkByEntries(Path primary, LocalizationProject candidate) {
-        String expected = entryIdDigest(candidate);
-        for (JsonNode entry : readLineage(primary).path("forks")) {
-            if (expected.equals(entry.path("entryIdDigest").asText(""))) {
-                Optional<Path> workspace = registeredWorkspace(entry.path("workspace").asText(""));
-                if (workspace.isPresent() && matchingSavedFork(workspace.get(), candidate)) {
-                    return workspace;
-                }
-            }
-        }
-        // Older registries hashed only entry locations. Resolve their saved
-        // projects by content instead, preserving rename recovery on upgrade.
-        for (JsonNode entry : readLineage(primary).path("forks")) {
-            Optional<Path> workspace = registeredWorkspace(entry.path("workspace").asText(""));
-            if (workspace.isPresent() && matchingSavedFork(workspace.get(), candidate)) {
-                return workspace;
-            }
-        }
-        return Optional.empty();
+        return workflowLineageStore.registeredForkByEntries(primary, candidate);
     }
 
     private boolean matchingSavedFork(Path workspace, LocalizationProject candidate) {
-        if (!Files.isRegularFile(workspace.resolve(PROJECT_FILE), LinkOption.NOFOLLOW_LINKS)) {
-            return false;
-        }
-        try {
-            LocalizationProject saved = projects.read(workspace.resolve(PROJECT_FILE));
-            return saved.sourceModId().equals(candidate.sourceModId())
-                    && entryIdDigest(saved).equals(entryIdDigest(candidate));
-        } catch (ProjectException exception) {
-            return false;
-        }
+        return workflowLineageStore.matchingSavedFork(workspace, candidate);
     }
 
     private Optional<Path> registeredWorkspace(String name) {
-        if (!name.matches("[0-9a-f]{64}")) {
-            return Optional.empty();
-        }
-        Path workspace = root.resolve(name).normalize();
-        return root.equals(workspace.getParent()) && !Files.isSymbolicLink(workspace)
-                ? Optional.of(workspace)
-                : Optional.empty();
+        return workflowLineageStore.registeredWorkspace(name);
     }
 
     /**
@@ -709,83 +666,15 @@ public final class TranslationWorkflow {
      */
     private void recordLineage(Path primary, SourceModIdentity identity, Path canonical,
             Path workspace, LocalizationProject project, boolean separated) {
-        ObjectNode lineage = readLineage(primary);
-        lineage.put("schemaVersion", LINEAGE_SCHEMA_VERSION);
-        lineage.put("sourceModId", identity.originalId());
-        if (!separated) {
-            lineage.put("modName", identity.originalName());
-            lineage.put("gameVersion", identity.gameVersion());
-            lineage.put("folderName", identity.originalFolderName());
-            lineage.put("sourceRoot", canonical.toString());
-            lineage.put("entryIdDigest", entryIdDigest(project));
-            writeLineage(primary, lineage);
-            return;
-        }
-        var forks = lineage.withArray("forks");
-        String name = java.util.Objects.requireNonNull(workspace.getFileName(), "workspace").toString();
-        ObjectNode registered = null;
-        for (JsonNode existing : forks) {
-            if (existing.isObject() && name.equals(existing.path("workspace").asText(""))) {
-                registered = (ObjectNode) existing;
-            }
-        }
-        if (registered == null) {
-            if (forks.size() >= MAX_REGISTERED_FORKS) {
-                LOG.log(System.Logger.Level.WARNING, "Too many separated copies to register");
-                return;
-            }
-            registered = forks.addObject();
-            registered.put("workspace", name);
-            registered.put("registeredAt", java.time.Instant.now().toString());
-        }
-        registered.put("sourceRoot", canonical.toString());
-        registered.put("entryIdDigest", entryIdDigest(project));
-        registered.put("modName", identity.originalName());
-        registered.put("gameVersion", identity.gameVersion());
-        writeLineage(primary, lineage);
+        workflowLineageStore.recordLineage(primary, identity, canonical, workspace, project, separated);
     }
 
     private ObjectNode readLineage(Path primary) {
-        Path file = primary.resolve(LINEAGE_FILE);
-        if (Files.isSymbolicLink(file) || !Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)) {
-            return JSON.createObjectNode();
-        }
-        try {
-            if (Files.size(file) > MAX_LINEAGE_BYTES) {
-                return JSON.createObjectNode();
-            }
-            JsonNode lineage = JSON.readTree(file.toFile());
-            if (!(lineage instanceof ObjectNode)
-                    || lineage.path("schemaVersion").asInt(-1) != LINEAGE_SCHEMA_VERSION
-                    || !workspaceFor(lineage.path("sourceModId").asText("")).equals(primary)
-                    || (lineage.has("forks") && (!lineage.path("forks").isArray()
-                            || lineage.path("forks").size() > MAX_REGISTERED_FORKS))) {
-                return JSON.createObjectNode();
-            }
-            return ((ObjectNode) lineage).deepCopy();
-        } catch (IOException exception) {
-            LOG.log(System.Logger.Level.WARNING, "Ignoring unreadable source lineage record", exception);
-            return JSON.createObjectNode();
-        }
+        return workflowLineageStore.readLineage(primary);
     }
 
     private void writeLineage(Path primary, ObjectNode lineage) {
-        Path staging = null;
-        try {
-            Files.createDirectories(primary);
-            staging = Files.createTempFile(primary, ".lineage-", ".json");
-            JSON.writerWithDefaultPrettyPrinter().writeValue(staging.toFile(), lineage);
-            publisher.publish(staging, primary.resolve(LINEAGE_FILE));
-        } catch (IOException exception) {
-            LOG.log(System.Logger.Level.WARNING, "Could not record source lineage", exception);
-        } finally {
-            if (staging != null) {
-                try { Files.deleteIfExists(staging); }
-                catch (IOException exception) {
-                    LOG.log(System.Logger.Level.WARNING, "Lineage staging cleanup failed", exception);
-                }
-            }
-        }
+        workflowLineageStore.writeLineage(primary, lineage);
     }
 
     private static void retainHistory(ObjectNode state, LocalizationProject previous, ProjectRefreshResult refreshed) {
@@ -882,7 +771,7 @@ public final class TranslationWorkflow {
         catch (IOException exception) { throw new ProjectException("Could not read saved translations", exception); }
     }
 
-    private static String digest(String value) {
+    static String digest(String value) {
         try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
                 .digest(value.getBytes(java.nio.charset.StandardCharsets.UTF_8))); }
         catch (NoSuchAlgorithmException exception) { throw new IllegalStateException(exception); }
