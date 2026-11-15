@@ -89,6 +89,24 @@ class StandardJsonFileExtractorTest {
     }
 
     @Test
+    void settingsToleratesTheTopLevelRulesListAddedIn0985a(@TempDir Path modRoot) throws Exception {
+        Path source = modRoot.resolve("data/config/settings.json");
+        Files.createDirectories(Objects.requireNonNull(source.getParent()));
+        Files.writeString(source, """
+                { "rules": [ { "id": "example_rule", "script": "$a == 1 -> SetFlag", "text": "Placeholder text" },
+                             "plain string entry", 3 ],
+                  "designTypeColors": { "Nightcross Armory": [1,2,3,255] },
+                  "plugin": "technical.class.Name" }
+                """);
+
+        List<ExtractedString> strings =
+                extractor.extract(new ExtractionRequest("test", modRoot, source));
+
+        assertThat(strings).extracting(ExtractedString::key)
+                .containsExactly("json-key:/designTypeColors/Nightcross Armory");
+    }
+
+    @Test
     void magicBountyExtractsOnlyConfirmedPlayerVisibleFieldsAcrossArbitraryBountyIds(
             @TempDir Path modRoot) throws Exception {
         Path source = modRoot.resolve("data/config/modFiles/magicBounty_data.json");

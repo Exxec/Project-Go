@@ -595,6 +595,22 @@ none. Neither `--from` nor `--to` is modified; `--out` and the reports must not 
 `.txt` summary are deterministic (no timestamps) and record the old project's SHA-256. The carried project goes
 through the normal review and build gates; carrying changes no gate state.
 
+### Comparing two game or mod versions side by side
+
+```text
+ssmt-cli string-diff OLD_ROOT NEW_ROOT --report DIFF.json [--pack OLD_PROJECT.json] [--glossary GLOSSARY.json]
+```
+
+Both roots (for example the `starsector-core` folders of two game versions) are read with the standard extractors only
+(CSV, JSON-like and mission text; never jars or classes) and matched by source file plus stable key. Each string is
+`ADDED`, `REMOVED`, `CHANGED` (same identity, different text) or `UNCHANGED`. With a translation pack (a project JSON
+whose entries were extracted from the old root) and/or a glossary, each string also gets a verdict: `CARRIED_OVER`
+(unchanged, and the translation was written for exactly that text), `STALE` (source changed since),
+`NEEDS_TRANSLATION` (added, or no usable translation), `ORPHANED` (removed but translated) or `NONE`. A glossary term
+applies only to a string whose whole old text equals the term source. A file an extractor cannot read in either root is listed as `unreadableFiles` and left out of the comparison on both sides (never reported as added or removed). Nothing is written into either root. The JSON
+report and its `.txt` count summary hold identities and SHA-256 digests only, never source or translated text, so they
+are safe to share; neither may already exist.
+
 ### Other `translate` operations
 
 - `translate check MOD` lists the Chinese text still left in a translated working
