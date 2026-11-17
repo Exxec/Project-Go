@@ -832,3 +832,32 @@ Implemented for review: application/tab/action separation, normal-workflow dialo
 codec/build/lineage responsibilities. Public API and behavior are preserved. Full build: 765 tests, zero failures/errors,
 2 existing skips; all 16 GUI checklist rows unchanged. Checkstyle, SpotBugs, launcher and native Unicode checks pass.
 See [the G1 audit](REFACTOR_G1_AUDIT.md). Pending PR review/merge; existing owner, live-game and release gates stay open.
+
+## P9 — genome track: export and carry a gene's strings (BridgeForge 94.G2, 94.G4; approved 2026-11-17)
+
+Status: approved by the owner 2026-11-17 ("all approved"); not yet implemented. This is Project Go's portion of
+BridgeForge's genome track. Source: BridgeForge ROADMAP-3 item 94 and
+[docs/FEATURE_GENOME_ROADMAP.md](https://github.com/Exxec/Project-BridgeForge/blob/main/docs/FEATURE_GENOME_ROADMAP.md),
+which defines phase ids 94.G1-94.G7, decisions GD-1-GD-5 and refinements GR-1-GR-6.
+
+- **Contract:** BridgeForge's `gene.json` (schema 1), which 94.G1 defines. Nothing here starts before 94.G1 publishes it.
+  GR-1 (approved by the owner 2026-11-17, with GR-2-GR-6) exports it pinned by hash with shared fixtures and a conformance
+  test in every consuming repository, as BridgeForge's `target export` does for builds; Project Go adds that conformance
+  test when it starts this phase.
+- **Trace check:** GR-4 (approved 2026-11-17): a cross-repository check will verify that this entry cites an existing
+  BridgeForge 94.Gn id and that BridgeForge's section 12 links back here.
+- **Licence:** GD-2 applies: third-party genes are for local, personal use; distribution only with the author's recorded
+  permission or for the owner's own content; author credit travels with every gene.
+- **Boundary:** Project Go keeps its own scope (BridgeForge `VISION.md`, "Product and repository boundaries"); it consumes
+  a gene manifest and returns versioned evidence through files, as it already does with BridgeForge.
+- **Traceability:** commits and pull requests implementing this phase name the BridgeForge phase id in the subject (for
+  example "feat: ... (BridgeForge 94.G2)"). BridgeForge's `docs/FEATURE_GENOME_ROADMAP.md` section 12 links back to this
+  entry.
+
+1. [ ] **94.G2:** export a gene's player-visible strings (CSV, JSON, `rules.csv`, jar string constants) as one unit with
+   stable ids, given the gene manifest's members.
+2. [ ] **94.G4:** carry a gene's translations across builds and hosts (`string-diff`, translation memory) and report
+   strings missing in the host's language.
+
+Exit criteria: BridgeForge pilot P3's strings exported as a unit and carried to the host with a coverage report.
+Estimate: 2-3 sessions.
