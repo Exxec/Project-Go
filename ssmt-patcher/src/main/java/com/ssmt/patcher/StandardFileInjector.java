@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.ssmt.core.GameCsv;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -269,7 +270,7 @@ public final class StandardFileInjector {
                         ? records.get(index + 1).getCharacterPosition()
                         : sourceText.length();
                 String rawText = sourceText.substring((int) start, (int) end);
-                rows.add(new Row(original, new LinkedHashMap<>(original), rawText, isStructuralRow(record)));
+                rows.add(new Row(original, new LinkedHashMap<>(original), rawText, isStructuralRow(record, rawText)));
             }
             for (TranslationReplacement replacement : replacements) {
                 replaceCsv(rows, replacement);
@@ -313,8 +314,9 @@ public final class StandardFileInjector {
                 .toString();
     }
 
-    private static boolean isStructuralRow(CSVRecord record) {
-        return isBlankRow(record) || isHashPrefixedRow(record);
+    /** A blank row, or one the game drops as a comment (RC8-47: its raw text starts with '#'), as CsvExtractor skips it. */
+    private static boolean isStructuralRow(CSVRecord record, String rawText) {
+        return isBlankRow(record) || GameCsv.commentedInGame(rawText, 0);
     }
 
     private static boolean isBlankRow(CSVRecord record) {
@@ -327,10 +329,6 @@ public final class StandardFileInjector {
             }
         }
         return true;
-    }
-
-    private static boolean isHashPrefixedRow(CSVRecord record) {
-        return record.size() > 0 && record.get(0).stripLeading().startsWith("#");
     }
 
     private static String stripTrailingLineSeparator(String text) {
@@ -358,6 +356,9 @@ public final class StandardFileInjector {
         String textColumn = decodeCsv(matcher.group(3));
         Row selected = null;
         for (Row row : rows) {
+            if (row.structural()) {
+                continue;  // a blank row, or a comment the game drops (RC8-47): never a unit's row, never a rival match
+            }
             boolean identityMatches = true;
             for (int index = 0; index < identityColumns.length; index++) {
                 identityMatches &= identityValues[index].equals(row.current().get(identityColumns[index]));

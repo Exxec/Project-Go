@@ -1,10 +1,10 @@
 package com.ssmt.extractor;
 
+import com.ssmt.core.GameCsv;
 import com.ssmt.core.exception.SsmtParseException;
 import com.ssmt.extractor.csv.OptInCsvFileSchema;
 import com.ssmt.extractor.csv.OptInCsvSchema;
 import java.io.IOException;
-import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.ByteBuffer;
@@ -101,13 +101,14 @@ public final class CsvGapSchemaSuggester {
         String text = decode(file);
         List<String> headers;
         List<List<String>> dataRows;
-        try (Reader reader = readerWithoutBom(text);
+        String source = !text.isEmpty() && text.charAt(0) == BYTE_ORDER_MARK ? text.substring(1) : text;
+        try (Reader reader = new StringReader(source);
              CSVParser parser = csvFormat().parse(reader)) {
             headers = parser.getHeaderNames();
             if (hasDuplicateNamedHeader(headers)) {
                 return unparseable(relative, "Duplicate CSV header");
             }
-            dataRows = dataRows(parser);
+            dataRows = dataRows(parser, source);
         } catch (IOException | IllegalArgumentException exception) {
             return unparseable(relative, "Malformed CSV: " + exception.getMessage());
         }
@@ -237,7 +238,7 @@ public final class CsvGapSchemaSuggester {
         return index < row.size() ? row.get(index) : "";
     }
 
-    private static List<List<String>> dataRows(CSVParser parser) {
+    private static List<List<String>> dataRows(CSVParser parser, String source) {
         List<List<String>> rows = new ArrayList<>();
         for (CSVRecord record : parser) {
             List<String> cells = new ArrayList<>();
@@ -245,7 +246,7 @@ public final class CsvGapSchemaSuggester {
                 cells.add(record.get(index));
             }
             if (cells.isEmpty()
-                    || cells.getFirst().stripLeading().startsWith("#")
+                    || GameCsv.commentedInGame(source, record.getCharacterPosition())  // RC8-47
                     || cells.stream().allMatch(String::isBlank)) {
                 continue;
             }
@@ -265,15 +266,6 @@ public final class CsvGapSchemaSuggester {
                 .setSkipHeaderRecord(true)
                 .setAllowMissingColumnNames(true)
                 .get();
-    }
-
-    private static Reader readerWithoutBom(String decoded) throws IOException {
-        PushbackReader reader = new PushbackReader(new StringReader(decoded), 1);
-        int first = reader.read();
-        if (first != -1 && first != BYTE_ORDER_MARK) {
-            reader.unread(first);
-        }
-        return reader;
     }
 
     private static String decode(Path file) throws SsmtParseException {
