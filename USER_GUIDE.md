@@ -611,6 +611,49 @@ applies only to a string whose whole old text equals the term source. A file an 
 report and its `.txt` count summary hold identities and SHA-256 digests only, never source or translated text, so they
 are safe to share; neither may already exist.
 
+### Exporting a BridgeForge gene's strings (P9, BridgeForge 94.G2)
+
+```text
+ssmt-cli gene-strings GENE_OR_PROOF_FOLDER MOD_ROOT --out STRINGS.json
+```
+
+The first argument can be a BridgeForge `gene.json`, or a BridgeForge proof folder: its `gene.json` first, then every
+carried gene under `closure/`. Each manifest must pass the pinned contract (`fixtures/gene-contract`). The export filters
+the units the standard extractors and the bytecode extractor already produce, so every string keeps its stable key. Each
+gene member selects its own units:
+- **file:** every unit of the file;
+- **csv-row:** that row's units;
+- **json-entry:** the units at or under its pointer;
+- **jar-class:** that class's units.
+
+For each gene the export lists:
+- **units:** every selected string, with its text and the first member that selected it;
+- **uncovered:** CSV units in rows keyed by one of the gene's own ids that no member selects (a gap in BridgeForge's
+  closure, to report there). Only tables keyed by `id` are searched;
+- **not_mappable:** members Project Go cannot map:
+  - a row of a table it keys by another column;
+  - a row whose id has more than one row in a table keyed by id and type, such as a SHIP and a CUSTOM row in
+    `descriptions.csv` (BridgeForge's member names only the first);
+  - a member path that is malformed or leaves the mod folder;
+- **no_units:** rows, entries and classes that hold no text Project Go extracts. Examples: a numeric settings entry, a
+  class without string constants, a table no standard extractor reads (`factions.csv`), or a row the extractor skips as a
+  comment (its line starts with `#`). A file member is not listed here, since most hold no text;
+- **licence and provenance:** they travel with the strings.
+
+The file starts with BridgeForge's evidence header (`bridgeforge gene evidence check` accepts it). It is about the first
+gene, so that gene must be a manifest: a top-level `gene.json` that is not one is refused, while a stray JSON under
+`closure/` is skipped with a warning. The header lists each member file as an input with its SHA-256. The verdict is FAIL
+when a member file is missing or unreadable.
+
+**Not checked:** the export does not compare the mod with the manifest's member hashes. A different build of the mod
+exports without warning. Run `bridgeforge gene evidence check` against the folder the gene was described from.
+
+**Bytecode text:** without a reviewed `ssmt-bytecode-allowlist.tsv`, jar strings are raw constants. The export says so in
+`bytecode_catalog` and does not claim they are player-visible.
+
+**Keep it local:** the export holds the mod's text, so keep it on your machine when the gene's licence is LOCAL_ONLY.
+The mod is never written: `--out` must not already exist and must not be inside the mod folder.
+
 ### Other `translate` operations
 
 - `translate check MOD` lists the Chinese text still left in a translated working

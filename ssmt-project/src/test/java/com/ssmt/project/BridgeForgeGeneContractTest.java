@@ -93,6 +93,13 @@ class BridgeForgeGeneContractTest {
         assertThat(wrong).isEmpty();
     }
 
+    @Test void evidenceAboutAWithdrawnGeneSchemaIsRefusedWithoutAManifest() throws Exception {
+        // check() also refuses this fixture for naming another schema than the manifest; validate() alone must too.
+        JsonNode evidence = read(CONTRACT.resolve("evidence/invalid-withdrawn-gene-schema.json"));
+
+        assertThat(BridgeForgeEvidenceHeader.validate(evidence)).containsExactly("gene schema 1 is withdrawn");
+    }
+
     @Test void aMalformedManifestGivesProblemsNotAnException() throws Exception {
         assertThat(BridgeForgeGeneManifest.validate(JSON.readTree("[]"))).containsExactly("a manifest is a JSON object");
         assertThat(BridgeForgeGeneManifest.validate(JSON.readTree("{}"))).contains("missing schema", "missing members");
