@@ -872,8 +872,37 @@ which defines phase ids 94.G1-94.G7, decisions GD-1-GD-5 and refinements GR-1-GR
   example "feat: ... (BridgeForge 94.G2)"). BridgeForge's `docs/FEATURE_GENOME_ROADMAP.md` section 12 links back to this
   entry.
 
-1. [ ] **94.G2:** export a gene's player-visible strings (CSV, JSON, `rules.csv`, jar string constants) as one unit with
-   stable ids, given the gene manifest's members.
+1. [x] **94.G2:** export a gene's player-visible strings (CSV, JSON, `rules.csv`, jar string constants) as one unit with
+   stable ids, given the gene manifest's members. **Done 2026-11-22:** `ssmt-cli gene-strings`
+   (`BridgeForgeGeneStrings`, USER_GUIDE "Exporting a BridgeForge gene's strings").
+   - **How it works:** it filters the units the standard and bytecode extractors already produce, by each member, and
+     writes BridgeForge's evidence header.
+   - **P3's set** (56 genes, local only, since the mod's licence is LOCAL_ONLY): 739 distinct units, 288 data strings
+     and 451 raw jar constants. The mod has no reviewed bytecode catalog, and the export says so.
+   - **One uncovered string:** the faction's FACTION row in `descriptions.csv`. It is a gap in BridgeForge's faction
+     closure, reported there.
+   - **14 members with no text** (`no_units`): 6 jar classes without string constants, 4 settings entries, the
+     `factions.csv` row (no standard extractor reads that table), and 3 `weapon_data.csv` rows whose line starts with `#`.
+     Project Go skips those rows as comments; BridgeForge counts a row as a comment only when its `id` starts with `#`,
+     so it lists them as members. Reported to BridgeForge as a candidate; which rule the game follows needs javap evidence.
+   - **Evidence:** `bridgeforge gene evidence check --root` accepts the export, with all 184 inputs re-hashed.
+   - **Tests:**
+     - `BridgeForgeGeneStringsTest` (9) covers:
+       - the selection by each member kind, including a real compiled class in a jar;
+       - uncovered rows, and a table keyed by another column;
+       - a row id shared by two rows;
+       - overlapping members, malformed member paths and `no_units`;
+       - a missing member file, and one the extractor cannot read;
+       - an invalid manifest, and the key decoding.
+     - `GeneStringsCommandTest` (3) covers:
+       - a proof folder: identities once, an upper-case `.JSON` read, a stray non-manifest JSON skipped;
+       - a non-manifest top-level `gene.json` refused;
+       - `--out` inside the mod refused, and the overwrite refusal.
+   - **Mutation check:** 25 mutants, all killed: 17 of the export, 7 of the command, and #15's withdrawn-schema check.
+     Each kill was read from the test results file after an unmutated baseline passed. The first drivers for this item and for PRs #15 and #16 never started Gradle (`cmd` does not
+     search the working folder when `NoDefaultCurrentDirectoryInExePath` is set), so every mutant they printed as
+     killed was void. Re-run properly: #16's five were killed. One of #15's five survived (evidence about a withdrawn
+     gene schema, refused only through the manifest comparison); `BridgeForgeGeneContractTest` now tests it directly.
 2. [ ] **94.G4:** carry a gene's translations across builds and hosts (`string-diff`, translation memory) and report
    strings missing in the host's language.
 

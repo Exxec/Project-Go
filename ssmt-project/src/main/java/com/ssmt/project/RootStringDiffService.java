@@ -138,7 +138,8 @@ public final class RootStringDiffService {
             new StandardJsonFileExtractor(),
             new MissionTextExtractor());
 
-    private record Extracted(List<ExtractedString> strings, Set<String> unreadable) { }
+    /** The strings of a root, and the files an extractor matched but could not read (posix relative paths). */
+    record Extracted(List<ExtractedString> strings, Set<String> unreadable) { }
 
     /**
      * Extracts both roots with the standard extractors and compares them. A file an extractor cannot read is listed
@@ -181,6 +182,14 @@ public final class RootStringDiffService {
     }
 
     private static Extracted extract(Path root) throws ProjectException {
+        return extract(root, EXTRACTORS);
+    }
+
+    /**
+     * Extracts a root with the given extractors (P9's gene string export adds the bytecode extractor). A file exactly one
+     * extractor supports is read; a file that extractor cannot read is listed as unreadable.
+     */
+    static Extracted extract(Path root, List<FileExtractor> extractors) throws ProjectException {
         Path normalizedRoot = root.toAbsolutePath().normalize();
         if (!Files.isDirectory(normalizedRoot, LinkOption.NOFOLLOW_LINKS)) {
             throw new ProjectException("Not a directory: " + normalizedRoot);
@@ -197,7 +206,7 @@ public final class RootStringDiffService {
         List<ExtractedString> strings = new ArrayList<>();
         Set<String> unreadable = new TreeSet<>();
         for (Path file : files) {
-            List<FileExtractor> matches = EXTRACTORS.stream().filter(extractor -> extractor.supports(file)).toList();
+            List<FileExtractor> matches = extractors.stream().filter(extractor -> extractor.supports(file)).toList();
             if (matches.size() != 1) {
                 continue;
             }
