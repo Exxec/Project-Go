@@ -935,6 +935,49 @@ which defines phase ids 94.G1-94.G7, decisions GD-1-GD-5 and refinements GR-1-GR
        in both.
 2. [ ] **94.G4:** carry a gene's translations across builds and hosts (`string-diff`, translation memory) and report
    strings missing in the host's language.
+   **Slice 1 Done 2026-11-22: the read-only report, `ssmt-cli gene-carry`** (`BridgeForgeGeneCarry`, USER_GUIDE
+   "Reporting how a gene's strings carry into a host").
+   - **How it works:**
+     - The host's units are selected by the export's own member rule (`BridgeForgeGeneStrings.members`, shared with the
+       export) and compared through `RootStringDiffService`'s string-diff, with its carry verdicts given a pack.
+     - It flags host text still in CJK, and CSV cells that differ only in CRLF against LF (the same text to the game,
+       whose CSV parser replaces CRLF first).
+     - It refuses an export that is not PASS, or is about other genes than the manifests. The report records the
+       export's SHA-256.
+   - **Measured first on P3** (advisor):
+     - Key pairing across builds is reliable: `string-diff` of Eridani's `original/` against `working/` gives 0 added,
+       0 removed, 30 changed, 328 unchanged.
+     - For the gene's units, all 289 data keys and 451 of 452 jar keys pair across the builds.
+   - **P3 across builds** (the original Chinese build's export into `working/`):
+     - Data: 271 unchanged and 18 changed, exactly the 18 that were Chinese. None removed, none still CJK.
+     - Jar: 26 changed (16 of them Chinese, 10 changed by the jar patch) and 1 removed.
+     - PASS.
+   - **P3 into the carrier:** 35 data units changed, every one `crlf_only`: the carrier writes LF inside multi-line
+     cells. Nothing else changed, so the carrier carries every gene string as the game reads it.
+   - **BridgeForge's evidence check** accepts both reports, with 184 inputs re-hashed.
+   - **Tests:**
+     - `BridgeForgeGeneCarryTest` (12) covers:
+       - unchanged; changed, added, removed and CJK, with no text in the report;
+       - a CJK-only failure; the pack verdicts (CARRIED_OVER, STALE, NEEDS_TRANSLATION, ORPHANED, NONE);
+       - `crlf_only`; jar units counted apart; an unreadable host jar;
+       - the verdict and summary independent of gene order;
+       - refusals (failed export, other genes, not an export, a malformed unit); a missing host file.
+     - `GeneCarryCommandTest` (2): the report is bound to its export's SHA-256; overwrite and inside-the-host refusals;
+       exit 1 on FAIL.
+     - The export's member selection (`BridgeForgeGeneStrings.members`) and the manifest loader (`GeneManifests`) are
+       shared with `gene-strings`, whose tests still pass.
+   - **Mutation check:** 20 mutants, all killed after a passing baseline: 16 of the report, and 4 of the refactored
+     export selection.
+   - **Independent review:**
+     - **Fixed:** the verdict came from a summary that kept the first gene's row per unit, so two genes sharing a unit
+       could pass or fail by order. Every gene's rows are now judged, and the summary keeps the worst row.
+     - **Fixed:** a malformed export unit is now refused, not thrown.
+   - **Not done, and why:**
+     - No translation is written or approved. Eridani has no Project Go pack: it was translated in place by BridgeForge.
+     - A pack derived from `original/` against `working/` would be inferred, because `working/` also holds revive,
+       punctuation and jar-patch changes. Whether one may exist, and with what provenance, is the owner's call.
+     - The exit criterion stays open until a real host exists (BridgeForge 94.G5) or the owner accepts the carrier as
+       the host. The carrier run is plumbing: the carrier is built from `working/`.
 
 Exit criteria: BridgeForge pilot P3's strings exported as a unit and carried to the host with a coverage report.
 Estimate: 2-3 sessions.
