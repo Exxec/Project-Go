@@ -1,0 +1,294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Exxec/Project-BridgeForge/docs/contracts/gene/gene.schema.json#4",
+  "title": "bridgeforge-gene schema 4",
+  "type": "object",
+  "required": [
+    "schema",
+    "schema_version",
+    "identity",
+    "kind",
+    "anchors",
+    "provides",
+    "members",
+    "needs",
+    "registrations",
+    "conditions",
+    "persistent_state",
+    "build",
+    "provenance",
+    "derived_from",
+    "licence",
+    "phenotype_obligations",
+    "unknowns",
+    "collected_from"
+  ],
+  "properties": {
+    "schema": {
+      "const": "bridgeforge-gene"
+    },
+    "schema_version": {
+      "const": 4
+    },
+    "identity": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "kind": {
+      "enum": [
+        "hullmod",
+        "weapon",
+        "wing",
+        "hull",
+        "variant",
+        "shipsystem",
+        "faction",
+        "star-system",
+        "market",
+        "industry",
+        "condition",
+        "ability",
+        "rule",
+        "combat-plugin",
+        "campaign-plugin",
+        "custom-start"
+      ]
+    },
+    "anchors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "provides": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "members": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "what",
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "what": {
+            "enum": [
+              "file",
+              "csv-row",
+              "jar-class",
+              "json-entry"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "needs": {
+      "type": "object",
+      "required": [
+        "vanilla",
+        "mods"
+      ],
+      "properties": {
+        "vanilla": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "mods": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "genes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "registrations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "locus",
+          "statement"
+        ],
+        "additionalProperties": true,
+        "properties": {
+          "locus": {
+            "type": "string",
+            "minLength": 1
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "conditions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "subject"
+        ],
+        "additionalProperties": true,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "subject": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "persistent_state": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "via"
+        ],
+        "additionalProperties": true,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "via": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "build": {
+      "type": "object"
+    },
+    "provenance": {
+      "type": "object"
+    },
+    "derived_from": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identity",
+            "by",
+            "from_build"
+          ],
+          "properties": {
+            "identity": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "by": {
+              "type": "string",
+              "minLength": 1
+            },
+            "from_build": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "licence": {
+      "type": "object",
+      "required": [
+        "decision",
+        "mod_decision",
+        "local_only_members"
+      ],
+      "properties": {
+        "decision": {
+          "type": "string"
+        },
+        "mod_decision": {
+          "type": "string"
+        },
+        "local_only_members": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "if": {
+        "properties": {
+          "local_only_members": {
+            "minItems": 1
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "decision": {
+            "const": "LOCAL_ONLY"
+          }
+        }
+      }
+    },
+    "phenotype_obligations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "unknowns": {
+      "type": "object",
+      "required": [
+        "missing",
+        "suspects"
+      ],
+      "properties": {
+        "missing": {
+          "type": "array"
+        },
+        "suspects": {
+          "type": "array"
+        }
+      }
+    },
+    "collected_from": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

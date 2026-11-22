@@ -840,10 +840,20 @@ BridgeForge's genome track. Source: BridgeForge ROADMAP-3 item 94 and
 [docs/FEATURE_GENOME_ROADMAP.md](https://github.com/Exxec/Project-BridgeForge/blob/main/docs/FEATURE_GENOME_ROADMAP.md),
 which defines phase ids 94.G1-94.G7, decisions GD-1-GD-5 and refinements GR-1-GR-6.
 
-- **Contract:** BridgeForge's `gene.json` (schema 1), which 94.G1 defines. Nothing here starts before 94.G1 publishes it.
-  GR-1 (approved by the owner 2026-11-17, with GR-2-GR-6) exports it pinned by hash with shared fixtures and a conformance
-  test in every consuming repository, as BridgeForge's `target export` does for builds; Project Go adds that conformance
-  test when it starts this phase.
+- **Contract:** BridgeForge's `gene.json`, which 94.G1 defines; schema 4 since 94.G2 (schemas 1-3 are withdrawn). GR-1
+  (approved by the owner 2026-11-17, with GR-2-GR-6) exports it pinned by hash with shared fixtures and a conformance
+  test in every consuming repository, as BridgeForge's `target export` does for builds.
+  **Pinned 2026-11-22** (owner, "Start Project Go P9.1"):
+  - `fixtures/gene-contract/` is BridgeForge's `docs/contracts/gene/`, copied byte for byte from its main branch
+    (f11e0cc). `.gitattributes` keeps its bytes.
+  - `bridgeforge-pins/gene-contract.sha256` holds CONTRACT.json's SHA-256, `1345f51a…`, where BridgeForge's
+    `gene sisters` check reads it.
+  - `BridgeForgeGeneManifest` and `BridgeForgeEvidenceHeader` (`ssmt-project`) judge a manifest and an evidence header
+    as BridgeForge does, ported from its `genome/gene.py` and `genome/evidence.py`.
+  - `BridgeForgeGeneContractTest` checks:
+    - the copy against its hashes and the pin, and that a changed file is caught;
+    - the reader's kinds and versions against the pinned schema;
+    - all 21 gene fixtures and 8 evidence fixtures against BridgeForge's verdicts, with the valid identities recomputed.
 - **Trace check:** GR-4 (approved 2026-11-17): a cross-repository check will verify that this entry cites an existing
   BridgeForge 94.Gn id and that BridgeForge's section 12 links back here.
 - **Licence:** GD-2 applies: third-party genes are for local, personal use; distribution only with the author's recorded

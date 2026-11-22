@@ -23,3 +23,5 @@ fixtures/translation-conformance/** -text
 fixtures/runtime-context/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 # Coverage-manifest contract fixture (H3 / BridgeForge 80.9): the golden manifest binds to the exact mod bytes.
 fixtures/coverage-manifest/** -text
+# BridgeForge's gene.json contract (P9, BridgeForge 94.G2): copied byte for byte and pinned by CONTRACT.json's SHA-256.
+fixtures/gene-contract/** -text
