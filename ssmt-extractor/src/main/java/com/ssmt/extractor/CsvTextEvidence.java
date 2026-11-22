@@ -1,5 +1,6 @@
 package com.ssmt.extractor;
 
+import com.ssmt.core.GameCsv;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.UncheckedIOException;
@@ -28,7 +29,7 @@ final class CsvTextEvidence {
                 .setAllowMissingColumnNames(true).get().parse(new StringReader(withoutBom))) {
             var headers = parser.getHeaderNames();
             for (var record : parser) {
-                if (record.size() > 0 && record.get(0).stripLeading().startsWith("#")) {
+                if (GameCsv.commentedInGame(withoutBom, record.getCharacterPosition())) {  // RC8-47
                     continue;
                 }
                 for (int index = 0; index < Math.min(headers.size(), record.size()); index++) {

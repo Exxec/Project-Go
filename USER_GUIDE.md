@@ -72,6 +72,13 @@ disabled until you tick it. After installing, "Output quality" shows the remaini
 and `translate check --accept-unreadable --json report.json`; `translate restore <mod> [timestamp]` returns an in-place
 translated working copy to its pre-apply snapshot.
 
+**Comment rows in tables:** a CSV row whose line starts with `#` is a comment: the game ignores it, and so does the
+program. It is neither translated nor written to. A row whose first cell is quoted (`"#Light Mortar",...`) or starts with
+a space is a row the game reads. It is translated like any other, and it can fail like any other: a duplicate id, or a
+blank id with text, makes the table unreadable. This follows the game's loader (BridgeForge RC8_BEHAVIOUR RC8-47).
+Before 2026-11-22 such rows were skipped, so a project made earlier from a mod that has them can show them as new
+strings.
+
 ## Unit roles, linked groups and approval by rules
 
 Every extracted text unit has a role, set by data rules

@@ -157,6 +157,17 @@ class CsvGapSchemaSuggesterTest {
     }
 
     @Test
+    void countsAQuotedHashRowAsTheGameKeepsIt(@TempDir Path modRoot) throws Exception {
+        // RC8-47: only a row whose raw text starts with '#' is a comment; a quoted "#..." first cell is a real row.
+        write(modRoot.resolve("data/hulls/extra.csv"), "id,name\n\"#relic\",圣物\n#舰船注释行,注释\nwater,圣水\n");
+
+        GapSchemaSuggestion suggestion = suggestOne(modRoot, EXTRA);
+
+        assertThat(suggestion.status()).isEqualTo(GapSchemaStatus.SUGGESTED);
+        assertThat(suggestion.nonAsciiCellCount()).isEqualTo(2);
+    }
+
+    @Test
     void suggestsAsciiNamesEvenWhenNonAsciiAppearsOnlyInComments(@TempDir Path modRoot)
             throws Exception {
         write(modRoot.resolve("data/hulls/extra.csv"), "id,name\n#舰船注释行：结构行\nrelic,Relic\n");

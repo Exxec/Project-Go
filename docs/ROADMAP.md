@@ -903,6 +903,36 @@ which defines phase ids 94.G1-94.G7, decisions GD-1-GD-5 and refinements GR-1-GR
      search the working folder when `NoDefaultCurrentDirectoryInExePath` is set), so every mutant they printed as
      killed was void. Re-run properly: #16's five were killed. One of #15's five survived (evidence about a withdrawn
      gene schema, refused only through the manifest comparison); `BridgeForgeGeneContractTest` now tests it directly.
+   - **Update 2026-11-22 (BridgeForge 94.G2 slice 16):** javap of the game's CSV parser settled the `#` rows (BridgeForge
+     RC8_BEHAVIOUR RC8-47).
+     - **The rule:** the game drops a row whose raw text starts with `#`.
+     - **BridgeForge:** the three weapon rows were phantom genes. Its set is now 53 genes, and the faction gene carries
+       its description row.
+     - **The export of `p3-set-20261122-s16`:** 740 units (289 data, 451 raw jar), 0 uncovered, 11 `no_units`.
+     - **Project Go follows the rule exactly.** `GameCsv.commentedInGame` tests a record's first raw character,
+       before quotes are read. `CsvExtractor`, `StandardFileInjector`, `CsvTextEvidence` and `CsvGapSchemaSuggester`
+       use it.
+       - Before, a parsed and stripped first cell was tested, so a quoted `"#Light Mortar ..."` row (vanilla
+         `weapon_data.csv`) and a row starting ` #` were skipped although the game keeps them.
+       - The injector's comment flag was computed but never read: a commented duplicate of a live row (Eridani's
+         pattern) made the live row's translation fail as "Ambiguous CSV identity". Comment rows are no longer
+         candidates.
+     - **Local corpus (21 workspaces):** 14 quoted-`#` lines in 5 files, all with empty text cells or a blank id, so no
+       extracted unit changes. None start with ` #`.
+     - **Tests:**
+       - `GameCsvTest`;
+       - `CsvExtractorTest`: a quoted `#`, an indented `#`, a `#` line inside a quoted cell, and a commented duplicate
+         after a blank line;
+       - `StandardFileInjectorTest`: the same cases, with translations injected into the kept rows;
+       - `CsvTextEvidenceTest`;
+       - `CsvGapSchemaSuggesterTest`: a quoted `#` row counted.
+     - **Mutation check:** 14 mutants, all killed after a passing baseline (the `gradle-mutation-check` method). They
+       include the old stripped-cell rule restored at each site.
+     - **Independent review:** no position or extractor/injector mismatch. The failure modes of newly real rows are
+       now documented, and three test gaps were closed.
+     - **Not changed:** `BridgeForgeTextUnits` mirrors BridgeForge's own translation-unit rule (a stripped first cell),
+       a cross-repository contract. It changes together with BridgeForge's `translation_formats.py`, as a candidate
+       in both.
 2. [ ] **94.G4:** carry a gene's translations across builds and hosts (`string-diff`, translation memory) and report
    strings missing in the host's language.
 

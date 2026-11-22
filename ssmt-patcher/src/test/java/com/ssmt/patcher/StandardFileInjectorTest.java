@@ -78,6 +78,30 @@ class StandardFileInjectorTest {
     }
 
     @Test
+    void injectsRowsTheGameKeepsAndLeavesItsCommentRowsAlone() throws Exception {
+        // RC8-47, as CsvExtractor reads it: a quoted "#..." first cell is a row the game keeps, so its text is injected;
+        // a row whose raw text starts with '#' is a comment the game drops, so it stays as it was.
+        Path source = temporaryDirectory.resolve("weapon_data.csv");
+        // A blank line before the comment row: its raw text then starts with the line break Commons CSV skipped.
+        String fixture = "name,id,other\r\n\"#Light Mortar\",lightmortar_fighter,keep\r\n #Spaced,spaced,keep\r\n"
+                + "\r\n#Old Laser,laser,x\r\nLaser,laser,keep\r\n";
+        Files.writeString(source, fixture, StandardCharsets.UTF_8);
+        List<TranslationReplacement> replacements = List.of(
+                new TranslationReplacement(Path.of("weapon_data.csv"), "csv:id=lightmortar_fighter:name", "#Light Mortar",
+                        "#Mortier leger"),
+                new TranslationReplacement(Path.of("weapon_data.csv"), "csv:id=spaced:name", " #Spaced", " #Espace"),
+                new TranslationReplacement(Path.of("weapon_data.csv"), "csv:id=laser:name", "Laser", "Laser traduit"));
+
+        PatchArtifact artifact = new StandardFileInjector().inject(temporaryDirectory, replacements);
+        String output = new String(artifact.content(), StandardCharsets.UTF_8);
+
+        // The edited " #..." cell is written quoted, which keeps its leading space; a quoted row is still one the game reads.
+        assertThat(output).contains("#Mortier leger").contains("\" #Espace\",spaced,keep")
+                .contains("\r\n\r\n#Old Laser,laser,x\r\n").contains("Laser traduit,laser,keep");
+        assertThat(output).doesNotContain("#Light Mortar");
+    }
+
+    @Test
     void injectsCsvSourceEncodedAsGb18030LikeCsvExtractorTolerates() throws Exception {
         Path source = temporaryDirectory.resolve("weapon_data.csv");
         String csv = "id,name,other\r\nlaser,激光炮,keep\r\n";

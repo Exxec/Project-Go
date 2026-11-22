@@ -1,11 +1,11 @@
 package com.ssmt.extractor.csv;
 
+import com.ssmt.core.GameCsv;
 import com.ssmt.core.exception.SsmtParseException;
 import com.ssmt.core.model.ExtractedString;
 import com.ssmt.core.plugin.ExtractionRequest;
 import com.ssmt.core.plugin.FileExtractor;
 import java.io.IOException;
-import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.UncheckedIOException;
@@ -58,10 +58,13 @@ public final class CsvExtractor implements FileExtractor {
             throw new SsmtParseException("Missing CSV file", request.sourceFile());
         }
 
-        try (Reader reader = utf8ReaderWithoutBom(request.sourceFile());
-             CSVParser parser = csvFormat().parse(reader)) {
-            validateHeaders(parser, request.sourceFile());
-            return extractRecords(parser, request);
+        try {
+            String text = textWithoutBom(request.sourceFile());
+            try (Reader reader = new StringReader(text);
+                 CSVParser parser = csvFormat().parse(reader)) {
+                validateHeaders(parser, request.sourceFile());
+                return extractRecords(parser, request, text);
+            }
         } catch (SsmtParseException exception) {
             throw exception;
         } catch (IOException | UncheckedIOException | IllegalArgumentException exception) {
@@ -80,7 +83,7 @@ public final class CsvExtractor implements FileExtractor {
                 .get();
     }
 
-    private static Reader utf8ReaderWithoutBom(Path sourceFile) throws IOException {
+    private static String textWithoutBom(Path sourceFile) throws IOException {
         byte[] bytes = Files.readAllBytes(sourceFile);
         String decoded;
         try {
@@ -88,12 +91,7 @@ public final class CsvExtractor implements FileExtractor {
         } catch (CharacterCodingException invalidUtf8) {
             decoded = decodeStrict(bytes, Charset.forName("GB18030"));
         }
-        PushbackReader reader = new PushbackReader(new StringReader(decoded), 1);
-        int first = reader.read();
-        if (first != -1 && first != BYTE_ORDER_MARK) {
-            reader.unread(first);
-        }
-        return reader;
+        return !decoded.isEmpty() && decoded.charAt(0) == BYTE_ORDER_MARK ? decoded.substring(1) : decoded;
     }
 
     private static String decodeStrict(byte[] bytes, Charset charset)
@@ -132,13 +130,14 @@ public final class CsvExtractor implements FileExtractor {
 
     private List<ExtractedString> extractRecords(
             CSVParser parser,
-            ExtractionRequest request
+            ExtractionRequest request,
+            String source
     ) throws SsmtParseException {
         Set<String> identities = new HashSet<>();
         List<ExtractedString> extracted = new ArrayList<>();
         List<String> presentTextColumns = presentTextColumns(parser);
         for (CSVRecord record : parser) {
-            if (record.size() > 0 && record.get(0).stripLeading().startsWith("#")) {
+            if (GameCsv.commentedInGame(source, record.getCharacterPosition())) {  // RC8-47: the game drops it
                 continue;
             }
             List<String> identityValues = spec.identityColumns().stream()

@@ -366,6 +366,30 @@ class CsvExtractorTest {
     }
 
     @Test
+    void followsTheGamesCommentRuleOnTheRawFirstCharacter() throws Exception {
+        // BridgeForge RC8_BEHAVIOUR RC8-47 (javap of the RC7 and RC8 CSV parsers, 2026-11-22): the game drops a row whose raw
+        // text starts with '#', before quotes are read. A quoted "#..." first cell and a row starting " #" are rows it keeps.
+        Path dataDirectory = Files.createDirectories(temporaryDirectory.resolve("data"));
+        Path source = dataDirectory.resolve("comments.csv");
+        Files.writeString(source, "name,id,description\r\n"
+                + "\"#Light Mortar\",lightmortar_fighter,Kept\r\n"
+                + " #Spaced,spaced,Kept too\r\n"
+                + "Laser,laser,\"first\r\n#second\"\r\n"
+                + "\r\n"
+                + "#Old Laser,laser,dropped after a blank line\r\n");
+
+        List<ExtractedString> strings = extractor.extract(
+                new ExtractionRequest("test_mod", temporaryDirectory, source));
+
+        assertThat(strings).extracting(ExtractedString::key).containsExactly(
+                "csv:id=laser:description", "csv:id=laser:name",
+                "csv:id=lightmortar_fighter:description", "csv:id=lightmortar_fighter:name",
+                "csv:id=spaced:description", "csv:id=spaced:name");
+        assertThat(strings).extracting(ExtractedString::originalText)
+                .contains("#Light Mortar", " #Spaced", "first\r\n#second");
+    }
+
+    @Test
     void reportsMalformedCsv() {
         assertThatThrownBy(() -> extract("malformed.csv"))
                 .isInstanceOf(SsmtParseException.class)
