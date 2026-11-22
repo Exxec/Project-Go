@@ -661,6 +661,35 @@ exports without warning. Run `bridgeforge gene evidence check` against the folde
 **Keep it local:** the export holds the mod's text, so keep it on your machine when the gene's licence is LOCAL_ONLY.
 The mod is never written: `--out` must not already exist and must not be inside the mod folder.
 
+### Reporting how a gene's strings carry into a host (P9, BridgeForge 94.G4)
+
+```text
+ssmt-cli gene-carry GENE_OR_PROOF_FOLDER GENE_STRINGS.json HOST_ROOT --report REPORT.json [--pack DONOR_PROJECT.json]
+```
+
+The inputs:
+- the gene manifests the export was made from (the same first argument as `gene-strings`);
+- the donor's `gene-strings` export, which must be PASS and about exactly those genes;
+- a host mod folder.
+
+The host's strings are selected by the same gene members, under the same rules as the export. Both sides then go
+through `string-diff`'s comparison:
+- **each string:** `ADDED`, `REMOVED`, `CHANGED` or `UNCHANGED`;
+- **with `--pack`:** a project whose translations were written for the donor's strings adds `string-diff`'s carry
+  verdict (`CARRIED_OVER`, `STALE`, `NEEDS_TRANSLATION`, `ORPHANED` or `NONE`). Without a pack every unit's carry
+  verdict is `NOT_EVALUATED`;
+- **`host_cjk`:** a host string that still holds Chinese characters;
+- **`crlf_only`:** a changed table cell that differs only in CRLF against LF line endings. The game turns CRLF into LF
+  before it reads a table, so the player sees the same text. BridgeForge's carrier writes LF.
+
+Jar strings are raw constants, counted apart and not judged. The verdict is FAIL when, in any gene, a data string is
+missing from the host or a host data string is still Chinese, or when a host member file cannot be read. The summary
+counts each string once, keeping its worst state across the genes that share it.
+
+The report records the export's SHA-256 and the host member files' hashes under BridgeForge's evidence header. It holds
+identities and digests only, never text. It reports and does not carry: nothing is written into the host and no
+translation is approved. `--report` must not exist and must not be inside the host.
+
 ### Other `translate` operations
 
 - `translate check MOD` lists the Chinese text still left in a translated working

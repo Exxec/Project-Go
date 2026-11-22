@@ -3,23 +3,12 @@ package com.ssmt.cli;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.ssmt.project.BridgeForgeGeneManifest;
 import com.ssmt.project.BridgeForgeGeneStrings;
 import com.ssmt.project.ProjectException;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine.Command;
@@ -46,18 +35,11 @@ final class GeneStringsCommand implements Callable<Integer> {
     @Override
     public Integer call() {
         try {
-            if (Files.exists(out, LinkOption.NOFOLLOW_LINKS)) {
-                throw new IllegalArgumentException("Refusing to overwrite " + out);
-            }
-            if (out.toAbsolutePath().normalize().startsWith(modRoot.toAbsolutePath().normalize())) {
-                throw new IllegalArgumentException("--out is inside the mod folder, which is never written: " + out);
-            }
+            GeneEvidenceFile.checkTarget(out, modRoot, "--out");
             ObjectMapper json = new ObjectMapper();
-            String version = new Main.VersionProvider().getVersion()[0].replaceFirst("^SSMT ", "");
-            ObjectNode export = BridgeForgeGeneStrings.export(manifests(json), modRoot, version);
-            try (OutputStream stream = Files.newOutputStream(out, StandardOpenOption.CREATE_NEW)) {
-                json.writerWithDefaultPrettyPrinter().writeValue(stream, export);  // CREATE_NEW: never through a link
-            }
+            ObjectNode export = BridgeForgeGeneStrings.export(GeneManifests.load(genes, json), modRoot,
+                    GeneEvidenceFile.version());
+            GeneEvidenceFile.write(out, json, export);
             int units = 0;
             int uncovered = 0;
             for (JsonNode gene : export.get("genes")) {
@@ -73,35 +55,4 @@ final class GeneStringsCommand implements Callable<Integer> {
         }
     }
 
-    /** The manifests to export: one gene.json, or a proof folder's gene.json then its closure/*.json, each identity once. */
-    private List<JsonNode> manifests(ObjectMapper json) throws IOException {
-        List<Path> files = new ArrayList<>();
-        Path first = Files.isDirectory(genes) ? genes.resolve("gene.json") : genes;
-        files.add(first);
-        if (Files.isDirectory(genes)) {
-            Path closure = genes.resolve("closure");
-            if (Files.isDirectory(closure)) {
-                try (Stream<Path> listed = Files.list(closure)) {
-                    files.addAll(listed.filter(path -> path.toString().toLowerCase(Locale.ROOT).endsWith(".json"))
-                            .sorted().toList());
-                }
-            }
-        }
-        List<JsonNode> manifests = new ArrayList<>();
-        Set<String> seen = new HashSet<>();
-        for (Path file : files) {
-            JsonNode gene = json.readTree(file.toFile());
-            if (!BridgeForgeGeneManifest.SCHEMA.equals(gene.path("schema").asText())) {
-                if (file.equals(first)) {  // review 2026-11-22: the header is about this gene, so never skip it
-                    throw new IllegalArgumentException(file + " is not a BridgeForge gene manifest");
-                }
-                LOG.warn("Skipped {}: not a BridgeForge gene manifest", file);  // a stray file in closure/
-                continue;
-            }
-            if (seen.add(gene.path("identity").asText())) {
-                manifests.add(gene);
-            }
-        }
-        return manifests;
-    }
 }

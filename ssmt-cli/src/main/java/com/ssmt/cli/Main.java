@@ -34,7 +34,8 @@ import picocli.CommandLine.IVersionProvider;
             ProjectCommand.class,
             RecoverDraftsCommand.class,
             StringDiffCommand.class,
-            GeneStringsCommand.class
+            GeneStringsCommand.class,
+            GeneCarryCommand.class
         }
 )
 public final class Main implements Runnable {

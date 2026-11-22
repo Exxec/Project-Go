@@ -82,17 +82,13 @@ public final class BridgeForgeGeneStrings {
                 throw new ProjectException("Not a gene manifest under the pinned contract: " + String.join("; ", problems));
             }
         }
-        RootStringDiffService.Extracted extracted = RootStringDiffService.extract(modRoot, List.of(new StandardCsvFileExtractor(),
-                new StandardJsonFileExtractor(), new MissionTextExtractor(), new ClassStringExtractor()));
-        Map<String, List<ExtractedString>> byFile = new TreeMap<>();
-        for (ExtractedString string : extracted.strings()) {
-            byFile.computeIfAbsent(posix(string.sourceFile()), file -> new ArrayList<>()).add(string);
-        }
+        Set<String> unreadableFiles = new TreeSet<>();
+        Map<String, List<ExtractedString>> byFile = unitsByFile(modRoot, unreadableFiles);
         Set<String> inputs = new TreeSet<>();
         Set<String> unreadable = new TreeSet<>();
         ArrayNode geneEntries = JSON.createArrayNode();
         for (JsonNode gene : genes) {
-            geneEntries.add(geneEntry(gene, byFile, extracted.unreadable(), inputs, unreadable));
+            geneEntries.add(geneEntry(gene, byFile, unreadableFiles, inputs, unreadable));
         }
         JsonNode first = genes.getFirst();
         ObjectNode document = JSON.createObjectNode();
@@ -145,38 +141,72 @@ public final class BridgeForgeGeneStrings {
         return document;
     }
 
+    /** The units of {@code root} by posix file, read with the export's extractors; unreadable files go to the set. */
+    static Map<String, List<ExtractedString>> unitsByFile(Path root, Set<String> unreadable) throws ProjectException {
+        RootStringDiffService.Extracted extracted = RootStringDiffService.extract(root, List.of(new StandardCsvFileExtractor(),
+                new StandardJsonFileExtractor(), new MissionTextExtractor(), new ClassStringExtractor()));
+        unreadable.addAll(extracted.unreadable());
+        Map<String, List<ExtractedString>> byFile = new TreeMap<>();
+        for (ExtractedString string : extracted.strings()) {
+            byFile.computeIfAbsent(posix(string.sourceFile()), file -> new ArrayList<>()).add(string);
+        }
+        return byFile;
+    }
+
+    /**
+     * One gene member and the units it selects. {@code file} is null when the path is malformed; {@code mappable} is
+     * false then, and for a csv-row of a table keyed by another column or a row id shared by two rows.
+     */
+    record Member(String what, String path, String file, boolean mappable, List<ExtractedString> units) { }
+
+    /** Each member of {@code gene} with the units it selects in {@code byFile}: the one selection rule P9 uses. */
+    static List<Member> members(JsonNode gene, Map<String, List<ExtractedString>> byFile) {
+        List<Member> result = new ArrayList<>();
+        for (JsonNode member : gene.get("members")) {
+            String what = member.get("what").asText();
+            String path = member.get("path").asText();
+            if (!wellFormed(what, path)) {
+                result.add(new Member(what, path, null, false, List.of()));  // review 2026-11-22: reported, not thrown
+                continue;
+            }
+            String file = memberFile(what, path);
+            List<ExtractedString> candidates = byFile.getOrDefault(file, List.of());
+            if ("csv-row".equals(what) && !candidates.isEmpty()
+                    && (!keyedBy(candidates.getFirst().key(), KEY_COLUMN) || rowIdentities(path, candidates) > 1)) {
+                result.add(new Member(what, path, file, false, List.of()));
+                continue;
+            }
+            result.add(new Member(what, path, file, true,
+                    candidates.stream().filter(string -> selects(what, path, string.key())).toList()));
+        }
+        return result;
+    }
+
     private static ObjectNode geneEntry(JsonNode gene, Map<String, List<ExtractedString>> byFile, Set<String> unreadableFiles,
             Set<String> inputs, Set<String> unreadable) {
         Map<String, ObjectNode> units = new LinkedHashMap<>();
         ArrayNode notMappable = JSON.createArrayNode();
         ArrayNode noUnits = JSON.createArrayNode();
-        for (JsonNode member : gene.get("members")) {
-            String what = member.get("what").asText();
-            String path = member.get("path").asText();
-            if (!wellFormed(what, path)) {
-                notMappable.add(path);  // review 2026-11-22: a malformed path is reported, never a stack trace
+        for (Member member : members(gene, byFile)) {
+            if (member.file() == null) {
+                notMappable.add(member.path());
                 continue;
             }
-            String file = memberFile(what, path);
-            inputs.add(file);
-            if (unreadableFiles.contains(file)) {
-                unreadable.add(file);
+            inputs.add(member.file());
+            if (unreadableFiles.contains(member.file())) {
+                unreadable.add(member.file());
             }
-            List<ExtractedString> candidates = byFile.getOrDefault(file, List.of());
-            if ("csv-row".equals(what) && !candidates.isEmpty()
-                    && (!keyedBy(candidates.getFirst().key(), KEY_COLUMN) || rowIdentities(path, candidates) > 1)) {
-                notMappable.add(path);
+            if (!member.mappable()) {
+                notMappable.add(member.path());
                 continue;
             }
-            boolean selected = false;  // review 2026-11-22: counted per member, so overlapping members are not "no units"
-            for (ExtractedString string : candidates) {
-                if (selects(what, path, string.key())) {
-                    selected = true;
-                    units.computeIfAbsent(file + "\0" + string.key(), ignored -> unit(path, file, string));
-                }
+            for (ExtractedString string : member.units()) {
+                units.computeIfAbsent(member.file() + "\0" + string.key(), ignored -> unit(member.path(), member.file(), string));
             }
-            if (!selected && !"file".equals(what)) {
-                noUnits.add(path);  // a row, entry or class that holds no text Project Go extracts (factions.csv, say)
+            // Review 2026-11-22: judged per member, so overlapping members are not "no units". A row, entry or class that
+            // holds no text Project Go extracts (factions.csv, say) is listed; a file member is not.
+            if (member.units().isEmpty() && !"file".equals(member.what())) {
+                noUnits.add(member.path());
             }
         }
         ObjectNode entry = JSON.createObjectNode();
