@@ -854,6 +854,14 @@ which defines phase ids 94.G1-94.G7, decisions GD-1-GD-5 and refinements GR-1-GR
     - the copy against its hashes and the pin, and that a changed file is caught;
     - the reader's kinds and versions against the pinned schema;
     - all 21 gene fixtures and 8 evidence fixtures against BridgeForge's verdicts, with the valid identities recomputed.
+
+  **Input fix found while measuring P3 (2026-11-22).** Pilot P3's faction file has a Java float suffix,
+  `"officerSkillsShuffleProbability":1f`. Starsector's org.json reader accepts it, but Project Go's JSON reader refused
+  the whole file, so its display, fleet and rank names were missed. `JsonExtractor` now drops a Java number suffix
+  outside strings (`1f`, `0.5f`, `2d`, `.0f`, `1.f`), mirroring BridgeForge's `scan_json`, and reads `.5` and `1.` as
+  `Double.valueOf` does. On P3's mod: 0 unreadable files (was 1), and 358 units (was 339), 19 of them from the faction.
+  Tests: `JsonExtractorTest` covers every suffix form, a string that keeps its `1f`/`2d` text, and an unquoted key
+  `abc2f`.
 - **Trace check:** GR-4 (approved 2026-11-17): a cross-repository check will verify that this entry cites an existing
   BridgeForge 94.Gn id and that BridgeForge's section 12 links back here.
 - **Licence:** GD-2 applies: third-party genes are for local, personal use; distribution only with the author's recorded

@@ -113,6 +113,41 @@ class JsonExtractorTest {
     }
 
     @Test
+    void toleratesJavaNumberSuffixesWithoutChangingStringText(@TempDir Path modRoot) throws Exception {
+        // BridgeForge P9 measurement, 2026-11-22: a mod's faction file has "officerSkillsShuffleProbability":1f, which
+        // Starsector's org.json reader takes as a number (Double.valueOf accepts the suffix; BridgeForge scan_json,
+        // checked against RC8's json.jar 2026-09-14). The whole faction file, display names included, was unreadable.
+        Path source = modRoot.resolve("suffix.faction");
+        Files.writeString(source, """
+                {"displayName": "Demo 1f League", "a": 1f, "b": 0.5f, "c": 2d, "d": .0f, "e": 1.f, "f": -3F,
+                 "list": [1f, 2D], "label": "keep 2d"}
+                """);
+        JsonExtractor extractor = new JsonExtractor(JsonExtractionSpec.allTextLeaves());
+
+        List<ExtractedString> strings = extractor.extract(new ExtractionRequest("test_mod", modRoot, source));
+
+        assertThat(strings).extracting(ExtractedString::originalText).containsExactly("Demo 1f League", "keep 2d");
+    }
+
+    @Test
+    void aWordEndingInADigitAndLetterIsNotANumber(@TempDir Path modRoot) throws Exception {
+        Path source = modRoot.resolve("word.faction");
+        Files.writeString(source, """
+                {"name": "x", "value": a1f}
+                """);
+        JsonExtractor extractor = new JsonExtractor(JsonExtractionSpec.allTextLeaves());
+
+        assertThatThrownBy(() -> extractor.extract(new ExtractionRequest("test_mod", modRoot, source)))
+                .isInstanceOf(SsmtParseException.class);  // not rewritten to a1, which Jackson would also refuse
+        Path key = modRoot.resolve("key.faction");
+        Files.writeString(key, """
+                {abc2f: "Text"}
+                """);
+        assertThat(extractor.extract(new ExtractionRequest("test_mod", modRoot, key))).extracting(ExtractedString::key)
+                .containsExactly("json:/abc2f");  // an unquoted key ending in a digit and f keeps its name
+    }
+
+    @Test
     void ignoresMissingSelectedPointerButRejectsNonTextSelection() throws Exception {
         JsonExtractor missing = new JsonExtractor(
                 JsonExtractionSpec.selectedPointers(Set.of("/notPresent")));

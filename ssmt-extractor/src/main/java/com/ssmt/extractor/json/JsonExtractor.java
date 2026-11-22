@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Extracts textual JSON nodes selected by an explicit specification.
@@ -25,6 +27,9 @@ import java.util.Objects;
 public final class JsonExtractor implements FileExtractor {
 
     private final JsonExtractionSpec spec;
+    /** A number with a Java float/double suffix, group 1 without it; not followed by a word character or a dot. */
+    private static final Pattern SUFFIXED_NUMBER = Pattern.compile("(-?(?:\\d+\\.?\\d*|\\.\\d+))[fFdD](?![\\w.])");
+
     private final JsonMapper mapper;
 
     public JsonExtractor(JsonExtractionSpec spec) {
@@ -35,6 +40,9 @@ public final class JsonExtractor implements FileExtractor {
                 .enable(JsonReadFeature.ALLOW_TRAILING_COMMA)
                 .enable(JsonReadFeature.ALLOW_UNQUOTED_FIELD_NAMES)
                 .enable(JsonReadFeature.ALLOW_SINGLE_QUOTES)
+                // org.json reads numbers with Double.valueOf, which takes ".5" and "1." (and so ".0f" and "1.f").
+                .enable(JsonReadFeature.ALLOW_LEADING_DECIMAL_POINT_FOR_NUMBERS)
+                .enable(JsonReadFeature.ALLOW_TRAILING_DECIMAL_POINT_FOR_NUMBERS)
                 .build();
     }
 
@@ -76,7 +84,7 @@ public final class JsonExtractor implements FileExtractor {
                         "JSON_PROBABLE_LITERAL_TYPO",
                         "Replace 'Ture' with 'true' in the source file, then retry.");
             }
-            root = mapper.readTree(normalizeUppercaseLiterals(source));
+            root = mapper.readTree(normalizeLenientTokens(source));
         } catch (SsmtParseException exception) {
             throw exception;
         } catch (JsonProcessingException exception) {
@@ -145,7 +153,14 @@ public final class JsonExtractor implements FileExtractor {
         }
     }
 
-    private static String normalizeUppercaseLiterals(String source) {
+    /**
+     * Starsector's org.json tokens Jackson refuses, outside strings: uppercase {@code TRUE}/{@code FALSE}/{@code NULL}, and
+     * a Java float or double suffix on a number ({@code 1f}, {@code 0.5f}, {@code 2d}, {@code .0f}, {@code 1.f}), which
+     * org.json reads through {@code Double.valueOf}. The suffix rule mirrors BridgeForge's {@code scan_json}
+     * {@code _JAVA_NUMBER_SUFFIX_PATTERN}, checked against RC8's json.jar on 2026-09-14 (BridgeForge P9 measurement,
+     * 2026-11-22: a faction file's {@code 1f} made the whole file unreadable).
+     */
+    private static String normalizeLenientTokens(String source) {
         StringBuilder normalized = new StringBuilder(source.length());
         char quote = 0;
         boolean escaped = false;
@@ -170,15 +185,32 @@ public final class JsonExtractor implements FileExtractor {
                 continue;
             }
             String replacement = uppercaseLiteralAt(source, index);
+            Matcher number = replacement == null ? suffixedNumberAt(source, index) : null;
             if (replacement != null) {
                 normalized.append(replacement);
                 index += replacement.length();
+            } else if (number != null) {
+                normalized.append(number.group(1));
+                index = number.end();
             } else {
                 normalized.append(current);
                 index++;
             }
         }
         return normalized.toString();
+    }
+
+    /** A suffixed Java number starting at {@code index}, not preceded by a word character or a dot; else null. */
+    private static Matcher suffixedNumberAt(String source, int index) {
+        char current = source.charAt(index);
+        if (!(Character.isDigit(current) || current == '.' || current == '-')) {
+            return null;
+        }
+        if (index > 0 && (isIdentifierCharacter(source.charAt(index - 1)) || source.charAt(index - 1) == '.')) {
+            return null;
+        }
+        Matcher matcher = SUFFIXED_NUMBER.matcher(source).region(index, source.length());
+        return matcher.lookingAt() ? matcher : null;
     }
 
     private static int probableLiteralTypoLine(String source, String token) {
