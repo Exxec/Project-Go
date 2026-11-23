@@ -20,6 +20,21 @@ Coverage-importer CLI/end-to-end hosted acceptance, JSON-key consumer proof (P8.
 candidate/rights/release gates remain open. See [NON_LIVE_ROADMAP_FOLLOWUP.md](NON_LIVE_ROADMAP_FOLLOWUP.md)
 for dated evidence and the distinction between the hosted fixture check and actual-manifest acceptance.
 
+## Owner deferral - 2026-11-22
+
+Owner, 2026-11-22: "Project go is meant for everyone to use but we can defer that until later once its finalized or much more
+polished." and "For everything else I will follow your recommendations".
+
+Deferred until Project Go is finalized or much more polished (nothing is deleted; each item below is marked in place):
+- the native-interactive and GUI items: P5's campaign, combat and save/reload exercises, P6's release-identity audit, P8.5
+  (native GUI acceptance) and the 15 owner GUI rows (P8.5, near-term item 4, H2's inbox review), P8.11 and P8.12;
+- packaging and release polish: the release-chain and published-asset acceptance (Sister repository interoperability item 2,
+  P8.11) and the choice of the next release;
+- live AI-provider tests (G3.4 stays `NOT_TESTED` against a live endpoint).
+
+Releases: `0.8.0-rc.4` is to be cut after the owner's live session of 2026-11-22, not before it. Nothing is tagged or
+released by this note.
+
 ## Pre-implementation review checkpoint — 2026-09-10
 
 - At the start of this review, the working tree was clean after refreshing
@@ -442,6 +457,8 @@ from the recorded inputs without access to the original working directory.
 
 ## P5 — runtime and persistence gates
 
+*Deferred 2026-11-22 by the owner (see "Owner deferral - 2026-11-22" above): not dropped. The campaign, combat, persistence and upgrade exercises below are interactive live-game work.*
+
 - [x] Define separate machine-readable gates for offline validation, automated
   launcher/main-menu boot, interactive campaign behavior, combat behavior,
   save/load persistence, and upgrade compatibility.
@@ -473,12 +490,14 @@ no campaign, combat, persistence or upgrade checkbox is closed by these offline 
 
 ## P6 — completion and future-attempt feedback
 
+*Deferred 2026-11-22 by the owner (see "Owner deferral - 2026-11-22" above): not dropped. This covers the release-identity audit against the eventual release bytes.*
+
 - [x] Generate the final status and summary from per-gate evidence. Reject missing,
   repeated, contradictory, or non-final completion declarations.
 - [x] Require source review, compile/build evidence when applicable, static
   validation, dependency and API checks, package validation, save-compatibility
   disposition, live-test disposition, and redistribution-rights disposition.
-- [ ] Run the candidate-to-ZIP identity audit after all reports and packaging are
+- [ ] (*deferred 2026-11-22*) Run the candidate-to-ZIP identity audit after all reports and packaging are
   final, then archive the report with the release hashes.
   `ssmt finalize-evidence` now enforces this order and emits the hashes without
   overwriting an existing report; executing it against the eventual release bytes
@@ -586,6 +605,9 @@ these slices in order; automated completion and visual/runtime acceptance are
 independent. The normal flow keeps original mods read-only and publishes one copy.
 Acceptance details: [GUI_WORKFLOW_ENHANCEMENTS.md](GUI_WORKFLOW_ENHANCEMENTS.md).
 
+*Owner deferral 2026-11-22: the open native, GUI-acceptance and packaging items (5, 11, 12 below) are deferred until Project Go is
+finalized or much more polished; see "Owner deferral - 2026-11-22" above. Item 10 (JSON-key policy) is not deferred.*
+
 1. [x] **Remembered installation:** install to the validated remembered destination;
    offer Change destination separately; prompt when absent or unusable.
    Benefit: repeat installs take one click.
@@ -599,7 +621,7 @@ Acceptance details: [GUI_WORKFLOW_ENHANCEMENTS.md](GUI_WORKFLOW_ENHANCEMENTS.md)
 4. [x] **Native Auto Unicode:** fix CJK arguments in the executable; add a packaged
    Unicode-path export/import/build regression with source hashes.
    Benefit: removes the ASCII-copy workaround.
-5. [ ] **Native GUI acceptance:** maintain a chooser/drop/renamed-response/rejection/
+5. [ ] **Native GUI acceptance** (*deferred 2026-11-22; includes the owner's 15 GUI rows*)**:** maintain a chooser/drop/renamed-response/rejection/
    cancellation checklist and record visual observations. A checklist alone is not PASS.
    Benefit: verifies Windows interactions beyond engine tests.
 6. [x] **Progress and cancellation:** show operation stages and cooperative Cancel;
@@ -623,7 +645,7 @@ Acceptance details: [GUI_WORKFLOW_ENHANCEMENTS.md](GUI_WORKFLOW_ENHANCEMENTS.md)
     G2.4 (2026-10-18): a key that a value, CSV design-type/groupTag cell or code literal repeats is now LINKED with them and
     translated together; `id`/`*Id`/`tags` fields are IDENTIFIER (see `unit-roles.json`). A bare key that nothing uses stays UNKNOWN
     (BridgeForge conformance translates every key); flip `bare_json_keys` to IDENTIFIER once BridgeForge agrees. Not yet closed.
-11. [ ] **Interoperability acceptance:** exercise the existing coverage-manifest and
+11. [ ] **Interoperability acceptance** (*hosted-asset and release parts deferred 2026-11-22*)**:** exercise the existing coverage-manifest and
     release-chain contracts, including hosted workflow/downloaded-asset evidence,
     before closing the sister-repository items above.
     Benefit: closes evidence gaps without duplicate implementations.
@@ -631,7 +653,7 @@ Acceptance details: [GUI_WORKFLOW_ENHANCEMENTS.md](GUI_WORKFLOW_ENHANCEMENTS.md)
     sister-tool joins and actual published/downloaded assets remain acceptance gates.
     Incremental checksum freshness is fixed: ZIPs are declared checksum inputs,
     and `check` verifies SHA256SUMS against the actual current distribution bytes.
-12. [ ] **Candidate acceptance:** execute existing P5/P6 campaign, combat,
+12. [ ] **Candidate acceptance** (*deferred 2026-11-22*)**:** execute existing P5/P6 campaign, combat,
     persistence, rights and final-package gates on an authorized candidate.
     Benefit: ties readiness to exact bytes and observed behavior.
 
@@ -710,10 +732,10 @@ Status (one commit per item on `main`):
 - **G3.2 Done 2026-10-18.** `PolicyApproval` (`approval-rules.json`, rules version `policy-1`) and import policy `APPROVE_BY_RULES`: per unit, TEXT only, validators (already fail-closed in the import), line breaks, glossary terms, no CJK left, length ratio per kind; passing units become provenance `POLICY_APPROVED` (new `TranslationProvenance`, ranked like AI in the TM, never counted as a human-approved TM entry), others stay `AI_TRANSLATED` drafts with the failed rule in `policyReview`; `PolicyApproval.revoke` reverses. The normal GUI/Auto/workflow import now uses it (`SharedTranslationWorkflowService`); CLI `project import-ai-response --approve-by-rules`. `ARCHITECTURE.md` AI Boundary updated in the same change. The GUI review view lists POLICY_APPROVED through its provenance filter; a one-click revoke button was not built in this slice (added 2026-10-20: Review Changes revoke button, persisted review gate; see the follow-up under Recommendations). Tests: `PolicyApprovalTest`.
 - **G3.1 Done 2026-10-18.** `GlossaryService`: approved terms = user approvals (per mod `glossary.json` in the workspace, global `global-glossary.json`; the mod wins) + names the mod spells in English in a parallel CSV row (same row id and column in another file; origin MOD_ENGLISH) + units with exactly one human-approved translation in the library (origin TRANSLATION_MEMORY, read only); disagreeing sources become a CONFLICT proposal. Units repeated 3 or more times are only proposed (REPEATED). Approved terms that occur in the mod fill the method document's `glossary{}` (so they reach the AI request and the policy rules) when a mod is loaded or refreshed in the GUI workflow and in Auto. CLI `translate glossary` / `glossary-approve`. GUI: "Glossary terms..." dialog with one-click approval (NOT_TESTED on a real window; the controller is tested). Not done in this slice: counting repeats through `TerminologyConsistencyAuditor` (done 2026-10-20 via `TerminologyConsistencyAuditor.sourceOccurrences`) and fuzzy suggestions for proposed terms (still open). Tests: `GlossaryServiceTest`, controller test in `UnreadableAcknowledgementTest`, CLI test.
 - **G3.3 Done 2026-10-18.** `CandidateRanker` + data `ranking-rules.json` (weights same_file 0.30, same_field 0.25, neighbours 0.20, similarity 0.25; threshold 0.85, margin 0.05, floor 0.60; an unmeasurable feature is left out and the weights renormalised). `MemoryMatchSuggester` ranks conflicting exact and fuzzy human-approved library matches for blank entries; Auto applies the leader as POLICY_APPROVED only when the score passes the threshold, the margin holds and every approval rule passes, and writes every proposal with its score breakdown to `suggestions.json` beside the project. Deviation: a fuzzy match (different source text) is only proposed unless `auto_apply_fuzzy` is set to true in the config, because a similar sentence is not the same sentence (numbers differ); the plan's threshold applies to conflicting exact matches by default. Ambiguous author-record prefill is ranked by neighbouring units and file-name overlap (`candidates_ranked`, `suggestion`, `record-ranked` when applied). Tests: `CandidateRankingTest`, `RankedMatchAutoTest`.
-- **G3.4 Done 2026-10-18.** `AutoWorkflow.aiProvider/confirmAiSend`, `ai-provider.json` beside the master library (type, baseUri, model, credentialEnvironmentVariable name; no key in the file), `--confirm-ai-send`. Off unless configured; with a provider but no confirmation Auto reports provider and string count and sends nothing (`AI_SEND_NEEDS_CONFIRMATION`). `AiRoundTrip` sends 20 strings per chunk, one progress line per chunk, `ai-checkpoint.jsonl` header names the inputs (provider + pending keys) so a stopped run resumes (`AI_ROUND_TRIP_INTERRUPTED`), deleted when done. Results are applied only as POLICY_APPROVED after the protected-syntax validators and every G3.2 rule; the rest stay untranslated and are listed in `ai-review.json`. Deviation: the plan's "GUI says which provider and how many strings" is done in Auto (the result text and log) because only Auto has the round trip; the GUI has no provider settings storage. Real providers (Ollama/OpenAI/Gemini) were not called: `NOT_TESTED` against a live endpoint. Tests: `AiRoundTripAutoTest` (fake provider: no send without confirmation, chunks and progress, resume after a failure, rule failures listed).
+- **G3.4 Done 2026-10-18** (live-endpoint tests deferred 2026-11-22, see "Owner deferral - 2026-11-22"). `AutoWorkflow.aiProvider/confirmAiSend`, `ai-provider.json` beside the master library (type, baseUri, model, credentialEnvironmentVariable name; no key in the file), `--confirm-ai-send`. Off unless configured; with a provider but no confirmation Auto reports provider and string count and sends nothing (`AI_SEND_NEEDS_CONFIRMATION`). `AiRoundTrip` sends 20 strings per chunk, one progress line per chunk, `ai-checkpoint.jsonl` header names the inputs (provider + pending keys) so a stopped run resumes (`AI_ROUND_TRIP_INTERRUPTED`), deleted when done. Results are applied only as POLICY_APPROVED after the protected-syntax validators and every G3.2 rule; the rest stay untranslated and are listed in `ai-review.json`. Deviation: the plan's "GUI says which provider and how many strings" is done in Auto (the result text and log) because only Auto has the round trip; the GUI has no provider settings storage. Real providers (Ollama/OpenAI/Gemini) were not called: `NOT_TESTED` against a live endpoint. Tests: `AiRoundTripAutoTest` (fake provider: no send without confirmation, chunks and progress, resume after a failure, rule failures listed).
 - **G4.1 Done 2026-10-18.** `CandidateArchiveAudit` and `ssmt audit-candidate ZIP --manifest installed-copy.json --ledger LEDGER [--expect-id ID] [--expect-version V]`: bounded, traversal-safe extraction (`ModInputPreparationService`), every file hash compared with the publication manifest the build wrote (`installed-copy.json` in the workspace; this is the "apply manifest"), leftover check on the extracted tree, mod id and version read. Writes PACKAGE_IDENTITY (PASS, or FAIL on any added/missing/changed file or id/version mismatch) and STATIC_VALIDATION (PASS, REVIEW_REQUIRED for leftovers or unreadable inputs, NOT_TESTED after a package failure) into an assurance ledger bound to the extracted candidate's inventory fingerprint, with `candidate-audit.json` as the hashed evidence beside it; an existing ledger of the same candidate is merged. Exit 0 both PASS, 2 review needed, 1 failure. Deviation: a new command instead of an `assess` option, because `assess` is read-only inventory and the ledger needs its own writer. Bytes and static text only; no game behaviour is claimed. Tests: `CandidateArchiveAuditTest`, `AuditCandidateCommandTest`.
-- **G4.2 follow-up 2026-10-18 (`fix-import-run-schema`):** `RunRecordImport` now reads BridgeForge's real R1 record shape (milestones under `evidence.milestones`, identity from `manifest` and `core_baseline_sha256`, `evidence.status` ACCEPTABLE required, triage and `jvm_crashes` for failures); the test fixture is a record BridgeForge's `write_run_record` produced for a synthetic tree, and the Java shipped-hash port matches it. BridgeForge does not record a Java version or a process exit code, so all three gates stay NOT_TESTED with that reason until it does. The paragraph below describes the first version and its guessed field names, now superseded.
-- **G4.2 Done 2026-10-18 on the Project Go side; LIVE PENDING on the BridgeForge side.** `assurance --candidate DIR --import-run <queue>/_live/<TESTID>.json --ledger-out LEDGER` (`RunRecordImport`, `AssuranceLedgerWriter`, `BridgeForgeShippedHash`). A record is evidence only when it has a `manifest_id` (BridgeForge item 75 R1), a member with provenance `BOUND` whose `shipped_sha256` equals the candidate's BridgeForge shipped hash (the copy-drift file-set hash, ported to Java and pinned against a value BridgeForge computed on a synthetic tree), and the launch environment (Starsector build, Java, process exit code). Legacy records (today's format, no manifest or provenance), unbound members, other bytes or missing environment leave AUTOMATED_BOOT, CAMPAIGN and SAVE_RELOAD NOT_TESTED with the reason. For a matching BOUND member: boot PASS when the main menu was reached with no FATAL, MOD-ERROR, JVM crash or non-zero exit (FAIL on a FAIL verdict or those signs), CAMPAIGN PASS when a campaign loaded, SAVE_RELOAD PASS only with a save and an explicit `milestones.reload_after_save` (the log counters alone cannot show a reload). The record is copied verbatim beside the ledger as the hashed log of a schema-2 runtime capture (`runtime-<TESTID>.json`), so `AssuranceLedgerReader` verifies it. Caveats: R1 is specified but not built in BridgeForge, so the field names `manifest_id`, `members[].provenance`, `milestones`, `environment` are this side's reading contract and must be reconciled when R1 lands; no real BOUND record exists to test against. Tests: `BridgeForgeShippedHashTest`, `RunRecordImportTest`, `AssuranceImportRunCommandTest`.
+- **G4.2 follow-up 2026-10-18 (`fix-import-run-schema`):** `RunRecordImport` now reads BridgeForge's real R1 record shape (milestones under `evidence.milestones`, identity from `manifest` and `core_baseline_sha256`, `evidence.status` ACCEPTABLE required, triage and `jvm_crashes` for failures); the test fixture is a record BridgeForge's `write_run_record` produced for a synthetic tree, and the Java shipped-hash port matches it. At that date BridgeForge did not record a Java version or a process exit code, so all three gates stayed NOT_TESTED with that reason. **Update 2026-11-22:** BridgeForge now records both: `run_manifest` observes `manifest.java_version`, `write_run_record` stores `process_exit_code`, and `probe-group live --natural-exit` with `record --observe-exit` observes the exit (BridgeForge `docs/ROADMAP_STATUS.md`; `RunRecordImport` reads both). What is left is one live BridgeForge run of the exact candidate bytes with its exit recorded; until then no real record exists and the gates stay NOT_TESTED. The paragraph below describes the first version and its guessed field names, now superseded.
+- **G4.2 Done 2026-10-18 on the Project Go side; LIVE RUN PENDING (one live BridgeForge run of the candidate bytes, with its exit recorded; see the 2026-11-22 update above).** `assurance --candidate DIR --import-run <queue>/_live/<TESTID>.json --ledger-out LEDGER` (`RunRecordImport`, `AssuranceLedgerWriter`, `BridgeForgeShippedHash`). A record is evidence only when it has a `manifest_id` (BridgeForge item 75 R1), a member with provenance `BOUND` whose `shipped_sha256` equals the candidate's BridgeForge shipped hash (the copy-drift file-set hash, ported to Java and pinned against a value BridgeForge computed on a synthetic tree), and the launch environment (Starsector build, Java, process exit code). Legacy records (today's format, no manifest or provenance), unbound members, other bytes or missing environment leave AUTOMATED_BOOT, CAMPAIGN and SAVE_RELOAD NOT_TESTED with the reason. For a matching BOUND member: boot PASS when the main menu was reached with no FATAL, MOD-ERROR, JVM crash or non-zero exit (FAIL on a FAIL verdict or those signs), CAMPAIGN PASS when a campaign loaded, SAVE_RELOAD PASS only with a save and an explicit `milestones.reload_after_save` (the log counters alone cannot show a reload). The record is copied verbatim beside the ledger as the hashed log of a schema-2 runtime capture (`runtime-<TESTID>.json`), so `AssuranceLedgerReader` verifies it. Caveats: R1 is specified but not built in BridgeForge, so the field names `manifest_id`, `members[].provenance`, `milestones`, `environment` are this side's reading contract and must be reconciled when R1 lands; no real BOUND record exists to test against. Tests: `BridgeForgeShippedHashTest`, `RunRecordImportTest`, `AssuranceImportRunCommandTest`.
 - **G4.3 Done 2026-10-18 (harness; owner marks the rows).** `GuiChecklistTest` + `gradlew :ssmt-gui:guiChecklist`: the real `TranslationWorkflowPane` in a real JavaFX window, one screenshot per step in `ssmt-gui/build/gui-checklist/`, `checklist.json` with what was asserted. Run here on 2026-10-18 on a Windows desktop: 10 rows AUTOMATED_PASS (drops of folder/ZIP/mod_info.json, Unicode folder, renamed response, malformed response keeps the project, changed source held for review, first install remembers its destination, a different destination, quality plus a later edit named, a missing remembered destination falls back, and the unreadable-input checkbox), 5 NOT_AUTOMATED with reasons. Deviation: plain JavaFX `Node.snapshot` instead of TestFX/Monocle: no new dependency, and Monocle's latest build (21.0.2) targets JavaFX 21, not the 25 used here; so no headless CI run (Ubuntu runners have no display). Production change: the pane takes an injectable controller and a few methods are package-private for the harness. Not covered: native file choosers, the error dialog (it writes a diagnostic into the user's app data), Explorer drops, cancellation timing.
 
 ## G2 safety follow-up (2026-10-19)
@@ -763,9 +785,19 @@ Order of work: H1, H2, H3, H4. None changes a gate state by itself; drafts stay 
   The earlier project and approved-entry copy stay untouched; LINKED groups remain all-or-none; regenerated drafts follow
   the normal validation and approval rules. Done when FlowerGod's missing targets can be re-drafted and imported in
   batches, resumed after interruption, without touching approved entries.
+  *Built 2026-10-22 (PR #5, merged):* `ssmt-cli recover-drafts plan|export|import|status` (`DraftRecoveryPlan`,
+  `DraftRecoveryService`), with batches that never split a LINKED group, a checkpoint per exported batch, import by identity
+  only and all-or-nothing per batch, and accepted text stored as `DRAFT_NEEDS_REVIEW` (nothing approved). Tests:
+  `DraftRecoveryServiceTest`, `RecoverDraftsCommandTest`. FlowerGod dry run (read-only): 712 missing targets, 118 LINKED
+  groups, 15 batches at size 50. The owner's re-drafting and import are not done; FlowerGod stays BLOCKED_REVIEW.
 - **H2 GUI review inbox.** Show only checklist rows that are unreviewed or whose evidence changed since the owner's
   decision, each with its screenshots and the recorded decision; recording a decision writes the same receipt the
   checklist uses. Done when the 15 NOT_TESTED owner rows can be reviewed from the inbox.
+  *Built 2026-10-22 (PR #6, merged):* `GuiChecklistReview`, a Review Inbox tab and `ssmt-cli review-inbox list|record`.
+  No machine-readable owner receipt existed, so `owner-review.json` (beside `checklist.json`) is the first; evidence
+  changed = a different SHA-256 over the automated result, observation and screenshots. On the real data the inbox listed
+  16 rows (the Revoke PASS had no receipt); no decision was recorded. The owner's review of the rows is deferred
+  (2026-11-22, see above); every row stays NOT_TESTED until the owner marks it.
 - **H3 Real-manifest contract check.** CI exports an actual coverage manifest from a fixture mod and BridgeForge's
   consumer imports it (BridgeForge ROADMAP-3 80.9), next to the existing shared-fixture comparison. Closes the
   "end-to-end hosted acceptance of an actual exported coverage manifest" gap recorded in the 2026-10-21 receipt.
@@ -802,12 +834,14 @@ directions remain proposed. `AGENTS.md` and the
    boundaries. No schema-2 migration is needed for this backward-readable profile; older consumers lacking these kinds
    must not be used to apply it.
 2. **Runtime evidence from BridgeForge.** `assurance --import-run` reads BridgeForge's real run record, but every gate stays
-   NOT_TESTED until BridgeForge records `manifest.java_version` and a `process_exit_code` (BridgeForge follow-up). Once it
-   does, one bound BridgeForge live run of a translated mod closes AUTOMATED_BOOT and CAMPAIGN for that candidate.
+   NOT_TESTED until a record carries real launch facts. BridgeForge now records `manifest.java_version` and `process_exit_code`
+   (checked 2026-11-22, see G4.2). What is left: one live BridgeForge run of the exact candidate bytes with its exit
+   recorded (`probe-group live --natural-exit`, `record --observe-exit`); that run closes AUTOMATED_BOOT and CAMPAIGN for that
+   candidate.
 3. **One real translation end to end with the new rules**: a Chinese mod through roles, glossary, policy approval and the
    candidate audit, including a `zgrstuff.csv`-shaped file and `translate bytecode-audit` on its jars. Record how many units
    policy approval took and how many went to review: that ratio is the measure of the automation's worth.
-4. **Owner GUI pass** over the 15 checklist rows using the screenshots `guiChecklist` produces, then mark them; then decide
+4. **Owner GUI pass** (*deferred 2026-11-22; `0.8.0-rc.4` is cut after the owner's live session of that day, not now*) over the 15 checklist rows using the screenshots `guiChecklist` produces, then mark them; then decide
    rc.4 (or 0.8.0 final), since `main` now carries 20+ feature commits beyond `v0.8.0-rc.3`.
 5. **Close P8.10** (JSON key labels vs identifiers) together with BridgeForge, using `bare_json_keys` in `unit-roles.json`.
 
@@ -831,11 +865,13 @@ directions remain proposed. `AGENTS.md` and the
 Implemented for review: application/tab/action separation, normal-workflow dialog and catalog seams, and project
 codec/build/lineage responsibilities. Public API and behavior are preserved. Full build: 765 tests, zero failures/errors,
 2 existing skips; all 16 GUI checklist rows unchanged. Checkstyle, SpotBugs, launcher and native Unicode checks pass.
-See [the G1 audit](REFACTOR_G1_AUDIT.md). Pending PR review/merge; existing owner, live-game and release gates stay open.
+See [the G1 audit](REFACTOR_G1_AUDIT.md). Merged as PR #11 (2026-10-23, `33f6b32`); existing owner, live-game and release gates stay open.
 
 ## P9 — genome track: export and carry a gene's strings (BridgeForge 94.G2, 94.G4; approved 2026-11-17)
 
-Status: approved by the owner 2026-11-17 ("all approved"); not yet implemented. This is Project Go's portion of
+Status: approved by the owner 2026-11-17 ("all approved"). P9.1 (pin the gene contract; export a gene's strings) is done
+(PRs #15-#18); P9.2 (carry and report) has its read-only report built (PRs #19, #20; slices 1 and 2 below), and the exit
+criterion stays open. This is Project Go's portion of
 BridgeForge's genome track. Source: BridgeForge ROADMAP-3 item 94 and
 [docs/FEATURE_GENOME_ROADMAP.md](https://github.com/Exxec/Project-BridgeForge/blob/main/docs/FEATURE_GENOME_ROADMAP.md),
 which defines phase ids 94.G1-94.G7, decisions GD-1-GD-5 and refinements GR-1-GR-6.
