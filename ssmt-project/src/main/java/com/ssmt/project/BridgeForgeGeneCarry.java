@@ -97,7 +97,7 @@ public final class BridgeForgeGeneCarry {
                 // Review 2026-11-22: genes sharing a unit can see it differently (one gene's member may not map in the
                 // host), so every gene's rows are judged, and the summary keeps the worst row whatever the gene order.
                 dataFails |= failsData(row);
-                distinct.merge(identity(unit.file(), unit.key()), row, (kept, next) -> worse(next, kept) ? next : kept);
+                distinct.merge(identity(unit.file(), unit.key()), row, BridgeForgeGeneCarry::merge);
             }
             ObjectNode entry = geneEntries.addObject();
             entry.put("anchor", gene.get("anchors").get(0).asText());
@@ -232,9 +232,20 @@ public final class BridgeForgeGeneCarry {
         return "REMOVED".equals(row.get("change").asText()) && !"REMOVED".equals(other.get("change").asText());
     }
 
+    /** The summary's row for one identity: the worse row, flagged when any gene's row has a pack entry for other text. */
+    private static ObjectNode merge(ObjectNode kept, ObjectNode next) {
+        ObjectNode chosen = (worse(next, kept) ? next : kept).deepCopy();
+        if (chosen.has("pack_for_other_text")) {
+            chosen.put("pack_for_other_text", kept.path("pack_for_other_text").asBoolean()
+                    || next.path("pack_for_other_text").asBoolean());
+        }
+        return chosen;
+    }
+
+    /** Text per identity, the first one kept on a duplicate, as string-diff's own pairing does ({@code putIfAbsent}). */
     private static Map<String, String> texts(List<ExtractedString> units) {
         Map<String, String> texts = new HashMap<>();
-        units.forEach(string -> texts.put(identity(posix(string.sourceFile()), string.key()), string.originalText()));
+        units.forEach(string -> texts.putIfAbsent(identity(posix(string.sourceFile()), string.key()), string.originalText()));
         return texts;
     }
 

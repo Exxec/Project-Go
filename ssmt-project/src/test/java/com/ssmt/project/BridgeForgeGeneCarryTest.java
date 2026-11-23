@@ -156,6 +156,38 @@ class BridgeForgeGeneCarryTest {
     }
 
     @Test
+    void aWindowsPathInThePackAndARemovedUnitAreFlaggedToo() throws Exception {
+        // Review 2026-11-22: the pack may name its file with backslashes, and a unit the host lacks reads NONE, not
+        // NEEDS_TRANSLATION, while its entry still does not apply.
+        Path donor = donor();
+        Path host = temporary.resolve("host");
+        write(host, SHIP, Files.readString(donor.resolve(SHIP)));
+        write(host, DESCRIPTIONS, "id,type,text1\nother_hull,SHIP,Someone else.\n");  // the description row is gone
+        String key = null;
+        for (JsonNode unit : BridgeForgeGeneStrings.export(List.of(hull()), donor, "test").get("genes").get(0).get("units")) {
+            if (DESCRIPTIONS.equals(unit.get("file").asText())) {
+                key = unit.get("key").asText();
+            }
+        }
+        LocalizationProject pack = new LocalizationProject(1, "demo", "demo.tr", "Demo", List.of(
+                new ProjectEntry(Path.of("data\\strings\\descriptions.csv"), Objects.requireNonNull(key), "演示舰描述",
+                        "A demo hull.", TranslationProvenance.AI_TRANSLATED)));
+
+        ObjectNode report = carry(hull(), donor, host, pack);
+
+        JsonNode removed = null;
+        for (JsonNode unit : report.get("genes").get(0).get("units")) {
+            if ("REMOVED".equals(unit.get("change").asText())) {
+                removed = unit;
+            }
+        }
+        assertThat(removed).isNotNull();
+        assertThat(removed.get("pack_for_other_text").asBoolean()).isTrue();
+        assertThat(removed.get("carry").asText()).isEqualTo("NONE");
+        assertThat(report.get("summary").get("data").get("pack_for_other_text").asInt()).isEqualTo(1);
+    }
+
+    @Test
     void withoutAPackNoUnitIsJudgedForOtherText() throws Exception {
         Path donor = donor();
 

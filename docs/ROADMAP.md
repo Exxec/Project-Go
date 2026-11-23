@@ -1002,8 +1002,15 @@ which defines phase ids 94.G1-94.G7, decisions GD-1-GD-5 and refinements GR-1-GR
          say why. The pack's entries were written for the Chinese text, not the export's English text.
      - **Fixed:** each row now has `pack_for_other_text` with `--pack`, the summary counts it per kind, and the command
        warns.
-       - Tests: `BridgeForgeGeneCarryTest` `aPackWrittenForOtherSourceTextIsFlaggedPerUnit`,
-         `withoutAPackNoUnitIsJudgedForOtherText`, and the existing pack test, which now asserts a count of 0.
+       - Tests in `BridgeForgeGeneCarryTest`:
+         - `aPackWrittenForOtherSourceTextIsFlaggedPerUnit`;
+         - `aWindowsPathInThePackAndARemovedUnitAreFlaggedToo` (a removed unit reads `NONE`, still flagged);
+         - `withoutAPackNoUnitIsJudgedForOtherText`;
+         - the existing pack test, which now asserts a count of 0.
+       - Independent review: no blocking finding. Its nits are fixed:
+         - the wording for a removed unit;
+         - a duplicate donor unit now keeps its first text, as string-diff does;
+         - the summary flags a unit when any gene's row has the flag.
        - Mutation check: 5 mutants, all killed after a passing baseline.
      - **Candidate (not built):** a host already holding the pack's translated text reads `STALE`, which looks like a
        problem. A verdict such as `TRANSLATED_IN_HOST` (host text equal to the entry's translation) would say what
