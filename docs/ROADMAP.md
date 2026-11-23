@@ -949,7 +949,9 @@ which defines phase ids 94.G1-94.G7, decisions GD-1-GD-5 and refinements GR-1-GR
        0 removed, 30 changed, 328 unchanged.
      - For the gene's units, all 289 data keys and 451 of 452 jar keys pair across the builds.
    - **P3 across builds** (the original Chinese build's export into `working/`):
-     - Data: 271 unchanged and 18 changed, exactly the 18 that were Chinese. None removed, none still CJK.
+     - Data: 271 unchanged and 18 changed. None removed, none still CJK.
+       - **Corrected 2026-11-22:** 17 of the 18 were Chinese. The 18th, a `hull_mods.csv` description, changed only a
+         full-width comma to `, `: the hand fix that BridgeForge's escalation review records.
      - Jar: 26 changed (16 of them Chinese, 10 changed by the jar patch) and 1 removed.
      - PASS.
    - **P3 into the carrier:** 35 data units changed, every one `crlf_only`: the carrier writes LF inside multi-line
@@ -976,6 +978,38 @@ which defines phase ids 94.G1-94.G7, decisions GD-1-GD-5 and refinements GR-1-GR
      - No translation is written or approved. Eridani has no Project Go pack: it was translated in place by BridgeForge.
      - A pack derived from `original/` against `working/` would be inferred, because `working/` also holds revive,
        punctuation and jar-patch changes. Whether one may exist, and with what provenance, is the owner's call.
+   - **Slice 2 Done 2026-11-22: P3's pack, and a pack written for other text is reported.**
+     - **The owner's ruling (2026-11-22):** "1 and 2, consult advisor then follow recommendation". The advisor's
+       recommendation was to build the pack narrowly: provenance in a sidecar, no format change, nothing approved, and
+       nothing written into a mod.
+     - **Not inferred after all:** BridgeForge's translate-batch record of 2026-11-16 holds each unit's source and
+       translation; its escalation review records it as reviewed.
+     - **What the pack holds:** a unit enters only when:
+       - its original text has CJK;
+       - its working text has none;
+       - exactly one record entry has its file and source text.
+
+       That gives 33 entries (17 data, 16 jar). The jar patch's 10 changes and the punctuation fix stay out by the rule.
+     - **Cross-check:** every entry's translation equals `working/`'s text exactly.
+     - **Provenance:** each entry is `AI_TRANSLATED`, the record's origin; the vocabulary is closed, and no value was
+       added. The pack, its sidecar (`PROVENANCE.json`: inputs and hashes, the rule, the counts, "NOT APPROVED") and the
+       carry reports stay in the Eridani workspace (LOCAL_ONLY).
+     - **Runs with the pack:**
+       - **Original build into `working/`** (plumbing: the pack came from these builds): the 33 read `STALE`, because
+         the host holds the translation itself.
+       - **Original build into the carrier:** the same 33 read `STALE`, and none of them is `crlf_only`.
+       - **The translated build's export into the carrier:** the 33 read `NEEDS_TRANSLATION`, and the report did not
+         say why. The pack's entries were written for the Chinese text, not the export's English text.
+     - **Fixed:** each row now has `pack_for_other_text` with `--pack`, the summary counts it per kind, and the command
+       warns.
+       - Tests: `BridgeForgeGeneCarryTest` `aPackWrittenForOtherSourceTextIsFlaggedPerUnit`,
+         `withoutAPackNoUnitIsJudgedForOtherText`, and the existing pack test, which now asserts a count of 0.
+       - Mutation check: 5 mutants, all killed after a passing baseline.
+     - **Candidate (not built):** a host already holding the pack's translated text reads `STALE`, which looks like a
+       problem. A verdict such as `TRANSLATED_IN_HOST` (host text equal to the entry's translation) would say what
+       happened.
+     - **Candidate (not built):** a donor string with no CJK reads `NEEDS_TRANSLATION` (272 data units here) though it
+       is already in the target language.
      - The exit criterion stays open until a real host exists (BridgeForge 94.G5) or the owner accepts the carrier as
        the host. The carrier run is plumbing: the carrier is built from `working/`.
 

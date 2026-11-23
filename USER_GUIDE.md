@@ -678,6 +678,9 @@ through `string-diff`'s comparison:
 - **with `--pack`:** a project whose translations were written for the donor's strings adds `string-diff`'s carry
   verdict (`CARRIED_OVER`, `STALE`, `NEEDS_TRANSLATION`, `ORPHANED` or `NONE`). Without a pack every unit's carry
   verdict is `NOT_EVALUATED`;
+- **`pack_for_other_text`** (only with `--pack`): the pack holds an entry for this string that was written for other
+  source text, so it does not apply and the string reads `NEEDS_TRANSLATION`. The command warns when any string has one.
+  A typical cause: a pack written for a mod's original build, given with an export of its translated build;
 - **`host_cjk`:** a host string that still holds Chinese characters;
 - **`crlf_only`:** a changed table cell that differs only in CRLF against LF line endings. The game turns CRLF into LF
   before it reads a table, so the player sees the same text. BridgeForge's carrier writes LF.

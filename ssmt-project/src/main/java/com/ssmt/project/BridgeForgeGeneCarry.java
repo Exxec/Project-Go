@@ -84,8 +84,15 @@ public final class BridgeForgeGeneCarry {
             ArrayNode rows = JSON.createArrayNode();
             for (RootStringDiffService.Unit unit : new RootStringDiffService().diff(donorUnits, hostUnits, translations).units()) {
                 String text = hostText.get(identity(unit.file(), unit.key()));
-                ObjectNode row = row(unit, text != null && BridgeForgeTextUnits.cjk(text),
-                        crlfOnly(unit, donorText.get(identity(unit.file(), unit.key())), text));
+                String donor = donorText.get(identity(unit.file(), unit.key()));
+                ObjectNode row = row(unit, text != null && BridgeForgeTextUnits.cjk(text), crlfOnly(unit, donor, text));
+                if (translations != null) {
+                    // A pack written for other text (e.g. for the original build, given with an export of the translated
+                    // one) leaves every such unit NEEDS_TRANSLATION; without this flag the report never said why
+                    // (found 2026-11-22 on Eridani P3's pack).
+                    row.put("pack_for_other_text", donor != null
+                            && translations.writtenForOtherText(unit.file(), unit.key(), donor));
+                }
                 rows.add(row);
                 // Review 2026-11-22: genes sharing a unit can see it differently (one gene's member may not map in the
                 // host), so every gene's rows are judged, and the summary keeps the worst row whatever the gene order.
@@ -267,6 +274,10 @@ public final class BridgeForgeGeneCarry {
             carry.put(row.get("carry").asText(), carry.path(row.get("carry").asText()).asInt() + 1);
             kind.put("host_cjk", kind.path("host_cjk").asInt() + (row.get("host_cjk").asBoolean() ? 1 : 0));
             kind.put("changed_crlf_only", kind.path("changed_crlf_only").asInt() + (row.get("crlf_only").asBoolean() ? 1 : 0));
+            if (row.has("pack_for_other_text")) {
+                kind.put("pack_for_other_text", kind.path("pack_for_other_text").asInt()
+                        + (row.get("pack_for_other_text").asBoolean() ? 1 : 0));
+            }
         }
         return counts;
     }

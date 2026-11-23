@@ -126,7 +126,43 @@ class BridgeForgeGeneCarryTest {
         assertThat(carry.get("CARRIED_OVER").asInt()).isEqualTo(1);       // the designation did not
         assertThat(carry.get("NEEDS_TRANSLATION").asInt()).isEqualTo(2);  // the new cell, and the untranslated description
         assertThat(report.get("translations").asText()).isEqualTo("pack");
+        assertThat(report.get("summary").get("data").get("pack_for_other_text").asInt()).isZero();
         assertThat(JSON.writeValueAsString(report)).doesNotContain("Coque demo", "Croiseur");
+    }
+
+    @Test
+    void aPackWrittenForOtherSourceTextIsFlaggedPerUnit() throws Exception {
+        // Found 2026-11-22: a pack written for a mod's original build, given with an export of its translated build, left
+        // every such unit NEEDS_TRANSLATION and the report never said the pack did not apply.
+        Path donor = donor();
+        LocalizationProject pack = new LocalizationProject(1, "demo", "demo.tr", "Demo", List.of(
+                new ProjectEntry(Path.of(SHIP), "csv:id=demo_hull:name", "演示舰", "Demo Hull",
+                        TranslationProvenance.AI_TRANSLATED),
+                new ProjectEntry(Path.of(SHIP), "csv:id=demo_hull:designation", "Cruiser", "Croiseur",
+                        TranslationProvenance.HUMAN_EDITED)));
+
+        ObjectNode report = carry(hull(), donor, donor, pack);
+
+        JsonNode data = report.get("summary").get("data");
+        assertThat(data.get("pack_for_other_text").asInt()).isEqualTo(1);  // the name: written for 演示舰, not "Demo Hull"
+        assertThat(data.get("carry").get("CARRIED_OVER").asInt()).isEqualTo(1);       // the designation's entry applies
+        assertThat(data.get("carry").get("NEEDS_TRANSLATION").asInt()).isEqualTo(2);  // the name and the description
+        for (JsonNode unit : report.get("genes").get(0).get("units")) {
+            assertThat(unit.get("pack_for_other_text").asBoolean())
+                    .isEqualTo("csv:id=demo_hull:name".equals(unit.get("key").asText()));
+        }
+        assertThat(report.get("verdict").asText()).isEqualTo("PASS");  // information, not a failure
+        assertThat(JSON.writeValueAsString(report)).doesNotContain("演示舰", "Croiseur");
+    }
+
+    @Test
+    void withoutAPackNoUnitIsJudgedForOtherText() throws Exception {
+        Path donor = donor();
+
+        ObjectNode report = carry(hull(), donor, donor, null);
+
+        assertThat(report.get("summary").get("data").has("pack_for_other_text")).isFalse();
+        report.get("genes").get(0).get("units").forEach(unit -> assertThat(unit.has("pack_for_other_text")).isFalse());
     }
 
     @Test
