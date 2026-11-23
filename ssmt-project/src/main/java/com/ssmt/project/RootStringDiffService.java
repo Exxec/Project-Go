@@ -124,6 +124,14 @@ public final class RootStringDiffService {
             return oldDigest.equals(digestByIdentity.get(identity)) || glossaryDigests.contains(oldDigest);
         }
 
+        /**
+         * Whether the pack holds an entry for this unit that was written for other source text (its recorded original text
+         * differs from {@code oldText}, and no glossary term covers {@code oldText}). Such an entry does not apply here.
+         */
+        public boolean writtenForOtherText(String file, String key, String oldText) {
+            return hasIdentityOnly(identity(file, key), CarryForwardService.digest(oldText));
+        }
+
         private boolean hasIdentityOnly(String identity, String oldDigest) {
             String recorded = digestByIdentity.get(identity);
             return recorded != null && !recorded.equals(oldDigest) && !glossaryDigests.contains(oldDigest);

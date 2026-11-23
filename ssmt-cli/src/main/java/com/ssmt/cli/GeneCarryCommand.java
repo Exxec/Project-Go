@@ -60,6 +60,11 @@ final class GeneCarryCommand implements Callable<Integer> {
                     data.path("UNCHANGED").asInt(), data.path("CHANGED").asInt(), data.path("ADDED").asInt(),
                     data.path("REMOVED").asInt(), data.path("host_cjk").asInt(), jar.path("units").asInt(),
                     jar.path("host_cjk").asInt(), document.get("verdict").asText());
+            int otherText = data.path("pack_for_other_text").asInt() + jar.path("pack_for_other_text").asInt();
+            if (otherText > 0) {
+                LOG.warn("{} unit(s) have a pack entry written for other source text: it does not apply to this export"
+                        + " (was the pack made for another build?)", otherText);
+            }
             return "PASS".equals(document.get("verdict").asText()) ? 0 : 1;
         } catch (ProjectException | IllegalArgumentException | IOException | UncheckedIOException exception) {
             LOG.error(CliDiagnostics.explain("Gene carry report", exception));
