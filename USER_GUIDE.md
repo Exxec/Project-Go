@@ -676,8 +676,17 @@ The host's strings are selected by the same gene members, under the same rules a
 through `string-diff`'s comparison:
 - **each string:** `ADDED`, `REMOVED`, `CHANGED` or `UNCHANGED`;
 - **with `--pack`:** a project whose translations were written for the donor's strings adds `string-diff`'s carry
-  verdict (`CARRIED_OVER`, `STALE`, `NEEDS_TRANSLATION`, `ORPHANED` or `NONE`). Without a pack every unit's carry
-  verdict is `NOT_EVALUATED`;
+  verdict (`CARRIED_OVER`, `STALE`, `NEEDS_TRANSLATION`, `ORPHANED` or `NONE`), and gene-carry refines two of them
+  in its own rows (report `format_version` 2; `string-diff`'s output is unchanged):
+  - `TRANSLATED_IN_HOST`: the host's text already equals the pack entry's translated text, so there is nothing to
+    carry. It replaces `STALE` or `NEEDS_TRANSLATION`. A host text that still holds Chinese never reads this;
+  - `NOT_NEEDED`: the donor's text holds no Chinese, so it is already in the target language. It replaces
+    `NEEDS_TRANSLATION` only when the host's text is not Chinese either and the row is not `pack_for_other_text`.
+    `ADDED` strings (no donor text) stay `NEEDS_TRANSLATION`;
+  - the order is: `TRANSLATED_IN_HOST`, then `NOT_NEEDED`, then `string-diff`'s verdict. `CARRIED_OVER`, `ORPHANED`
+    and `NONE` are never changed.
+
+  Without a pack every unit's carry verdict is `NOT_EVALUATED`, `NOT_NEEDED` included;
 - **`pack_for_other_text`** (only with `--pack`): the pack holds an entry for this string that was written for other
   source text, so it does not apply: a string the host still has reads `NEEDS_TRANSLATION`, one it lacks `NONE`. The
   command warns when any string has one.
