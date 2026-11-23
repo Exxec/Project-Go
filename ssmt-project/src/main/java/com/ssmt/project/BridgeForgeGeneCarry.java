@@ -31,7 +31,9 @@ import java.util.TreeSet;
  * select, by the export's own rule ({@link BridgeForgeGeneStrings#members}). Both go through string-diff's comparison
  * ({@link RootStringDiffService}), so every unit is ADDED, REMOVED, CHANGED or UNCHANGED. Given a translation pack written
  * for the donor's strings, each unit also gets string-diff's carry verdict: CARRIED_OVER, STALE, NEEDS_TRANSLATION,
- * ORPHANED or NONE. A host text that still holds CJK characters is flagged, because Project Go translates Chinese into
+ * ORPHANED or NONE. Gene-carry adds two (format version 2): TRANSLATED_IN_HOST, where the host's text already equals the
+ * pack entry's translation, and NOT_NEEDED, where the donor's text holds no CJK (see refineCarry); string-diff's own
+ * verdicts are unchanged. A host text that still holds CJK characters is flagged, because Project Go translates Chinese into
  * English. A CHANGED CSV cell that differs only in CRLF against LF is flagged {@code crlf_only}: the game reads it as the
  * same text.
  *
@@ -45,7 +47,7 @@ public final class BridgeForgeGeneCarry {
     /** The report's format name. */
     public static final String FORMAT = "project-go-gene-carry";
     /** The report's format version. */
-    public static final int FORMAT_VERSION = 1;
+    public static final int FORMAT_VERSION = 2;
     /** The evidence kind written in the header. */
     public static final String EVIDENCE_KIND = "gene-carry";
     private static final ObjectMapper JSON = new ObjectMapper();
@@ -71,6 +73,7 @@ public final class BridgeForgeGeneCarry {
         Map<String, List<ExtractedString>> host = BridgeForgeGeneStrings.unitsByFile(hostRoot, hostUnreadable);
         RootStringDiffService.Translations translations = pack == null ? null
                 : new RootStringDiffService.Translations().withProject(pack);
+        Map<String, String> packTexts = packTranslations(pack);
         Set<String> inputs = new TreeSet<>();
         Set<String> unreadable = new TreeSet<>();
         Map<String, ObjectNode> distinct = new TreeMap<>();
@@ -92,6 +95,7 @@ public final class BridgeForgeGeneCarry {
                     // (found 2026-11-22 on Eridani P3's pack).
                     row.put("pack_for_other_text", donor != null
                             && translations.writtenForOtherText(unit.file(), unit.key(), donor));
+                    refineCarry(row, donor, text, packTexts.get(identity(unit.file(), unit.key())));
                 }
                 rows.add(row);
                 // Review 2026-11-22: genes sharing a unit can see it differently (one gene's member may not map in the
@@ -216,6 +220,46 @@ public final class BridgeForgeGeneCarry {
                     unit.get("text").asText(), -1));
         }
         return units;
+    }
+
+    /** The pack's non-blank translated text per identity (posix file path), used only to compare, never written out. */
+    private static Map<String, String> packTranslations(LocalizationProject pack) {
+        Map<String, String> texts = new HashMap<>();
+        if (pack != null) {
+            for (ProjectEntry entry : pack.entries()) {
+                if (!entry.translatedText().isBlank()) {
+                    texts.putIfAbsent(identity(posix(entry.sourceFile()), entry.key()), entry.translatedText());
+                }
+            }
+        }
+        return texts;
+    }
+
+    /**
+     * Gene-carry's two verdicts beyond string-diff's (format version 2), applied to a row of a run with a pack only. Only
+     * a row string-diff read STALE or NEEDS_TRANSLATION can change; CARRIED_OVER, ORPHANED and NONE are left alone.
+     * Precedence, first match wins:
+     * <ol>
+     * <li>TRANSLATED_IN_HOST: the host has the unit, its text has no CJK and equals the pack entry's translated text;</li>
+     * <li>NOT_NEEDED: string-diff read NEEDS_TRANSLATION, the donor text exists and has no CJK, the host text (if any)
+     * has no CJK, and the row is not {@code pack_for_other_text};</li>
+     * <li>otherwise string-diff's verdict stands (so ADDED rows, which have no donor text, stay NEEDS_TRANSLATION).</li>
+     * </ol>
+     * Without a pack every unit stays NOT_EVALUATED: nothing was asked about translations.
+     */
+    private static void refineCarry(ObjectNode row, String donor, String host, String packTranslated) {
+        String carry = row.get("carry").asText();
+        boolean open = "STALE".equals(carry) || "NEEDS_TRANSLATION".equals(carry);
+        if (!open) {
+            return;
+        }
+        boolean hostHoldsCjk = row.get("host_cjk").asBoolean();
+        if (host != null && !hostHoldsCjk && host.equals(packTranslated)) {
+            row.put("carry", "TRANSLATED_IN_HOST");
+        } else if ("NEEDS_TRANSLATION".equals(carry) && donor != null && !BridgeForgeTextUnits.cjk(donor)
+                && !hostHoldsCjk && !row.get("pack_for_other_text").asBoolean()) {
+            row.put("carry", "NOT_NEEDED");
+        }
     }
 
     /** A data row the verdict fails on: a donor string the host lacks, or a host string still in CJK. */

@@ -1012,11 +1012,18 @@ which defines phase ids 94.G1-94.G7, decisions GD-1-GD-5 and refinements GR-1-GR
          - a duplicate donor unit now keeps its first text, as string-diff does;
          - the summary flags a unit when any gene's row has the flag.
        - Mutation check: 5 mutants, all killed after a passing baseline.
-     - **Candidate (not built):** a host already holding the pack's translated text reads `STALE`, which looks like a
-       problem. A verdict such as `TRANSLATED_IN_HOST` (host text equal to the entry's translation) would say what
-       happened.
-     - **Candidate (not built):** a donor string with no CJK reads `NEEDS_TRANSLATION` (272 data units here) though it
-       is already in the target language.
+     - **Built 2026-11-22 (report `format_version` 2):** gene-carry's rows now refine string-diff's verdict; `string-diff`
+       and `RootStringDiffService` are unchanged.
+       - `TRANSLATED_IN_HOST`: a host already holding the pack's translated text (it read `STALE`, which looked like a
+         problem). It applies to a row string-diff read `STALE` or `NEEDS_TRANSLATION`, when the host text has no CJK.
+       - `NOT_NEEDED`: a donor string with no CJK (it read `NEEDS_TRANSLATION`, 272 data units on Eridani P3) though it
+         is already in the target language. It applies to `NEEDS_TRANSLATION` rows only, when the host text has no CJK
+         and the row is not `pack_for_other_text`.
+       - Precedence: `TRANSLATED_IN_HOST`, `NOT_NEEDED`, string-diff's verdict. Without a pack: `NOT_EVALUATED`.
+       - Tests in `BridgeForgeGeneCarryHostVerdictsTest` (each verdict, the precedence over `pack_for_other_text`, CJK
+         host text, REMOVED/ADDED/CARRIED_OVER rows, no pack) and the updated pack tests in `BridgeForgeGeneCarryTest`.
+       - Mutation check: 14 mutants, 12 killed after a passing baseline; 2 equivalent (a null-host guard and a
+         blank-translation filter that no row can reach).
      - The exit criterion stays open until a real host exists (BridgeForge 94.G5) or the owner accepts the carrier as
        the host. The carrier run is plumbing: the carrier is built from `working/`.
 
